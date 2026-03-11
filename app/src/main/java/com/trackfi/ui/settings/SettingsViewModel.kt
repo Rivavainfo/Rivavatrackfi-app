@@ -38,6 +38,12 @@ class SettingsViewModel @Inject constructor(
         "Daily Tracker"
     )
 
+    val showSmsDetails = preferencesRepository.showSmsDetailsFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        true
+    )
+
     private val _banksDetected = MutableStateFlow<List<String>>(emptyList())
     val banksDetected: StateFlow<List<String>> = _banksDetected
 
@@ -58,6 +64,12 @@ class SettingsViewModel @Inject constructor(
     fun setHomeLayoutPreset(preset: String) {
         viewModelScope.launch {
             preferencesRepository.setHomeLayoutPreset(preset)
+        }
+    }
+
+    fun setShowSmsDetails(show: Boolean) {
+        viewModelScope.launch {
+            preferencesRepository.setShowSmsDetails(show)
         }
     }
 

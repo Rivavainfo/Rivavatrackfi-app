@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Star
+import com.trackfi.ui.portfolio.RivavaPortfolioBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +55,9 @@ fun HomeScreen(
     val transactions by viewModel.transactions.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
+    val showDetails by viewModel.showSmsDetails.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var showPortfolioSheet by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
@@ -83,13 +87,28 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                Text(
-                    text = "TrackFi",
-                    style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
-                        color = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TrackFi",
+                        style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                    IconButton(onClick = { showPortfolioSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rivava's Portfolio",
+                            tint = Color(0xFFFFD700), // Gold/Premium color
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             }
 
             when (layoutPreset) {
@@ -155,7 +174,7 @@ fun HomeScreen(
                         enter = fadeIn() + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
                         exit = fadeOut() + shrinkVertically()
                     ) {
-                        TransactionItem(transaction, onClick = {
+                        TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedTransaction = transaction
                         })
@@ -183,6 +202,12 @@ fun HomeScreen(
                 onAddCategory = { newCategoryName, type ->
                     viewModel.addCategory(newCategoryName, type)
                 }
+            )
+        }
+
+        if (showPortfolioSheet) {
+            RivavaPortfolioBottomSheet(
+                onDismiss = { showPortfolioSheet = false }
             )
         }
     }
@@ -470,7 +495,7 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
 }
 
 @Composable
-fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
+fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit) {
     val isCredit = transaction.type == "INCOME"
     val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
 
@@ -507,7 +532,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = transaction.merchantName,
+                text = if (showDetails) transaction.merchantName else "Hidden",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -516,7 +541,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = visualToUse.title,
+                    text = if (showDetails) visualToUse.title else "Hidden",
                     style = MaterialTheme.typography.bodyMedium,
                     color = visualToUse.color,
                     modifier = Modifier
@@ -525,7 +550,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 val formatter = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
-                val dateString = formatter.format(java.util.Date(transaction.date))
+                val dateString = if (showDetails) formatter.format(java.util.Date(transaction.date)) else "****"
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.bodyMedium,

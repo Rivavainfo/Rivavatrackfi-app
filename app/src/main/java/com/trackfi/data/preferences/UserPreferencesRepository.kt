@@ -28,6 +28,17 @@ class UserPreferencesRepository @Inject constructor(
         val SMS_SCAN_COMPLETED_KEY = booleanPreferencesKey("sms_scan_completed")
         val DAILY_BUDGET_KEY = stringPreferencesKey("daily_budget")
         val HOME_LAYOUT_PRESET_KEY = stringPreferencesKey("home_layout_preset")
+        val SHOW_SMS_DETAILS_KEY = booleanPreferencesKey("show_sms_details")
+    }
+
+    val showSmsDetailsFlow: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[SHOW_SMS_DETAILS_KEY] ?: true
+    }
+
+    suspend fun setShowSmsDetails(show: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[SHOW_SMS_DETAILS_KEY] = show
+        }
     }
 
     val homeLayoutPresetFlow: Flow<String> = dataStore.data.map { preferences ->

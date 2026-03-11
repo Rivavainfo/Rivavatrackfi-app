@@ -179,6 +179,7 @@ fun TransactionsScreen(
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionList(transactions: List<TransactionEntity>, viewModel: TransactionsViewModel) {
+    val showDetails by viewModel.showSmsDetails.collectAsState()
     var selectedTransactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
     var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
     var transactionToView by remember { mutableStateOf<TransactionEntity?>(null) }
@@ -232,6 +233,7 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
                 content = {
                     TransactionItem(
                         transaction = transaction,
+                        showDetails = showDetails,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             transactionToView = transaction
@@ -304,7 +306,7 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit, onLongClick: () -> Unit) {
+fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit, onLongClick: () -> Unit) {
     val isCredit = transaction.type == "INCOME" || transaction.type == "REWARD"
 
     val catVisual = if (transaction.subcategory != null)
@@ -351,7 +353,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit, onLongC
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = transaction.merchantName,
+                    text = if (showDetails) transaction.merchantName else "Hidden",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
@@ -359,11 +361,11 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit, onLongC
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 val formatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-                val dateString = formatter.format(Date(transaction.date))
+                val dateString = if (showDetails) formatter.format(Date(transaction.date)) else "****"
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = catVisual.title,
+                        text = if (showDetails) catVisual.title else "Hidden",
                         style = MaterialTheme.typography.bodyMedium,
                         color = iconColor,
                         modifier = Modifier
