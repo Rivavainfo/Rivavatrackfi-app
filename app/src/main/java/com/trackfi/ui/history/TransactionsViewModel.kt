@@ -17,6 +17,9 @@ import com.trackfi.data.local.UserCorrectionEntity
 import com.trackfi.data.local.CategoryEntity
 import com.trackfi.domain.usecase.GetCategoriesUseCase
 import com.trackfi.domain.usecase.AddCategoryUseCase
+import com.trackfi.data.preferences.UserPreferencesRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 sealed class TransactionsUiState {
     object Loading : TransactionsUiState()
@@ -31,7 +34,8 @@ class TransactionsViewModel @Inject constructor(
     private val repository: TransactionRepository,
     private val userCorrectionDao: UserCorrectionDao,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val addCategoryUseCase: AddCategoryUseCase
+    private val addCategoryUseCase: AddCategoryUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
@@ -68,6 +72,12 @@ class TransactionsViewModel @Inject constructor(
 
     private val _sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
     val sortOrder = _sortOrder.asStateFlow()
+
+    val showSmsDetails = userPreferencesRepository.showSmsDetailsFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        true
+    )
 
     private var allTransactions: List<TransactionEntity> = emptyList()
 

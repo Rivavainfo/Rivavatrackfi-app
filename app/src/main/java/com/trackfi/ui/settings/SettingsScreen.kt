@@ -35,6 +35,7 @@ fun SettingsScreen(
     val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val banksDetected by viewModel.banksDetected.collectAsState()
+    val showSmsDetails by viewModel.showSmsDetails.collectAsState()
     var showClearDataDialog by remember { mutableStateOf(false) }
 
     val csvImportLauncher = rememberLauncherForActivityResult(
@@ -132,6 +133,50 @@ fun SettingsScreen(
                             Toast.makeText(context, "Learning data reset.", Toast.LENGTH_SHORT).show()
                         }
                     )
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Privacy",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Show Transaction Details",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Display merchant, category, and date",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = showSmsDetails,
+                            onCheckedChange = { isChecked ->
+                                viewModel.setShowSmsDetails(isChecked)
+                            }
+                        )
+                    }
                 }
             }
 

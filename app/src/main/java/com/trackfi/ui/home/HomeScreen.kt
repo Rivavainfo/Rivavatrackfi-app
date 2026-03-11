@@ -53,6 +53,7 @@ fun HomeScreen(
     val transactions by viewModel.transactions.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
+    val showDetails by viewModel.showSmsDetails.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
@@ -155,7 +156,7 @@ fun HomeScreen(
                         enter = fadeIn() + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
                         exit = fadeOut() + shrinkVertically()
                     ) {
-                        TransactionItem(transaction, onClick = {
+                        TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedTransaction = transaction
                         })
@@ -470,7 +471,7 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
 }
 
 @Composable
-fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
+fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit) {
     val isCredit = transaction.type == "INCOME"
     val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
 
@@ -507,7 +508,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = transaction.merchantName,
+                text = if (showDetails) transaction.merchantName else "Hidden",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -516,7 +517,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = visualToUse.title,
+                    text = if (showDetails) visualToUse.title else "Hidden",
                     style = MaterialTheme.typography.bodyMedium,
                     color = visualToUse.color,
                     modifier = Modifier
@@ -525,7 +526,7 @@ fun TransactionItem(transaction: TransactionEntity, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 val formatter = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
-                val dateString = formatter.format(java.util.Date(transaction.date))
+                val dateString = if (showDetails) formatter.format(java.util.Date(transaction.date)) else "****"
                 Text(
                     text = dateString,
                     style = MaterialTheme.typography.bodyMedium,
