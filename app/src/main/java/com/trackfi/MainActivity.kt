@@ -142,7 +142,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         NavHost(
             navController = navController,
             startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
-            modifier = Modifier,
+            modifier = Modifier.padding(paddingValues),
             enterTransition = {
                 androidx.compose.animation.slideInHorizontally(
                     initialOffsetX = { it },
