@@ -44,12 +44,12 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Star
+import com.trackfi.ui.portfolio.RivavaPortfolioBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToPortfolio: () -> Unit = {}
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -57,6 +57,7 @@ fun HomeScreen(
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val showDetails by viewModel.showSmsDetails.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var showPortfolioSheet by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
@@ -99,7 +100,7 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     )
-                    IconButton(onClick = onNavigateToPortfolio) {
+                    IconButton(onClick = { showPortfolioSheet = true }) {
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Rivava's Portfolio",
@@ -201,6 +202,12 @@ fun HomeScreen(
                 onAddCategory = { newCategoryName, type ->
                     viewModel.addCategory(newCategoryName, type)
                 }
+            )
+        }
+
+        if (showPortfolioSheet) {
+            RivavaPortfolioBottomSheet(
+                onDismiss = { showPortfolioSheet = false }
             )
         }
     }
