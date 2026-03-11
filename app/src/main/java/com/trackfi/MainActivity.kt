@@ -36,6 +36,7 @@ import com.trackfi.ui.onboarding.SmsScanningScreen
 import com.trackfi.ui.onboarding.SmsOptInScreen
 import com.trackfi.ui.onboarding.WelcomeScreen
 import com.trackfi.ui.settings.SettingsScreen
+import com.trackfi.ui.portfolio.RivavaPortfolioScreen
 import com.trackfi.ui.theme.TrackFiTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -52,6 +53,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Analytics : Screen("analytics", "Analytics", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
+    object RivavaPortfolio : Screen("rivava_portfolio", "Portfolio", Icons.Outlined.Star)
 }
 
 val BottomNavigationItems = listOf(
@@ -204,7 +206,11 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.Home.route) {
-                HomeScreen()
+                HomeScreen(
+                    onNavigateToPortfolio = {
+                        navController.navigate(Screen.RivavaPortfolio.route)
+                    }
+                )
             }
             composable(Screen.Transactions.route) {
                 TransactionsScreen()
@@ -222,6 +228,11 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                             inclusive = true
                         }
                     }
+                })
+            }
+            composable(Screen.RivavaPortfolio.route) {
+                RivavaPortfolioScreen(onBack = {
+                    navController.popBackStack()
                 })
             }
         }

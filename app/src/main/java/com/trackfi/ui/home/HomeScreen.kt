@@ -43,11 +43,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Star
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToPortfolio: () -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -84,13 +86,28 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                Text(
-                    text = "TrackFi",
-                    style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
-                        color = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "TrackFi",
+                        style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                    IconButton(onClick = onNavigateToPortfolio) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Rivava's Portfolio",
+                            tint = Color(0xFFFFD700), // Gold/Premium color
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
             }
 
             when (layoutPreset) {
