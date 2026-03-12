@@ -19,6 +19,16 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Handle Keystore
+      env:
+        ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      run: |
+        if [ -n "$ANDROID_KEYSTORE" ]; then
+          echo "$ANDROID_KEYSTORE" | base64 --decode > app/release.keystore
+        else
+          keytool -genkeypair -v -keystore app/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Rivava, OU=Mobile, O=Rivava, L=Global, S=NA, C=US"
+        fi
+
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
@@ -26,7 +36,14 @@ jobs:
       run: ./gradlew assembleDebug
 
     - name: Build with Gradle Release
-      run: ./gradlew assembleRelease
+      env:
+        KEYSTORE_PATH: release.keystore
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'password' }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'release' }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'password' }}
+      run: |
+        ./gradlew assembleRelease
+        ./gradlew bundleRelease
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
@@ -37,5 +54,11 @@ jobs:
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-release
+        name: rivava-release-apk
         path: app/build/outputs/apk/release/*.apk
+
+    - name: Upload AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: rivava-release-aab
+        path: app/build/outputs/bundle/release/*.aab
