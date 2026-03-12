@@ -38,13 +38,18 @@ import com.trackfi.domain.usecase.FinancialSummaryState
 import com.trackfi.ui.add.AddTransactionBottomSheet
 import com.trackfi.ui.theme.CategoryVisuals
 import com.trackfi.ui.theme.bounceClick
+import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Lock
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.trackfi.ui.portfolio.RivavaPortfolioBottomSheet
+import com.trackfi.ui.portfolio.PasswordDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,11 +61,14 @@ fun HomeScreen(
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val showDetails by viewModel.showSmsDetails.collectAsState()
+    val userName by viewModel.userName.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPortfolioSheet by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     Scaffold(
         floatingActionButton = {
@@ -100,12 +108,50 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     )
-                    IconButton(onClick = { showPortfolioSheet = true }) {
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
+                        .bounceClick {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            showPasswordDialog = true
+                        },
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Rivava Premium Portfolio",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Premium Feature",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                         Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rivava's Portfolio",
-                            tint = Color(0xFFFFD700), // Gold/Premium color
-                            modifier = Modifier.size(32.dp)
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Locked Premium Feature",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -171,8 +217,18 @@ fun HomeScreen(
                 items(transactions.take(5), key = { it.id }) { transaction ->
                     AnimatedVisibility(
                         visible = true,
-                        enter = fadeIn() + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                        exit = fadeOut() + shrinkVertically()
+                        enter = fadeIn(animationSpec = tween(500)) + expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.5f,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ),
+                        exit = fadeOut(animationSpec = tween(500)) + shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.5f,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
                     ) {
                         TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -201,6 +257,20 @@ fun HomeScreen(
                 },
                 onAddCategory = { newCategoryName, type ->
                     viewModel.addCategory(newCategoryName, type)
+                }
+            )
+        }
+
+        if (showPasswordDialog) {
+            PasswordDialog(
+                onDismiss = { showPasswordDialog = false },
+                onUnlock = { password ->
+                    if (password.trim() == userName?.trim()) {
+                        showPasswordDialog = false
+                        showPortfolioSheet = true
+                    } else {
+                        Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show()
+                    }
                 }
             )
         }
@@ -265,10 +335,10 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
 @Composable
 fun SpendingCard(title: String, amount: Double, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
+        modifier = modifier.glassMorphism(cornerRadius = 24f, alpha = 0.15f),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
@@ -350,10 +420,11 @@ fun DailyBudgetCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp)),
+            .clip(RoundedCornerShape(28.dp))
+            .glassMorphism(cornerRadius = 28f, alpha = 0.15f),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Row(
@@ -458,10 +529,11 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp)),
+                .clip(RoundedCornerShape(28.dp))
+                .glassMorphism(cornerRadius = 28f, alpha = 0.2f),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
@@ -509,7 +581,7 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
             .bounceClick { onClick() }
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically

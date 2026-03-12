@@ -51,6 +51,12 @@ class HomeViewModel @Inject constructor(
         true
     )
 
+    val userName = userPreferencesRepository.userNameFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ""
+    )
+
     init {
         viewModelScope.launch {
             userPreferencesRepository.dailyBudgetFlow.collectLatest {
