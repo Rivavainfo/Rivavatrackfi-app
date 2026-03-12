@@ -38,6 +38,7 @@ import com.trackfi.domain.usecase.FinancialSummaryState
 import com.trackfi.ui.add.AddTransactionBottomSheet
 import com.trackfi.ui.theme.CategoryVisuals
 import com.trackfi.ui.theme.bounceClick
+import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
@@ -171,8 +172,18 @@ fun HomeScreen(
                 items(transactions.take(5), key = { it.id }) { transaction ->
                     AnimatedVisibility(
                         visible = true,
-                        enter = fadeIn() + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                        exit = fadeOut() + shrinkVertically()
+                        enter = fadeIn(animationSpec = tween(500)) + expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.5f,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        ),
+                        exit = fadeOut(animationSpec = tween(500)) + shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.5f,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
                     ) {
                         TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -265,10 +276,10 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
 @Composable
 fun SpendingCard(title: String, amount: Double, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
+        modifier = modifier.glassMorphism(cornerRadius = 24f, alpha = 0.15f),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
@@ -350,10 +361,11 @@ fun DailyBudgetCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp)),
+            .clip(RoundedCornerShape(28.dp))
+            .glassMorphism(cornerRadius = 28f, alpha = 0.15f),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Row(
@@ -458,10 +470,11 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp)),
+                .clip(RoundedCornerShape(28.dp))
+                .glassMorphism(cornerRadius = 28f, alpha = 0.2f),
             shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
@@ -509,7 +522,7 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surface)
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
             .bounceClick { onClick() }
             .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
