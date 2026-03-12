@@ -19,22 +19,16 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = System.getenv("KEYSTORE_FILE") ?: localProperties.getProperty("keystore.file")
+            val keystoreFile = System.getenv("KEYSTORE_PATH") ?: localProperties.getProperty("keystore.file")
             if (keystoreFile != null) {
                 storeFile = file(keystoreFile)
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("keystore.password")
-                keyAlias = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("keystore.alias")
-                keyPassword = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("keystore.key_password")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("keystore.password") ?: "password"
+                keyAlias = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("keystore.alias") ?: "release"
+                keyPassword = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("keystore.key_password") ?: "password"
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
                 enableV4Signing = true
-            } else {
-                // Fallback to debug keystore for Github Actions if not provided
-                storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
             }
         }
     }
