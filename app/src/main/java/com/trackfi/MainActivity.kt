@@ -36,6 +36,7 @@ import com.trackfi.ui.onboarding.SmsScanningScreen
 import com.trackfi.ui.onboarding.SmsOptInScreen
 import com.trackfi.ui.onboarding.WelcomeScreen
 import com.trackfi.ui.settings.SettingsScreen
+import com.trackfi.ui.portfolio.RivavaPortfolioScreen
 import com.trackfi.ui.theme.TrackFiTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -49,16 +50,16 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Scanning : Screen("scanning", "Scanning", Icons.Outlined.Home)
     object Home : Screen("home", "Home", Icons.Outlined.Home)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
-    object Analytics : Screen("analytics", "Analytics", Icons.Outlined.Analytics)
+    object Analytics : Screen("analytics", "Insights", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
-    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
+    object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
+    object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
 }
 
-val BottomNavigationItems = listOf(
+val BaseBottomNavigationItems = listOf(
     Screen.Home,
     Screen.Transactions,
     Screen.Analytics,
-    Screen.AiReview,
     Screen.Settings
 )
 
@@ -78,7 +79,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            TrackFiTheme {
+            val isPremiumUser = preferencesRepository.isPremiumUserFlow.collectAsState(initial = false).value
+            TrackFiTheme(isPremium = isPremiumUser) {
                 TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
             }
         }
@@ -91,7 +93,14 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val isBottomBarVisible = currentRoute in BottomNavigationItems.map { it.route }
+    val isPremiumUser = preferencesRepository?.isPremiumUserFlow?.collectAsState(initial = false)?.value ?: false
+    val bottomNavigationItems = if (isPremiumUser) {
+        listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Settings)
+    } else {
+        BaseBottomNavigationItems
+    }
+
+    val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
     Scaffold(
         bottomBar = {
@@ -101,11 +110,11 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     modifier = Modifier.padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
                 ) {
                     NavigationBar(
-                        containerColor = androidx.compose.ui.graphics.Color.Black,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = MaterialTheme.colorScheme.onBackground,
-                        tonalElevation = 0.dp
+                        tonalElevation = 8.dp
                     ) {
-                        BottomNavigationItems.forEach { screen ->
+                        bottomNavigationItems.forEach { screen ->
                             NavigationBarItem(
                                 selected = currentRoute == screen.route,
                                 onClick = {
@@ -223,6 +232,9 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                         }
                     }
                 })
+            }
+            composable(Screen.RivavaPortfolio.route) {
+                RivavaPortfolioScreen()
             }
         }
     }

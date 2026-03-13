@@ -29,6 +29,17 @@ class UserPreferencesRepository @Inject constructor(
         val DAILY_BUDGET_KEY = stringPreferencesKey("daily_budget")
         val HOME_LAYOUT_PRESET_KEY = stringPreferencesKey("home_layout_preset")
         val SHOW_SMS_DETAILS_KEY = booleanPreferencesKey("show_sms_details")
+        val IS_PREMIUM_USER_KEY = booleanPreferencesKey("is_premium_user")
+    }
+
+    val isPremiumUserFlow: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[IS_PREMIUM_USER_KEY] ?: false
+    }
+
+    suspend fun setPremiumUser(isPremium: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[IS_PREMIUM_USER_KEY] = isPremium
+        }
     }
 
     val showSmsDetailsFlow: Flow<Boolean> = dataStore.data.map { preferences ->

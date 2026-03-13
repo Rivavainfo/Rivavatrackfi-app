@@ -48,8 +48,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Lock
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
-import com.trackfi.ui.portfolio.RivavaPortfolioBottomSheet
 import com.trackfi.ui.portfolio.PasswordDialog
+
+import com.trackfi.ui.components.PremiumCard
+import com.trackfi.ui.components.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,8 +64,8 @@ fun HomeScreen(
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
+    val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
-    var showPortfolioSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
@@ -111,50 +113,47 @@ fun HomeScreen(
                 }
             }
 
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
-                        .bounceClick {
+            if (!isPremiumUser) {
+                item {
+                    PremiumCard(
+                        modifier = Modifier.bounceClick {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             showPasswordDialog = true
-                        },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        }
                     ) {
-                        Column {
-                            Text(
-                                text = "Rivava Premium Portfolio",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Rivava Premium Portfolio",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
                                 )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Premium Feature",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Unlock Premium Features",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Locked Premium Feature",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Locked Premium Feature",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
                 }
+            }
+
+            item {
+                SectionHeader(title = "Dashboard Overview")
             }
 
             when (layoutPreset) {
@@ -267,17 +266,12 @@ fun HomeScreen(
                 onUnlock = { password ->
                     if (password.trim() == userName?.trim()) {
                         showPasswordDialog = false
-                        showPortfolioSheet = true
+                        viewModel.setPremiumUser(true)
+                        Toast.makeText(context, "Premium Unlocked!", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show()
                     }
                 }
-            )
-        }
-
-        if (showPortfolioSheet) {
-            RivavaPortfolioBottomSheet(
-                onDismiss = { showPortfolioSheet = false }
             )
         }
     }
