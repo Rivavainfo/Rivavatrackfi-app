@@ -57,6 +57,12 @@ class HomeViewModel @Inject constructor(
         ""
     )
 
+    val isPremiumUser = userPreferencesRepository.isPremiumUserFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false
+    )
+
     init {
         viewModelScope.launch {
             userPreferencesRepository.dailyBudgetFlow.collectLatest {
@@ -106,6 +112,12 @@ class HomeViewModel @Inject constructor(
     fun updateHomeLayoutPreset(preset: String) {
         viewModelScope.launch {
             userPreferencesRepository.setHomeLayoutPreset(preset)
+        }
+    }
+
+    fun setPremiumUser(isPremium: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setPremiumUser(isPremium)
         }
     }
 

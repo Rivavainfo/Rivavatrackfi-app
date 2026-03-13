@@ -10,8 +10,22 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-val DarkColorScheme = darkColorScheme(
-    primary = SamsungBlue,
+val StandardColorScheme = darkColorScheme(
+    primary = DeepBlue,
+    secondary = EmeraldGreen,
+    onPrimary = OnDarkSurface,
+    background = AmoledBlack,
+    onBackground = OnDarkSurface,
+    surface = DarkSurface,
+    onSurface = OnDarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
+    onSurfaceVariant = OnDarkSurfaceVariant,
+    error = SoftRed
+)
+
+val PremiumColorScheme = darkColorScheme(
+    primary = DeepBlueVariant,
+    secondary = EmeraldGreen,
     onPrimary = OnDarkSurface,
     background = AmoledBlack,
     onBackground = OnDarkSurface,
@@ -24,9 +38,10 @@ val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun TrackFiTheme(
+    isPremium: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val colorScheme = if (isPremium) PremiumColorScheme else StandardColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {
