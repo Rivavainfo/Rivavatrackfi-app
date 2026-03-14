@@ -53,6 +53,15 @@ import com.trackfi.ui.portfolio.PasswordDialog
 import com.trackfi.ui.components.PremiumCard
 import com.trackfi.ui.components.SectionHeader
 
+import android.Manifest
+import android.os.Build
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -65,19 +74,49 @@ fun HomeScreen(
     val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
+    val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
+    var showSmsRationaleDialog by remember { mutableStateOf(false) }
+    var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
+    val activity = context as? android.app.Activity
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val smsGranted = permissions[Manifest.permission.READ_SMS] == true &&
+                         permissions[Manifest.permission.RECEIVE_SMS] == true
+
+        if (smsGranted) {
+            viewModel.setSmsTrackingEnabled(true)
+            Toast.makeText(context, "SMS Tracking Enabled", Toast.LENGTH_SHORT).show()
+        } else {
+            val shouldShowRationale = activity?.let {
+                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
+            } ?: false
+
+            if (!shouldShowRationale) {
+                showSmsSettingsDialog = true
+            } else {
+                Toast.makeText(context, "SMS tracking remains disabled.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    showAddSheet = true
+                    if (!isSmsTrackingEnabled) {
+                        showSmsRationaleDialog = true
+                    } else {
+                        showAddSheet = true
+                    }
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -242,6 +281,65 @@ fun HomeScreen(
             TransactionDetailsBottomSheet(
                 transaction = transaction,
                 onDismiss = { selectedTransaction = null }
+            )
+        }
+
+        if (showSmsRationaleDialog) {
+            AlertDialog(
+                onDismissRequest = { showSmsRationaleDialog = false },
+                title = { Text("Enable Automatic Tracking?") },
+                text = { Text("This feature can read transaction SMS to help track financial activity. This is optional.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showSmsRationaleDialog = false
+                        val perms = mutableListOf(
+                            Manifest.permission.READ_SMS,
+                            Manifest.permission.RECEIVE_SMS,
+                            Manifest.permission.READ_CONTACTS
+                        )
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            perms.add(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        permissionLauncher.launch(perms.toTypedArray())
+                    }) {
+                        Text("Enable")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showSmsRationaleDialog = false
+                        showAddSheet = true
+                    }) {
+                        Text("Skip")
+                    }
+                }
+            )
+        }
+
+        if (showSmsSettingsDialog) {
+            AlertDialog(
+                onDismissRequest = { showSmsSettingsDialog = false },
+                title = { Text("Permission Denied") },
+                text = { Text("You have permanently denied SMS permissions. Please enable them manually in the app settings if you wish to use automatic tracking.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showSmsSettingsDialog = false
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    }) {
+                        Text("Open Settings")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showSmsSettingsDialog = false
+                        showAddSheet = true
+                    }) {
+                        Text("Continue Manually")
+                    }
+                }
             )
         }
 

@@ -186,7 +186,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.Greeting.route) {
                 GreetingScreen(onNavigateNext = {
-                    navController.navigate(Screen.SmsOptIn.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Greeting.route) { inclusive = true }
                     }
                 })

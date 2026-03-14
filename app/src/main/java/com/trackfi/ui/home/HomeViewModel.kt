@@ -57,6 +57,12 @@ class HomeViewModel @Inject constructor(
         ""
     )
 
+    val isSmsTrackingEnabled = userPreferencesRepository.isSmsTrackingEnabledFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false
+    )
+
     val isPremiumUser = userPreferencesRepository.isPremiumUserFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -118,6 +124,12 @@ class HomeViewModel @Inject constructor(
     fun setPremiumUser(isPremium: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setPremiumUser(isPremium)
+        }
+    }
+
+    fun setSmsTrackingEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setSmsTrackingEnabled(enabled)
         }
     }
 
