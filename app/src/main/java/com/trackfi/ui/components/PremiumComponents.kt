@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trackfi.ui.theme.glassMorphism
@@ -16,7 +17,7 @@ import androidx.compose.ui.graphics.Brush
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.theme.PremiumGradientEnd
-import com.trackfi.ui.theme.SoftRed
+import com.trackfi.ui.theme.VibrantRed
 
 @Composable
 fun PremiumCard(
@@ -75,8 +76,8 @@ fun PremiumButton(
             .fillMaxWidth()
             .height(56.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(PremiumGradientStart, PremiumGradientEnd)
+                brush = Brush.linearGradient(
+                    colors = listOf(PremiumGradientStart, EmeraldGreen)
                 ),
                 shape = RoundedCornerShape(28.dp)
             ),
@@ -98,10 +99,14 @@ fun PortfolioStockCard(
     companyName: String,
     marketPrice: String,
     isPremium: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isPositive: Boolean = true,
+    percentageChange: String = "+2.4%"
 ) {
-    val isPositive = true // For demo purposes. Real data would determine this.
-    val priceColor = if (isPositive) EmeraldGreen else SoftRed
+    val priceColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isPositive) EmeraldGreen else VibrantRed,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
+    )
 
     Card(
         modifier = modifier
@@ -153,7 +158,7 @@ fun PortfolioStockCard(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "+2.4%", // Placeholder for animation
+                    text = percentageChange,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = priceColor
                 )

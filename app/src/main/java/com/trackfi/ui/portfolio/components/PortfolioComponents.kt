@@ -12,9 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import com.trackfi.ui.theme.EmeraldGreen
-import com.trackfi.ui.theme.SoftRed
+import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.glassMorphism
 
 @Composable
@@ -32,7 +33,10 @@ fun PortfolioMetricsTable(
     unrealizedPnl: String,
     isPositive: Boolean
 ) {
-    val valueColor = if (isPositive) EmeraldGreen else SoftRed
+    val valueColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isPositive) EmeraldGreen else VibrantRed,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
+    )
 
     Column(
         modifier = Modifier

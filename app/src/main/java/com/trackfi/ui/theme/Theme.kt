@@ -20,12 +20,13 @@ val StandardColorScheme = darkColorScheme(
     onSurface = OnDarkSurface,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = OnDarkSurfaceVariant,
-    error = SoftRed
+    error = VibrantRed
 )
 
 val PremiumColorScheme = darkColorScheme(
     primary = DeepBlueVariant,
     secondary = EmeraldGreen,
+    tertiary = LightPink,
     onPrimary = OnDarkSurface,
     background = AmoledBlack,
     onBackground = OnDarkSurface,
@@ -33,7 +34,7 @@ val PremiumColorScheme = darkColorScheme(
     onSurface = OnDarkSurface,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = OnDarkSurfaceVariant,
-    error = SoftRed
+    error = VibrantRed
 )
 
 @Composable

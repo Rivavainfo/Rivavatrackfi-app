@@ -55,8 +55,13 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
         ) {
             item {
                 SectionHeader(
-                    title = "Market Overview",
-                    subtitle = "Strictly For Educational Purposes"
+                    title = "Market Overview"
+                )
+                Text(
+                    text = "Strictly For Educational Purposes",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = com.trackfi.ui.theme.LightPink
+                    )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
