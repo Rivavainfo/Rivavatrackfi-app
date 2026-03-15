@@ -144,7 +144,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "TrackFi",
+                        text = "Rivava+",
                         style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
                             color = MaterialTheme.colorScheme.onBackground
                         )

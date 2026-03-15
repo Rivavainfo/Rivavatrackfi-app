@@ -18,7 +18,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.trackfi.ui.theme.bounceClick
+import com.trackfi.ui.theme.glassMorphism
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -106,48 +127,44 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     Scaffold(
         bottomBar = {
             if (isBottomBarVisible) {
-                Surface(
-                    color = androidx.compose.ui.graphics.Color.Black,
-                    modifier = Modifier.padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
+                        .background(androidx.compose.ui.graphics.Color.Transparent)
                 ) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onBackground,
-                        tonalElevation = 8.dp
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.2f)
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         bottomNavigationItems.forEach { screen ->
-                            NavigationBarItem(
-                                selected = currentRoute == screen.route,
+                            val isSelected = currentRoute == screen.route
+                            CustomBottomNavItem(
+                                screen = screen,
+                                isSelected = isSelected,
                                 onClick = {
-                                    navController.navigate(screen.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
+                                    if (!isSelected) {
+                                        navController.navigate(screen.route) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
-                                        launchSingleTop = true
-                                        restoreState = true
                                     }
-                                },
-                                icon = { Icon(screen.icon, contentDescription = screen.title) },
-                                label = {
-                                    Text(
-                                        text = screen.title,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (currentRoute == screen.route) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium
-                                    )
-                                },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                )
+                                }
                             )
                         }
                     }
                 }
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -244,6 +261,59 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
                     onBack = { navController.popBackStack() }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomBottomNavItem(
+    screen: Screen,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.15f else 1f,
+        animationSpec = tween(300),
+        label = "iconScale"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(300),
+        label = "iconColor"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .bounceClick { onClick() }
+            .padding(8.dp)
+    ) {
+        Icon(
+            imageVector = screen.icon,
+            contentDescription = screen.title,
+            tint = iconColor,
+            modifier = Modifier
+                .size(26.dp)
+                .scale(scale)
+        )
+        AnimatedVisibility(visible = isSelected) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = screen.title,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(4.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
                 )
             }
         }
