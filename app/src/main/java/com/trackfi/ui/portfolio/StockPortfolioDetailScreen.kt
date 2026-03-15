@@ -5,14 +5,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalUriHandler
 import com.trackfi.ui.portfolio.components.CashBalanceSection
 import com.trackfi.ui.portfolio.components.PortfolioMetricsTable
 import kotlinx.coroutines.delay
 import com.trackfi.ui.theme.PremiumGradientStart
+import com.trackfi.ui.components.PremiumButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,6 +93,26 @@ fun StockPortfolioDetailScreen(
                     usdCash = "8.90",
                     totalCash = "8.90"
                 )
+            }
+
+            item {
+                val uriHandler = LocalUriHandler.current
+                Spacer(modifier = Modifier.height(24.dp))
+                PremiumButton(
+                    text = "View Full Stock Price",
+                    onClick = {
+                        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
+                        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+                        try {
+                            uriHandler.openUri(url)
+                        } catch (e: Exception) {
+                            // Ignored if browser not found
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    icon = Icons.Default.ShowChart
+                )
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

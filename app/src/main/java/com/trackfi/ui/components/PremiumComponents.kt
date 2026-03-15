@@ -18,6 +18,7 @@ import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.theme.PremiumGradientEnd
 import com.trackfi.ui.theme.VibrantRed
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun PremiumCard(
@@ -68,7 +69,8 @@ fun SectionHeader(title: String, subtitle: String? = null) {
 fun PremiumButton(
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null
 ) {
     Button(
         onClick = onClick,
@@ -82,8 +84,18 @@ fun PremiumButton(
                 shape = RoundedCornerShape(28.dp)
             ),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(28.dp)
+        shape = RoundedCornerShape(28.dp),
+        contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
         Text(
             text = text,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
