@@ -97,13 +97,14 @@ fun PortfolioStockCard(
     ticker: String,
     companyName: String,
     marketPrice: String,
-    isPremium: Boolean = true
+    isPremium: Boolean = true,
+    modifier: Modifier = Modifier
 ) {
     val isPositive = true // For demo purposes. Real data would determine this.
     val priceColor = if (isPositive) EmeraldGreen else SoftRed
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f),

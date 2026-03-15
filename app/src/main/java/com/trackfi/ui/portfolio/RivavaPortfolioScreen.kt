@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.trackfi.ui.components.PortfolioStockCard
 import com.trackfi.ui.components.SectionHeader
 import com.trackfi.ui.theme.PremiumGradientStart
+import androidx.compose.foundation.clickable
 
 data class PortfolioItem(
     val exchange: String,
@@ -32,7 +33,7 @@ val portfolioItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RivavaPortfolioScreen() {
+fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -66,7 +67,8 @@ fun RivavaPortfolioScreen() {
                     ticker = item.ticker,
                     companyName = item.companyName,
                     marketPrice = item.marketPrice,
-                    isPremium = true
+                    isPremium = true,
+                    modifier = Modifier.clickable { onNavigateToDetail(item.ticker) }
                 )
             }
         }
