@@ -54,6 +54,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
     object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
+    object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
 }
 
 val BaseBottomNavigationItems = listOf(
@@ -234,7 +235,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.RivavaPortfolio.route) {
-                RivavaPortfolioScreen()
+                RivavaPortfolioScreen(onNavigateToDetail = { ticker ->
+                    navController.navigate("${Screen.StockDetail.route}/$ticker")
+                })
+            }
+            composable("${Screen.StockDetail.route}/{ticker}") { backStackEntry ->
+                val ticker = backStackEntry.arguments?.getString("ticker") ?: ""
+                com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
+                    ticker = ticker,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

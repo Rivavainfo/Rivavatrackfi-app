@@ -1,0 +1,158 @@
+package com.trackfi.ui.portfolio.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.trackfi.ui.theme.EmeraldGreen
+import com.trackfi.ui.theme.SoftRed
+import com.trackfi.ui.theme.glassMorphism
+
+@Composable
+fun PortfolioMetricsTable(
+    ticker: String,
+    exchange: String,
+    change: String,
+    position: String,
+    avgVolume: String,
+    avgPrice: String,
+    lastPrice: String,
+    costBasis: String,
+    pnl: String,
+    pnlPercent: String,
+    unrealizedPnl: String,
+    isPositive: Boolean
+) {
+    val valueColor = if (isPositive) EmeraldGreen else SoftRed
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .glassMorphism(cornerRadius = 16f, alpha = 0.1f)
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = ticker,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "($exchange)",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MetricRow("Change:", change, valueColor)
+        MetricRow("Position:", position)
+        MetricRow("Avg Volume:", avgVolume)
+        MetricRow("Avg Price:", avgPrice)
+        MetricRow("Last Price:", lastPrice)
+        MetricRow("Cost Basis:", costBasis)
+        MetricRow("P&L:", pnl, valueColor)
+        MetricRow("P&L %:", pnlPercent, valueColor)
+        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor)
+    }
+}
+
+@Composable
+fun MetricRow(label: String, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = valueColor,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
+            )
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+    }
+}
+
+@Composable
+fun CashBalanceSection(usdCash: String, totalCash: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+    ) {
+        Text(
+            text = "Cash Balances",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .glassMorphism(cornerRadius = 16f, alpha = 0.1f)
+                .padding(16.dp)
+        ) {
+            BalanceRow("USD Cash", usdCash)
+            BalanceRow("Total Cash", totalCash, showDivider = false)
+        }
+    }
+}
+
+@Composable
+fun BalanceRow(label: String, value: String, showDivider: Boolean = true) {
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Market Value",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (showDivider) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        }
+    }
+}
