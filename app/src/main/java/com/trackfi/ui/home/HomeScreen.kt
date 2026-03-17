@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Lock
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.trackfi.ui.portfolio.PasswordDialog
+import androidx.compose.material.icons.filled.Person
 
 import com.trackfi.ui.components.PremiumCard
 import com.trackfi.ui.components.SectionHeader
@@ -61,11 +62,15 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.VideoCall
+import androidx.compose.material.icons.filled.Chat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -79,6 +84,8 @@ fun HomeScreen(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showSmsRationaleDialog by remember { mutableStateOf(false) }
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
+    var showVideoCallDialog by remember { mutableStateOf(false) }
+    var showChatDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
@@ -139,17 +146,111 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp),
+                        .padding(bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Rivava+",
-                        style = MaterialTheme.typography.displayLarge.copy( // Using the new One UI displayLarge
-                            color = MaterialTheme.colorScheme.onBackground
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = onNavigateToProfile,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.linearGradient(
+                                        listOf(com.trackfi.ui.theme.PremiumGradientStart, com.trackfi.ui.theme.EmeraldGreen)
+                                    )
+                                )
+                        ) {
+                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                            if (initial.isNotEmpty()) {
+                                Text(
+                                    text = initial,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Color.White
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.Person,
+                                    contentDescription = "Profile",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                text = "Welcome to Rivava+",
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                            Text(
+                                text = "Smart financial insights and portfolio tracking.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "About Rivava",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Rivava provides a unified platform to track, manage, and understand your financial portfolio with advanced analytics and seamless integrations.",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                SectionHeader(title = "Talk to Rivava")
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Schedule a Call",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                            context.startActivity(intent)
+                        },
+                        icon = Icons.Default.Call
+                    )
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Schedule a Video Call",
+                        onClick = { showVideoCallDialog = true },
+                        icon = Icons.Default.VideoCall
+                    )
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Chat with Rivava",
+                        onClick = { showChatDialog = true },
+                        icon = Icons.Default.Chat
                     )
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             if (!isPremiumUser) {
@@ -338,6 +439,87 @@ fun HomeScreen(
                         showAddSheet = true
                     }) {
                         Text("Continue Manually")
+                    }
+                }
+            )
+        }
+
+        if (showVideoCallDialog) {
+            var name by remember { mutableStateOf("") }
+            var preferredTime by remember { mutableStateOf("") }
+            var contactInfo by remember { mutableStateOf("") }
+
+            AlertDialog(
+                onDismissRequest = { showVideoCallDialog = false },
+                title = { Text("Schedule a Video Call") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Fill out the details below to book a consultation.")
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text("Name") },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = preferredTime,
+                            onValueChange = { preferredTime = it },
+                            label = { Text("Preferred Time") },
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = contactInfo,
+                            onValueChange = { contactInfo = it },
+                            label = { Text("Email / Phone") },
+                            singleLine = true
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showVideoCallDialog = false
+                        Toast.makeText(context, "Consultation requested!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text("Submit")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showVideoCallDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showChatDialog) {
+            var message by remember { mutableStateOf("") }
+
+            AlertDialog(
+                onDismissRequest = { showChatDialog = false },
+                title = { Text("Chat with Rivava") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Send us a message and our support team will get back to you.")
+                        OutlinedTextField(
+                            value = message,
+                            onValueChange = { message = it },
+                            label = { Text("Your Message") },
+                            minLines = 3,
+                            maxLines = 5
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showChatDialog = false
+                        Toast.makeText(context, "Message sent!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text("Send")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showChatDialog = false }) {
+                        Text("Cancel")
                     }
                 }
             )

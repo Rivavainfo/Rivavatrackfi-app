@@ -58,6 +58,7 @@ import com.trackfi.ui.onboarding.SmsOptInScreen
 import com.trackfi.ui.onboarding.WelcomeScreen
 import com.trackfi.ui.settings.SettingsScreen
 import com.trackfi.ui.portfolio.RivavaPortfolioScreen
+import com.trackfi.ui.profile.ProfileScreen
 import com.trackfi.ui.theme.TrackFiTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first

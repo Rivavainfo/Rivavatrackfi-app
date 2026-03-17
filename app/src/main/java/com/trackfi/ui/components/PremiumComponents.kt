@@ -18,7 +18,9 @@ import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.theme.PremiumGradientEnd
 import com.trackfi.ui.theme.VibrantRed
+import com.trackfi.ui.theme.bounceClick
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 
 @Composable
 fun PremiumCard(
@@ -119,6 +121,14 @@ fun PortfolioStockCard(
         targetValue = if (isPositive) EmeraldGreen else VibrantRed,
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
     )
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val openUrl: () -> Unit = {
+        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
+        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+        try {
+            uriHandler.openUri(url)
+        } catch (e: Exception) {}
+    }
 
     Card(
         modifier = modifier
@@ -164,16 +174,38 @@ fun PortfolioStockCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = marketPrice,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = percentageChange,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = priceColor
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = marketPrice,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Details",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .size(14.dp)
+                            .bounceClick { openUrl() }
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = percentageChange,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = priceColor
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Details",
+                        tint = priceColor.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .size(12.dp)
+                            .bounceClick { openUrl() }
+                    )
+                }
             }
         }
     }
