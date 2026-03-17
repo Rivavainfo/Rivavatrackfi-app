@@ -115,12 +115,14 @@ fun PortfolioStockCard(
     isPremium: Boolean = true,
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
-    percentageChange: String = "+2.4%"
+    percentageChange: String = "+2.4%",
+    onValueClick: ((String) -> Unit)? = null
 ) {
     val priceColor by androidx.compose.animation.animateColorAsState(
         targetValue = if (isPositive) EmeraldGreen else VibrantRed,
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
     )
+
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
         val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
@@ -174,7 +176,16 @@ fun PortfolioStockCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.bounceClick {
+                        if (onValueClick != null) {
+                            onValueClick("lastPrice")
+                        } else {
+                            openUrl()
+                        }
+                    }
+                ) {
                     Text(
                         text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -185,12 +196,19 @@ fun PortfolioStockCard(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Details",
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(14.dp)
-                            .bounceClick { openUrl() }
+                        modifier = Modifier.size(14.dp)
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.bounceClick {
+                        if (onValueClick != null) {
+                            onValueClick("pnlPercent")
+                        } else {
+                            openUrl()
+                        }
+                    }
+                ) {
                     Text(
                         text = percentageChange,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
@@ -201,9 +219,7 @@ fun PortfolioStockCard(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Details",
                         tint = priceColor.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(12.dp)
-                            .bounceClick { openUrl() }
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }

@@ -17,10 +17,16 @@ import kotlinx.coroutines.delay
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.components.PremiumButton
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.foundation.verticalScroll
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockPortfolioDetailScreen(
     ticker: String,
+    initialFocus: String? = null,
     onBack: () -> Unit
 ) {
     // Mock Data based on ticker
@@ -46,6 +52,8 @@ fun StockPortfolioDetailScreen(
         }
     }
 
+    val scrollState = rememberScrollState()
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -64,56 +72,52 @@ fun StockPortfolioDetailScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(20.dp),
+                .padding(paddingValues)
+                .verticalScroll(scrollState)
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                PortfolioMetricsTable(
-                    ticker = ticker,
-                    exchange = exchange,
-                    change = String.format("%s%.2f", if (isPositive) "+" else "", changeValue),
-                    position = "2.99",
-                    avgVolume = "6.10M",
-                    avgPrice = "119.31",
-                    lastPrice = String.format("%.2f", lastPrice),
-                    costBasis = "356.74",
-                    pnl = String.format("%s%.2f", if (isPositive) "+" else "", pnl),
-                    pnlPercent = String.format("%s%.2f%%", if (isPositive) "+" else "", pnlPercent),
-                    unrealizedPnl = "71.8%",
-                    isPositive = isPositive
-                )
-            }
+            PortfolioMetricsTable(
+                ticker = ticker,
+                exchange = exchange,
+                change = String.format("%s%.2f", if (isPositive) "+" else "", changeValue),
+                position = "2.99",
+                avgVolume = "6.10M",
+                avgPrice = "119.31",
+                lastPrice = String.format("%.2f", lastPrice),
+                costBasis = "356.74",
+                pnl = String.format("%s%.2f", if (isPositive) "+" else "", pnl),
+                pnlPercent = String.format("%s%.2f%%", if (isPositive) "+" else "", pnlPercent),
+                unrealizedPnl = "71.8%",
+                isPositive = isPositive,
+                focusedMetric = initialFocus
+            )
 
-            item {
-                CashBalanceSection(
-                    usdCash = "8.90",
-                    totalCash = "8.90"
-                )
-            }
+            CashBalanceSection(
+                usdCash = "8.90",
+                totalCash = "8.90"
+            )
 
-            item {
-                val uriHandler = LocalUriHandler.current
-                Spacer(modifier = Modifier.height(24.dp))
-                PremiumButton(
-                    text = "View Full Stock Price",
-                    onClick = {
-                        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
-                        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
-                        try {
-                            uriHandler.openUri(url)
-                        } catch (e: Exception) {
-                            // Ignored if browser not found
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.Default.ShowChart
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-            }
+            val uriHandler = LocalUriHandler.current
+            Spacer(modifier = Modifier.height(24.dp))
+            PremiumButton(
+                text = "View Full Stock Price",
+                onClick = {
+                    val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
+                    val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+                    try {
+                        uriHandler.openUri(url)
+                    } catch (e: Exception) {
+                        // Ignored if browser not found
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.Default.ShowChart
+            )
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

@@ -33,7 +33,7 @@ val portfolioItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
+fun RivavaPortfolioScreen(onNavigateToDetail: (ticker: String, focus: String?) -> Unit) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -73,7 +73,10 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
                     companyName = item.companyName,
                     marketPrice = item.marketPrice,
                     isPremium = true,
-                    modifier = Modifier.clickable { onNavigateToDetail(item.ticker) }
+                    onValueClick = { focus ->
+                        onNavigateToDetail(item.ticker, focus)
+                    },
+                    modifier = Modifier.clickable { onNavigateToDetail(item.ticker, null) }
                 )
             }
         }

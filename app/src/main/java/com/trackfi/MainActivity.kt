@@ -45,6 +45,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.core.view.WindowCompat
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
@@ -253,14 +255,26 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.RivavaPortfolio.route) {
-                RivavaPortfolioScreen(onNavigateToDetail = { ticker ->
-                    navController.navigate("${Screen.StockDetail.route}/$ticker")
+                RivavaPortfolioScreen(onNavigateToDetail = { ticker, focus ->
+                    val focusParam = focus ?: "none"
+                    navController.navigate("${Screen.StockDetail.route}/$ticker?focus=$focusParam")
                 })
             }
-            composable("${Screen.StockDetail.route}/{ticker}") { backStackEntry ->
+            composable(
+                route = "${Screen.StockDetail.route}/{ticker}?focus={focus}",
+                arguments = listOf(
+                    navArgument("ticker") { type = NavType.StringType },
+                    navArgument("focus") {
+                        type = NavType.StringType
+                        defaultValue = "none"
+                    }
+                )
+            ) { backStackEntry ->
                 val ticker = backStackEntry.arguments?.getString("ticker") ?: ""
+                val focus = backStackEntry.arguments?.getString("focus")?.takeIf { it != "none" }
                 com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
+                    initialFocus = focus,
                     onBack = { navController.popBackStack() }
                 )
             }
