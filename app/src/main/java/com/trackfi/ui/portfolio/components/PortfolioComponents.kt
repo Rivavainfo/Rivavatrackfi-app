@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material3.Icon
+import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.glassMorphism
@@ -37,6 +41,14 @@ fun PortfolioMetricsTable(
         targetValue = if (isPositive) EmeraldGreen else VibrantRed,
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
     )
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val openUrl: () -> Unit = {
+        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
+        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+        try {
+            uriHandler.openUri(url)
+        } catch (e: Exception) {}
+    }
 
     Column(
         modifier = Modifier
@@ -61,20 +73,25 @@ fun PortfolioMetricsTable(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        MetricRow("Change:", change, valueColor)
-        MetricRow("Position:", position)
-        MetricRow("Avg Volume:", avgVolume)
-        MetricRow("Avg Price:", avgPrice)
-        MetricRow("Last Price:", lastPrice)
-        MetricRow("Cost Basis:", costBasis)
-        MetricRow("P&L:", pnl, valueColor)
-        MetricRow("P&L %:", pnlPercent, valueColor)
-        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor)
+        MetricRow("Change:", change, valueColor, openUrl)
+        MetricRow("Position:", position, onClick = openUrl)
+        MetricRow("Avg Volume:", avgVolume, onClick = openUrl)
+        MetricRow("Avg Price:", avgPrice, onClick = openUrl)
+        MetricRow("Last Price:", lastPrice, onClick = openUrl)
+        MetricRow("Cost Basis:", costBasis, onClick = openUrl)
+        MetricRow("P&L:", pnl, valueColor, openUrl)
+        MetricRow("P&L %:", pnlPercent, valueColor, openUrl)
+        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor, openUrl)
     }
 }
 
 @Composable
-fun MetricRow(label: String, value: String, valueColor: Color = MaterialTheme.colorScheme.onSurface) {
+fun MetricRow(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+    onClick: (() -> Unit)? = null
+) {
     Column {
         Row(
             modifier = Modifier
@@ -88,12 +105,25 @@ fun MetricRow(label: String, value: String, valueColor: Color = MaterialTheme.co
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = valueColor,
-                textAlign = androidx.compose.ui.text.style.TextAlign.End
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = valueColor,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End
+                )
+                if (onClick != null) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Details",
+                        tint = valueColor.copy(alpha = 0.7f),
+                        modifier = Modifier
+                            .size(14.dp)
+                            .bounceClick { onClick() }
+                    )
+                }
+            }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
     }
