@@ -154,7 +154,7 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = "Welcome to Rivava+",
+                                text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
                                 style = MaterialTheme.typography.headlineMedium.copy(
                                     color = MaterialTheme.colorScheme.onBackground,
                                     fontWeight = FontWeight.Bold

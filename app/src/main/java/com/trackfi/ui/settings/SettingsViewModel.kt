@@ -87,6 +87,13 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun logout() {
+        viewModelScope.launch {
+            preferencesRepository.setOnboardingCompleted(false)
+            preferencesRepository.saveUserName("")
+        }
+    }
+
     fun clearAllData() {
         viewModelScope.launch {
             preferencesRepository.clearAllData()

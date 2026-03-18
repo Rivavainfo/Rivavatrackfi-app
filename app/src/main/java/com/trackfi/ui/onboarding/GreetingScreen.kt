@@ -27,6 +27,7 @@ fun GreetingScreen(
         delay(300)
         isVisible = true
         delay(2500)
+        viewModel.completeOnboarding()
         onNavigateNext()
     }
 
