@@ -1,5 +1,6 @@
 package com.trackfi.di
 
+import com.trackfi.domain.api.CryptoApiService
 import com.trackfi.domain.api.StockApiService
 import dagger.Module
 import dagger.Provides
@@ -9,6 +10,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -26,7 +28,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    @Named("finnhub")
+    fun provideFinnhubRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://finnhub.io/")
             .client(okHttpClient)
@@ -36,7 +39,24 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideStockApiService(retrofit: Retrofit): StockApiService {
+    @Named("coingecko")
+    fun provideCoinGeckoRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.coingecko.com/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStockApiService(@Named("finnhub") retrofit: Retrofit): StockApiService {
         return retrofit.create(StockApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCryptoApiService(@Named("coingecko") retrofit: Retrofit): CryptoApiService {
+        return retrofit.create(CryptoApiService::class.java)
     }
 }

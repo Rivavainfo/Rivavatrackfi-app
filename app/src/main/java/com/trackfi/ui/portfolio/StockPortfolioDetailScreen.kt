@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +54,12 @@ fun StockPortfolioDetailScreen(
 
     val scrollState = rememberScrollState()
 
+    val companyProfiles by viewModel.companyProfiles.collectAsState()
+    val companyNews by viewModel.companyNews.collectAsState()
+
+    val profile = companyProfiles[ticker]?.profile
+    val newsList = companyNews[ticker] ?: emptyList()
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -79,6 +86,33 @@ fun StockPortfolioDetailScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (profile != null) {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    if (!profile.logo.isNullOrBlank()) {
+                        coil.compose.AsyncImage(
+                            model = profile.logo,
+                            contentDescription = profile.name,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
+                    Column {
+                        Text(
+                            text = profile.name ?: ticker,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = profile.finnhubIndustry ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
             PortfolioMetricsTable(
                 ticker = ticker,
                 exchange = exchange,
@@ -102,6 +136,17 @@ fun StockPortfolioDetailScreen(
                 usdCash = "8.90",
                 totalCash = "8.90"
             )
+
+            if (newsList.isNotEmpty()) {
+                com.trackfi.ui.components.SectionHeader(title = "Company News")
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(newsList.size) { index ->
+                        NewsCard(news = newsList[index])
+                    }
+                }
+            }
 
             val uriHandler = LocalUriHandler.current
             Spacer(modifier = Modifier.height(24.dp))

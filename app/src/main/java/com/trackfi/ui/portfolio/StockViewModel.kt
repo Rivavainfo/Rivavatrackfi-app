@@ -2,6 +2,8 @@ package com.trackfi.ui.portfolio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trackfi.domain.api.FinnhubCompanyProfileResponse
+import com.trackfi.domain.api.FinnhubNewsResponse
 import com.trackfi.domain.api.FinnhubQuoteResponse
 import com.trackfi.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +19,11 @@ data class StockState(
     val error: String? = null
 )
 
+data class CompanyProfileState(
+    val isLoading: Boolean = false,
+    val profile: FinnhubCompanyProfileResponse? = null
+)
+
 @HiltViewModel
 class StockViewModel @Inject constructor(
     private val repository: StockRepository
@@ -25,8 +32,24 @@ class StockViewModel @Inject constructor(
     private val _stockStates = MutableStateFlow<Map<String, StockState>>(emptyMap())
     val stockStates: StateFlow<Map<String, StockState>> = _stockStates
 
+    private val _companyProfiles = MutableStateFlow<Map<String, CompanyProfileState>>(emptyMap())
+    val companyProfiles: StateFlow<Map<String, CompanyProfileState>> = _companyProfiles
+
+    private val _marketNews = MutableStateFlow<List<FinnhubNewsResponse>>(emptyList())
+    val marketNews: StateFlow<List<FinnhubNewsResponse>> = _marketNews
+
+    private val _companyNews = MutableStateFlow<Map<String, List<FinnhubNewsResponse>>>(emptyMap())
+    val companyNews: StateFlow<Map<String, List<FinnhubNewsResponse>>> = _companyNews
+
     fun startPolling(symbols: List<String>) {
         viewModelScope.launch {
+            // Initial one-off fetches for profiles and general news
+            fetchMarketNews()
+            symbols.forEach { symbol ->
+                fetchCompanyProfile(symbol)
+                fetchCompanyNews(symbol)
+            }
+
             while (true) {
                 symbols.forEach { symbol ->
                     _stockStates.value = _stockStates.value.toMutableMap().apply {
@@ -56,6 +79,47 @@ class StockViewModel @Inject constructor(
                     }
                 }
                 delay(15000) // Poll every 15 seconds
+            }
+        }
+    }
+
+    private fun fetchCompanyProfile(symbol: String) {
+        viewModelScope.launch {
+            _companyProfiles.value = _companyProfiles.value.toMutableMap().apply {
+                put(symbol, CompanyProfileState(isLoading = true))
+            }
+            repository.getCompanyProfile(symbol).collect { result ->
+                result.onSuccess { profile ->
+                    _companyProfiles.value = _companyProfiles.value.toMutableMap().apply {
+                        put(symbol, CompanyProfileState(isLoading = false, profile = profile))
+                    }
+                }.onFailure {
+                    _companyProfiles.value = _companyProfiles.value.toMutableMap().apply {
+                        put(symbol, CompanyProfileState(isLoading = false, profile = null))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun fetchMarketNews() {
+        viewModelScope.launch {
+            repository.getMarketNews().collect { result ->
+                result.onSuccess { news ->
+                    _marketNews.value = news
+                }
+            }
+        }
+    }
+
+    private fun fetchCompanyNews(symbol: String) {
+        viewModelScope.launch {
+            repository.getCompanyNews(symbol).collect { result ->
+                result.onSuccess { news ->
+                    _companyNews.value = _companyNews.value.toMutableMap().apply {
+                        put(symbol, news)
+                    }
+                }
             }
         }
     }
