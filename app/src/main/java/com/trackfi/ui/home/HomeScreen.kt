@@ -70,7 +70,8 @@ import androidx.compose.material.icons.filled.Chat
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToTransactionDetail: (Long) -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -345,20 +346,12 @@ fun HomeScreen(
                     ) {
                         TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            selectedTransaction = transaction
+                            onNavigateToTransactionDetail(transaction.id)
                         })
                     }
                 }
             }
         }
-
-        selectedTransaction?.let { transaction ->
-            TransactionDetailsBottomSheet(
-                transaction = transaction,
-                onDismiss = { selectedTransaction = null }
-            )
-        }
-
 
         if (showVideoCallDialog) {
             var name by remember { mutableStateOf("") }

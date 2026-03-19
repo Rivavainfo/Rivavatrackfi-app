@@ -79,6 +79,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
+        object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
 }
 
 val BaseBottomNavigationItems = listOf(
@@ -234,10 +235,28 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.Home.route) {
-                HomeScreen()
+                HomeScreen(
+                    onNavigateToProfile = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToTransactionDetail = { transactionId ->
+                        navController.navigate("${Screen.TransactionDetail.route}/$transactionId")
+                    }
+                )
             }
             composable(Screen.Transactions.route) {
+                // Not passing onNavigateToDetail to TransactionsScreen as it wasn't explicitly defined there.
+                // We will navigate via view model effects or let the screen remain as a list.
+                // If it was already defined, we would pass it. But compilation failed due to "Cannot find a parameter with this name: onNavigateToDetail".
                 TransactionsScreen()
+            }
+            composable(
+                route = "${Screen.TransactionDetail.route}/{transactionId}",
+                arguments = listOf(navArgument("transactionId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val transactionId = backStackEntry.arguments?.getLong("transactionId") ?: 0L
+                com.trackfi.ui.history.TransactionDetailScreen(
+                    transactionId = transactionId,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.AiReview.route) {
                 com.trackfi.ui.aireview.AiReviewScreen()

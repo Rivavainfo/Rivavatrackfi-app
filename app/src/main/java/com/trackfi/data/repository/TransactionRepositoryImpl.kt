@@ -14,6 +14,10 @@ class TransactionRepositoryImpl @Inject constructor(
         return dao.getAllTransactions()
     }
 
+    override fun getTransactionById(id: Long): Flow<TransactionEntity?> {
+        return dao.getTransactionById(id)
+    }
+
     override suspend fun getTransactionsByMerchant(merchantName: String): List<TransactionEntity> {
         return dao.getTransactionsByMerchant(merchantName)
     }

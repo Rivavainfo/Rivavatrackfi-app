@@ -37,6 +37,9 @@ fun PortfolioMetricsTable(
     avgPrice: String,
     lastPrice: String,
     costBasis: String,
+    dayHigh: String,
+    dayLow: String,
+    openPrice: String,
     pnl: String,
     pnlPercent: String,
     unrealizedPnl: String,
@@ -84,6 +87,9 @@ fun PortfolioMetricsTable(
         MetricRow("Avg Volume:", avgVolume, onClick = openUrl, isFocused = focusedMetric == "avgVolume")
         MetricRow("Avg Price:", avgPrice, onClick = openUrl, isFocused = focusedMetric == "avgPrice")
         MetricRow("Last Price:", lastPrice, onClick = openUrl, isFocused = focusedMetric == "lastPrice")
+        MetricRow("Day High:", dayHigh, onClick = openUrl, isFocused = focusedMetric == "dayHigh")
+        MetricRow("Day Low:", dayLow, onClick = openUrl, isFocused = focusedMetric == "dayLow")
+        MetricRow("Open Price:", openPrice, onClick = openUrl, isFocused = focusedMetric == "openPrice")
         MetricRow("Cost Basis:", costBasis, onClick = openUrl, isFocused = focusedMetric == "costBasis")
         MetricRow("P&L:", pnl, valueColor, openUrl, isFocused = focusedMetric == "pnl")
         MetricRow("P&L %:", pnlPercent, valueColor, openUrl, isFocused = focusedMetric == "pnlPercent")

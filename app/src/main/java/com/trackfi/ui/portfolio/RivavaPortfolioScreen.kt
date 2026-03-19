@@ -14,6 +14,11 @@ import com.trackfi.ui.components.PortfolioStockCard
 import com.trackfi.ui.components.SectionHeader
 import com.trackfi.ui.theme.PremiumGradientStart
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import java.util.Locale
 
 data class PortfolioItem(
     val exchange: String,
@@ -33,7 +38,16 @@ val portfolioItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RivavaPortfolioScreen(onNavigateToDetail: (ticker: String, focus: String?) -> Unit) {
+fun RivavaPortfolioScreen(
+    onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
+    viewModel: StockViewModel = hiltViewModel()
+) {
+    val stockStates by viewModel.stockStates.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.startPolling(portfolioItems.map { it.ticker })
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -67,12 +81,29 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (ticker: String, focus: String?) -
             }
 
             items(portfolioItems) { item ->
+                val state = stockStates[item.ticker]
+                val currency = if (item.exchange == "NSE") "₹" else "$"
+
+                // Use live data if available, else fall back to initial static mock string
+                val displayPrice = state?.data?.let {
+                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
+                } ?: item.marketPrice
+
+                val displayChange = state?.data?.let {
+                    val sign = if (it.dp >= 0) "+" else ""
+                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
+                } ?: "+0.00%"
+
+                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+
                 PortfolioStockCard(
                     exchange = item.exchange,
                     ticker = item.ticker,
                     companyName = item.companyName,
-                    marketPrice = item.marketPrice,
+                    marketPrice = displayPrice,
                     isPremium = true,
+                    isPositive = isPositive,
+                    percentageChange = displayChange,
                     onValueClick = { focus ->
                         onNavigateToDetail(item.ticker, focus)
                     },

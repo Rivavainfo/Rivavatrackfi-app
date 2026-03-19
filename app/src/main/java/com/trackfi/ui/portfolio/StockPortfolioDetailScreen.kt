@@ -21,36 +21,35 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.verticalScroll
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockPortfolioDetailScreen(
     ticker: String,
     initialFocus: String? = null,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: StockViewModel = hiltViewModel()
 ) {
-    // Mock Data based on ticker
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
 
-    // States that will simulate real-time updates
-    var lastPrice by remember { mutableStateOf(if (ticker == "RTX") 205.00 else 150.00) }
-    var changeValue by remember { mutableStateOf(if (ticker == "RTX") 1.96 else -1.20) }
-    var pnl by remember { mutableStateOf(if (ticker == "RTX") 5.86 else -2.30) }
-    var pnlPercent by remember { mutableStateOf(if (ticker == "RTX") 0.95 else -0.40) }
+    val stockStates by viewModel.stockStates.collectAsState()
+
+    LaunchedEffect(ticker) {
+        viewModel.startPolling(listOf(ticker))
+    }
+
+    val stockData = stockStates[ticker]?.data
+
+    val lastPrice = stockData?.c ?: (if (ticker == "RTX") 205.00 else 150.00)
+    val changeValue = stockData?.d ?: (if (ticker == "RTX") 1.96 else -1.20)
+    val pnlPercent = stockData?.dp ?: (if (ticker == "RTX") 0.95 else -0.40)
+    val dayHigh = stockData?.h ?: (lastPrice + 5.0)
+    val dayLow = stockData?.l ?: (lastPrice - 5.0)
+    val openPrice = stockData?.o ?: lastPrice
 
     val isPositive = changeValue >= 0
-
-    // Simulate 10-15 second updates
-    LaunchedEffect(ticker) {
-        while (true) {
-            delay(12000)
-            val fluctuation = (Math.random() - 0.5) * 2.0 // Random value between -1.0 and 1.0
-            lastPrice += fluctuation
-            changeValue += fluctuation
-            pnl += fluctuation * 2
-            pnlPercent += fluctuation * 0.1
-        }
-    }
+    val pnl = changeValue * 2.99 // Simulated position P&L
 
     val scrollState = rememberScrollState()
 
@@ -88,6 +87,9 @@ fun StockPortfolioDetailScreen(
                 avgVolume = "6.10M",
                 avgPrice = "119.31",
                 lastPrice = String.format("%.2f", lastPrice),
+                dayHigh = String.format("%.2f", dayHigh),
+                dayLow = String.format("%.2f", dayLow),
+                openPrice = String.format("%.2f", openPrice),
                 costBasis = "356.74",
                 pnl = String.format("%s%.2f", if (isPositive) "+" else "", pnl),
                 pnlPercent = String.format("%s%.2f%%", if (isPositive) "+" else "", pnlPercent),
