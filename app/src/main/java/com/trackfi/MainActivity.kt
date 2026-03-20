@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -47,6 +48,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
@@ -175,28 +181,32 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
             modifier = Modifier.padding(paddingValues),
             enterTransition = {
-                androidx.compose.animation.slideInHorizontally(
-                    initialOffsetX = { it },
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleIn(
+                    initialScale = 0.95f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             exitTransition = {
-                androidx.compose.animation.slideOutHorizontally(
-                    targetOffsetX = { -it / 3 },
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleOut(
+                    targetScale = 1.05f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             popEnterTransition = {
-                androidx.compose.animation.slideInHorizontally(
-                    initialOffsetX = { -it / 3 },
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleIn(
+                    initialScale = 1.05f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             popExitTransition = {
-                androidx.compose.animation.slideOutHorizontally(
-                    targetOffsetX = { it },
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleOut(
+                    targetScale = 0.95f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             }
         ) {
             composable(Screen.Welcome.route) {
@@ -307,48 +317,57 @@ fun CustomBottomNavItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1f,
-        animationSpec = tween(300),
-        label = "iconScale"
+    val haptic = LocalHapticFeedback.current
+
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent,
+        animationSpec = tween(durationMillis = 300),
+        label = "containerColor"
     )
 
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(300),
         label = "iconColor"
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
-            .bounceClick { onClick() }
-            .padding(8.dp)
+            .clip(CircleShape)
+            .background(containerColor)
+            .selectable(
+                selected = isSelected,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true)
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = screen.icon,
-            contentDescription = screen.title,
-            tint = iconColor,
-            modifier = Modifier
-                .size(26.dp)
-                .scale(scale)
-        )
-        AnimatedVisibility(visible = isSelected) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = screen.title,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = screen.icon,
+                contentDescription = screen.title,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp)
+            )
+            AnimatedVisibility(visible = isSelected) {
+                Row {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = screen.title,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                        color = iconColor,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                }
             }
         }
     }
