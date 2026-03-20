@@ -65,6 +65,7 @@ import androidx.core.app.ActivityCompat
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Notifications
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -146,111 +147,357 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 32.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = onNavigateToProfile,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    androidx.compose.ui.graphics.Brush.linearGradient(
-                                        listOf(com.trackfi.ui.theme.PremiumGradientStart, com.trackfi.ui.theme.EmeraldGreen)
+                    IconButton(
+                        onClick = onNavigateToProfile,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                    ) {
+                        val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                        if (initial.isNotEmpty()) {
+                            Text(
+                                text = initial,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "RIVAVA+",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                    IconButton(onClick = { }) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            item {
+                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
+                    Text(
+                        text = "PREMIUM WEALTH MANAGEMENT",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Welcome to Rivava+",
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Your exclusive gateway to institutional-grade wealth strategies and personalized financial growth.",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                }
+            }
+
+            item {
+                // Bento Grid
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // About Rivava Card
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = "About",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "About Rivava",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
                                     )
                                 )
-                        ) {
-                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                            if (initial.isNotEmpty()) {
-                                Text(
-                                    text = initial,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Empowering your wealth journey through sophisticated analytics and bespoke investment curation. At Rivava.in, we blend technology with human expertise to redefine financial liberation.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 24.sp
                                 )
-                            } else {
-                                Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = Color.White
-                                )
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                        .padding(16.dp)
+                                ) {
+                                    Text("01", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
+                                    Text("CURATION", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                                }
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                        .padding(16.dp)
+                                ) {
+                                    Text("02", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = com.trackfi.ui.theme.EmeraldGreen))
+                                    Text("GROWTH", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                                }
                             }
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = "Welcome to Rivava+",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold
+                    }
+
+                    // Wealth Card
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                        colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.3f), com.trackfi.ui.theme.DeepBlueVariant.copy(alpha = 0.6f))
+                                    )
                                 )
-                            )
-                            Text(
-                                text = "Smart financial insights and portfolio tracking.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                .padding(24.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "PORTFOLIO VALUE",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        color = Color.White.copy(alpha = 0.8f),
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 )
-                            )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "₹1,24,50,000",
+                                    style = MaterialTheme.typography.headlineLarge.copy(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.Star, contentDescription = "Trending", tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("+12.4% this year", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                                }
+                                Spacer(modifier = Modifier.height(32.dp))
+                                Button(
+                                    onClick = { },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
+                                    shape = RoundedCornerShape(50)
+                                ) {
+                                    Text("Manage Wealth", fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
             }
 
             item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Support Concierge",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                                context.startActivity(intent)
+                            }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Call, contentDescription = "Call", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Schedule a Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("+91-9044761170", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { showVideoCallDialog = true }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.VideoCall, contentDescription = "Video Call", tint = com.trackfi.ui.theme.EmeraldGreen)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Video Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("Expert Consultation", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { showChatDialog = true }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .background(com.trackfi.ui.theme.LightPink.copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Chat, contentDescription = "Chat", tint = com.trackfi.ui.theme.LightPink)
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Live Chat", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("Instant Assistance", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
                         .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            text = "About Rivava",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Rivava provides a unified platform to track, manage, and understand your financial portfolio with advanced analytics and seamless integrations.",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Latest Insights", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Curated market analysis for your investment profile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        // Insight 1
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = "Insight", tint = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("MARKET ANALYSIS", style = MaterialTheme.typography.labelSmall.copy(color = com.trackfi.ui.theme.EmeraldGreen, fontWeight = FontWeight.Bold))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("The Shift in Emerging Tech Hubs for 2024", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Understanding the fiscal dynamics...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Insight 2
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .background(com.trackfi.ui.theme.LightPink.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Star, contentDescription = "Insight", tint = com.trackfi.ui.theme.LightPink)
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("WEALTH STRATEGY", style = MaterialTheme.typography.labelSmall.copy(color = com.trackfi.ui.theme.LightPink, fontWeight = FontWeight.Bold))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Tax Harvesting Strategies for High Net-Worth Individuals", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Optimizing your post-tax returns...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Talk to Rivava")
-
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    com.trackfi.ui.components.PremiumButton(
-                        text = "Schedule a Call",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
-                            context.startActivity(intent)
-                        },
-                        icon = Icons.Default.Call
-                    )
-                    com.trackfi.ui.components.PremiumButton(
-                        text = "Schedule a Video Call",
-                        onClick = { showVideoCallDialog = true },
-                        icon = Icons.Default.VideoCall
-                    )
-                    com.trackfi.ui.components.PremiumButton(
-                        text = "Chat with Rivava",
-                        onClick = { showChatDialog = true },
-                        icon = Icons.Default.Chat
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
             if (!isPremiumUser) {
