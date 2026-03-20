@@ -10,10 +10,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 import com.trackfi.ui.components.PortfolioStockCard
 import com.trackfi.ui.components.SectionHeader
 import com.trackfi.ui.theme.PremiumGradientStart
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 
 data class PortfolioItem(
     val exchange: String,
@@ -27,43 +33,75 @@ data class PortfolioItem(
 val portfolioItems = listOf(
     PortfolioItem("NSE", "HAL", "Hindustan Aeronautics Ltd", "₹3,995.00"),
     PortfolioItem("NSE", "TATAMOTORS", "Tata Motors (PV/CV)", "₹335.35"),
-    PortfolioItem("NYSE", "RTX", "RTX Corporation", "$207.00"),
-    PortfolioItem("NYSE", "WMT", "Walmart Inc.", "$125.12")
+    PortfolioItem("Nasdaq 100", "RTX", "RTX Corporation", "$207.00"),
+    PortfolioItem("Nasdaq 100", "WMT", "Walmart Inc.", "$125.12")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text("Rivava Portfolio") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PremiumGradientStart.copy(alpha = 0.1f),
-                    titleContentColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(20.dp),
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Top Navigation Anchor
             item {
-                SectionHeader(
-                    title = "Market Overview"
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "RIVAVA+",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        )
+                    }
+                    IconButton(onClick = { }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    text = "Rivava Portfolio",
+                    style = MaterialTheme.typography.displaySmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 )
                 Text(
                     text = "Strictly For Educational Purposes",
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
                         color = com.trackfi.ui.theme.LightPink
-                    )
+                    ),
+                    modifier = Modifier.padding(top = 8.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
             items(portfolioItems) { item ->

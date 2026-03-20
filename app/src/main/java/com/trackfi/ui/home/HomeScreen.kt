@@ -66,6 +66,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Star
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
