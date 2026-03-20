@@ -132,11 +132,29 @@ fun PortfolioStockCard(
         } catch (e: Exception) {}
     }
 
-    Card(
-        modifier = modifier
+    val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+    val cardModifier = if (isNyse) {
+        modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f),
+            .background(Color(0xFF121212)) // Dark/Black background for NYSE
+    } else {
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f)
+    }
+
+    val exchangeBgColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.primary // Gold for NYSE
+    val exchangeTextColor = if (isNyse) Color.Black else MaterialTheme.colorScheme.onPrimary
+
+    val tickerColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
+    val companyNameColor = if (isNyse) Color(0xFFB0B0B0) else MaterialTheme.colorScheme.onSurfaceVariant
+    val priceTextColor = if (isNyse) Color.White else MaterialTheme.colorScheme.onSurface
+
+    Card(
+        modifier = cardModifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isPremium) 4.dp else 0.dp)
@@ -152,10 +170,10 @@ fun PortfolioStockCard(
                 Text(
                     text = exchange,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = exchangeTextColor,
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = exchangeBgColor,
                             shape = RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -165,12 +183,12 @@ fun PortfolioStockCard(
                     Text(
                         text = ticker,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = tickerColor
                     )
                     Text(
                         text = companyName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = companyNameColor
                     )
                 }
             }
@@ -189,13 +207,13 @@ fun PortfolioStockCard(
                     Text(
                         text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = priceTextColor
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Details",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        tint = exchangeBgColor.copy(alpha = 0.7f),
                         modifier = Modifier.size(14.dp)
                     )
                 }
