@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.github.mikephil.charting.charts.BarChart
@@ -26,6 +27,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.trackfi.data.local.TransactionEntity
 import com.trackfi.ui.theme.bounceClick
+import com.trackfi.ui.theme.glassMorphism
 import com.trackfi.domain.usecase.FinancialSummaryState
 import java.util.Calendar
 import java.util.Locale
@@ -41,6 +43,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun AnalyticsScreen(
@@ -56,11 +62,48 @@ fun AnalyticsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 60.dp)
+            .padding(top = 24.dp)
     ) {
+        // Top Navigation Anchor
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "RIVAVA+",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                )
+            }
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
         Text(
             text = "Analytics",
-            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.onBackground)
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            ),
+            modifier = Modifier.padding(horizontal = 24.dp)
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -78,35 +121,39 @@ fun AnalyticsScreen(
             is AnalyticsUiState.Success -> {
                 // Toggles for charts
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChip(
                         selected = selectedChartView == "Weekly",
                         onClick = { selectedChartView = "Weekly" },
-                        label = { Text("Weekly") }
+                        label = { Text("Weekly") },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), selectedLabelColor = MaterialTheme.colorScheme.primary)
                     )
                     FilterChip(
                         selected = selectedChartView == "Monthly",
                         onClick = { selectedChartView = "Monthly" },
-                        label = { Text("Monthly") }
+                        label = { Text("Monthly") },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), selectedLabelColor = MaterialTheme.colorScheme.primary)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     FilterChip(
                         selected = selectedChartType == "Bar",
                         onClick = { selectedChartType = "Bar" },
-                        label = { Text("Bar") }
+                        label = { Text("Bar") },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.2f), selectedLabelColor = com.trackfi.ui.theme.EmeraldGreen)
                     )
                     FilterChip(
                         selected = selectedChartType == "Line",
                         onClick = { selectedChartType = "Line" },
-                        label = { Text("Line") }
+                        label = { Text("Line") },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.2f), selectedLabelColor = com.trackfi.ui.theme.EmeraldGreen)
                     )
                 }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(bottom = 120.dp),
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     item {
@@ -140,10 +187,11 @@ fun AnimatedChartCard(transactions: List<TransactionEntity>, viewMode: String, c
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .bounceClick { expanded = !expanded }
-            .shadow(6.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
+            .bounceClick { expanded = !expanded },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column(
             modifier = Modifier.padding(20.dp)
@@ -312,12 +360,13 @@ fun SubscriptionTrackerCard(transactions: List<TransactionEntity>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .bounceClick { expanded = !expanded }
-            .shadow(6.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
+            .bounceClick { expanded = !expanded },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(24.dp)) {
             Text(
                 text = "Active Subscriptions",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -377,13 +426,14 @@ fun CategoryBreakdown(transactions: List<TransactionEntity>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .bounceClick { expanded = !expanded }
-            .shadow(6.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
+            .bounceClick { expanded = !expanded },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(24.dp)
         ) {
             Text(
                 text = "Breakdown by Category",

@@ -26,10 +26,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackfi.data.local.TransactionEntity
 import com.trackfi.ui.theme.bounceClick
+import com.trackfi.ui.theme.glassMorphism
 import com.trackfi.ui.home.TransactionDetailsBottomSheet
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -48,12 +52,45 @@ fun TransactionsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(top = 60.dp)
+            .padding(top = 24.dp)
     ) {
+        // Top Navigation Anchor
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "RIVAVA+",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                )
+            }
+            IconButton(onClick = { }) {
+                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -70,7 +107,7 @@ fun TransactionsScreen(
                     Icon(
                         imageVector = Icons.Default.Sort,
                         contentDescription = "Sort",
-                        tint = MaterialTheme.colorScheme.onBackground
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 DropdownMenu(
@@ -78,42 +115,42 @@ fun TransactionsScreen(
                     onDismissRequest = { sortMenuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Date (Newest)") },
+                        text = { Text("Date (Newest)" + if (sortOrder == SortOrder.DATE_DESC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.DATE_DESC)
                             sortMenuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Date (Oldest)") },
+                        text = { Text("Date (Oldest)" + if (sortOrder == SortOrder.DATE_ASC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.DATE_ASC)
                             sortMenuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Amount (High)") },
+                        text = { Text("Amount (High)" + if (sortOrder == SortOrder.AMOUNT_DESC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.AMOUNT_DESC)
                             sortMenuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Amount (Low)") },
+                        text = { Text("Amount (Low)" + if (sortOrder == SortOrder.AMOUNT_ASC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.AMOUNT_ASC)
                             sortMenuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Merchant") },
+                        text = { Text("Merchant" + if (sortOrder == SortOrder.MERCHANT_ASC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.MERCHANT_ASC)
                             sortMenuExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Category") },
+                        text = { Text("Category" + if (sortOrder == SortOrder.CATEGORY_ASC) " ✓" else "") },
                         onClick = {
                             viewModel.onSortOrderChanged(SortOrder.CATEGORY_ASC)
                             sortMenuExpanded = false
@@ -130,21 +167,22 @@ fun TransactionsScreen(
             onValueChange = { viewModel.onSearchQueryChanged(it) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            placeholder = { Text("Search merchants, categories, amounts...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
+                .padding(horizontal = 24.dp),
+            placeholder = { Text("Search merchants, categories, amounts...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon", tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+                        Icon(Icons.Default.Clear, contentDescription = "Clear Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             },
             shape = RoundedCornerShape(24.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = MaterialTheme.colorScheme.primary
             ),
             singleLine = true
         )
@@ -319,15 +357,16 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
     androidx.compose.material3.Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = 4.dp)
             .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
             .bounceClick { onClick() }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Row(
             modifier = Modifier
