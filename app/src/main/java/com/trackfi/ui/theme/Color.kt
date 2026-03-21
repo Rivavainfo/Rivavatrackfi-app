@@ -15,3 +15,9 @@ val OnDarkSurfaceVariant = Color(0xFFA0A4B8)
 
 val PremiumGradientStart = Color(0xFF0B3D91)
 val PremiumGradientEnd = Color(0xFF04193F)
+
+val WelcomePrimaryLightBlue = Color(0xFF98CBFF)
+val WelcomePrimaryContainer = Color(0xFF00A3FF)
+val WelcomeSurfaceContainerLow = Color(0xFF1B1B1B)
+val WelcomeSurfaceContainerHighest = Color(0xFF353535)
+val WelcomeSecondaryPink = Color(0xFFFFAEDB)
