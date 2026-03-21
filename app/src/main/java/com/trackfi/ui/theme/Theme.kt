@@ -11,30 +11,39 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 val StandardColorScheme = darkColorScheme(
-    primary = DeepBlue,
-    secondary = EmeraldGreen,
-    onPrimary = OnDarkSurface,
-    background = AmoledBlack,
+    primary = PrimarySky,
+    primaryContainer = PrimaryContainer,
+    secondary = SecondaryPink,
+    secondaryContainer = SecondaryContainer,
+    tertiary = TertiaryEmerald,
+    onPrimary = SurfaceContainerLow, // Use dark for text on primary
+    background = SurfaceDark,
     onBackground = OnDarkSurface,
-    surface = DarkSurface,
+    surface = SurfaceContainerLow,
     onSurface = OnDarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
+    surfaceVariant = SurfaceVariant,
     onSurfaceVariant = OnDarkSurfaceVariant,
-    error = VibrantRed
+    error = ErrorRed,
+    errorContainer = ErrorContainer,
+    outlineVariant = OutlineVariant
 )
 
 val PremiumColorScheme = darkColorScheme(
-    primary = DeepBlueVariant,
-    secondary = EmeraldGreen,
-    tertiary = LightPink,
-    onPrimary = OnDarkSurface,
-    background = AmoledBlack,
+    primary = PrimarySky,
+    primaryContainer = PrimaryContainer,
+    secondary = SecondaryPink,
+    secondaryContainer = SecondaryContainer,
+    tertiary = TertiaryEmerald,
+    onPrimary = SurfaceContainerLow,
+    background = SurfaceDark,
     onBackground = OnDarkSurface,
-    surface = DarkSurface,
+    surface = SurfaceContainerLow,
     onSurface = OnDarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
+    surfaceVariant = SurfaceVariant,
     onSurfaceVariant = OnDarkSurfaceVariant,
-    error = VibrantRed
+    error = ErrorRed,
+    errorContainer = ErrorContainer,
+    outlineVariant = OutlineVariant
 )
 
 @Composable
@@ -42,6 +51,7 @@ fun TrackFiTheme(
     isPremium: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    // Both are identical for the new unified theme, leaving structure for future premium-only features.
     val colorScheme = if (isPremium) PremiumColorScheme else StandardColorScheme
 
     val view = LocalView.current

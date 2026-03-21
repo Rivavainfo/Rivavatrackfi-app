@@ -37,6 +37,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.glassMorphism
@@ -74,7 +75,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
     object Analytics : Screen("analytics", "Insights", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
-    object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
+    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
 }
@@ -128,19 +129,18 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     Scaffold(
         bottomBar = {
             if (isBottomBarVisible) {
-                Box(
+                Surface(
+                    color = androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.8f),
+                    shape = RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
-                        .background(androidx.compose.ui.graphics.Color.Transparent)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.2f)
                             .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         bottomNavigationItems.forEach { screen ->
@@ -275,48 +275,44 @@ fun CustomBottomNavItem(
     onClick: () -> Unit
 ) {
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1f,
-        animationSpec = tween(300),
+        targetValue = if (isSelected) 0.9f else 1f,
+        animationSpec = tween(200),
         label = "iconScale"
     )
 
-    val iconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(300),
-        label = "iconColor"
-    )
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+    val bgColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else androidx.compose.ui.graphics.Color.Transparent
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(bgColor)
             .bounceClick { onClick() }
-            .padding(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .scale(scale),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = screen.icon,
-            contentDescription = screen.title,
-            tint = iconColor,
-            modifier = Modifier
-                .size(26.dp)
-                .scale(scale)
-        )
-        AnimatedVisibility(visible = isSelected) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = screen.title,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                )
-            }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = screen.icon,
+                contentDescription = screen.title,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = screen.title.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    letterSpacing = 1.sp,
+                    fontSize = 10.sp
+                ),
+                color = contentColor,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
