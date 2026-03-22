@@ -224,13 +224,14 @@ fun AnalyticsScreen(
                     Button(
                         onClick = { viewModel.syncMockData() },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            containerColor = Color(0xFF00A3FF),
+                            contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
+                        contentPadding = PaddingValues(horizontal = 48.dp, vertical = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
                     ) {
-                        Text("Sync Transactions", fontWeight = FontWeight.Bold)
+                        Text("Sync Transactions", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

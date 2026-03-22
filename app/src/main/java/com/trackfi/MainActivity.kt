@@ -169,7 +169,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         NavHost(
             navController = navController,
             startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.padding(bottom = 0.dp), // Fixes the extra space at the bottom/top
             enterTransition = {
                 androidx.compose.animation.slideInHorizontally(
                     initialOffsetX = { it },
