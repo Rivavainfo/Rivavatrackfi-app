@@ -101,11 +101,14 @@ class MainActivity : ComponentActivity() {
         val hasCompletedOnboarding = runBlocking {
             preferencesRepository.hasCompletedOnboardingFlow.first()
         }
+        val existingName = runBlocking {
+            preferencesRepository.userNameFlow.first()
+        }
 
         setContent {
             val isPremiumUser = preferencesRepository.isPremiumUserFlow.collectAsState(initial = false).value
             TrackFiTheme(isPremium = isPremiumUser) {
-                TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
+                TrackFiAppContent(hasCompletedOnboarding || !existingName.isNullOrBlank(), preferencesRepository)
             }
         }
     }

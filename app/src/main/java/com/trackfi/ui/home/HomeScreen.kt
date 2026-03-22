@@ -45,6 +45,10 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.Star
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.ArrowForwardIos
+
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -70,6 +74,10 @@ import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Star
+import coil.compose.rememberAsyncImagePainter
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.ArrowForwardIos
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,7 +155,7 @@ fun HomeScreen(
         ) {
             // TopAppBar
             Surface(
-                color = MaterialTheme.colorScheme.surface,
+                color = Color(0xFF131313),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -165,32 +173,18 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                 .clickable { onNavigateToProfile() },
                             contentAlignment = Alignment.Center
                         ) {
-                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                            if (initial.isNotEmpty()) {
-                                Text(
-                                    text = initial,
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            androidx.compose.foundation.Image(painter = rememberAsyncImagePainter("https://lh3.googleusercontent.com/aida-public/AB6AXuBBjANjvVTJAwCuIEzqpOGqmarYPRvZnQVkQJx54L43CqAUi_pc4O7sZDw5K8TGWaP5nI0kTE-mwudhufM9oyOzq6elZlmiD9M_p_5NcUsiLbuYSlrGUtYfQMmEX4uhpJ6TjZ0AMeTLoB2Q6yFXMBCnKAlFU8ZV8HAQ17koJO4T757BC7tfQKeunLSHhoWynDL9ar6xFSX3l5Ajo8KvoN0QgWwTG98l4l0AgFZWF_RjkO2weIX9mBbGBSVMee-b2n9sszX-mgaeCt7u"), contentDescription = "User Avatar", contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = Modifier.fillMaxSize())
                         }
                     }
                     Text(
                         text = "Rivava",
-                        style = MaterialTheme.typography.headlineMedium.copy(
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = Color(0xFF38bdf8)
                         )
                     )
                     IconButton(
@@ -211,21 +205,13 @@ fun HomeScreen(
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 120.dp),
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 // Premium Portfolio Card
                 item {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                    colors = listOf(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.colorScheme.surface)
-                                )
-                            )
-                            .bounceClick {
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(brush = androidx.compose.ui.graphics.Brush.linearGradient(colors = listOf(Color(0xFF2A2A2A), Color(0xFF1B1B1B)))).border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)).bounceClick {
                                 if (!isPremiumUser) {
                                     showPasswordDialog = true
                                 }
@@ -287,11 +273,13 @@ fun HomeScreen(
                                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                                     ),
-                                    shape = RoundedCornerShape(50)
+                                    shape = RoundedCornerShape(50),
+                                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
                                 ) {
                                     Text(
                                         text = if (isPremiumUser) "Manage" else "Unlock Now",
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelLarge
                                     )
                                 }
                             }
@@ -327,8 +315,8 @@ fun HomeScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(200.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -428,8 +416,8 @@ fun HomeScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(200.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -496,52 +484,7 @@ fun HomeScreen(
                     }
                 }
 
-            item {
-                // Bento Grid
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // About Rivava Card
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(MaterialTheme.colorScheme.surface),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text(
-                                text = "Empowering your wealth journey through sophisticated analytics and bespoke investment curation. At Rivava.in, we blend technology with human expertise to redefine financial liberation.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 24.sp
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-                                        .padding(16.dp)
-                                ) {
-                                    Text("01", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
-                                    Text("CURATION", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-                                        .padding(16.dp)
-                                ) {
-                                    Text("02", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = com.trackfi.ui.theme.EmeraldGreen))
-                                    Text("GROWTH", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+
 
                 item {
                     Row(
@@ -573,6 +516,110 @@ fun HomeScreen(
                             ),
                             modifier = Modifier.clickable { }
                         )
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Support & Advice",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        )
+                        Text(
+                            text = "We're here to help you grow",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Chat
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
+                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                                .clickable { showChatDialog = true }
+                                .padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Chat, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Chat with Us", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
+                                Text("Instant response from our experts", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                            }
+                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
+
+                        // Call
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
+                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                                .clickable { Toast.makeText(context, "Redirecting...", Toast.LENGTH_SHORT).show() }
+                                .padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Call, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(32.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Schedule Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
+                                Text("Book a 15-minute voice session", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                            }
+                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
+
+                        // Video
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
+                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                                .clickable { showVideoCallDialog = true }
+                                .padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.VideoCall, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(32.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Schedule Video Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
+                                Text("Deep dive with screen sharing", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                            }
+                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
                     }
                 }
 
