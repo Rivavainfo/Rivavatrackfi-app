@@ -75,8 +75,8 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
     object Analytics : Screen("analytics", "Insights", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
-    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
-    object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
+    object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
+    object RivavaPortfolio : Screen("rivava_portfolio", "Portfolio", Icons.Outlined.AccountBalanceWallet)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
 }
 
@@ -287,7 +287,7 @@ fun CustomBottomNavItem(
             .clip(RoundedCornerShape(16.dp))
             .background(bgColor)
             .bounceClick { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .scale(scale),
         contentAlignment = Alignment.Center
     ) {
@@ -299,18 +299,20 @@ fun CustomBottomNavItem(
                 imageVector = screen.icon,
                 contentDescription = screen.title,
                 tint = contentColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = screen.title.uppercase(),
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                    letterSpacing = 1.sp,
-                    fontSize = 10.sp
+                    letterSpacing = 0.5.sp,
+                    fontSize = 9.sp
                 ),
                 color = contentColor,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

@@ -165,7 +165,8 @@ fun HomeScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { onNavigateToProfile() },
                             contentAlignment = Alignment.Center
                         ) {
                             val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
