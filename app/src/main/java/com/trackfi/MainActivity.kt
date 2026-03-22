@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
@@ -99,31 +98,21 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        val hasCompletedOnboarding = runBlocking {
+            preferencesRepository.hasCompletedOnboardingFlow.first()
+        }
+
         setContent {
             val isPremiumUser = preferencesRepository.isPremiumUserFlow.collectAsState(initial = false).value
-            var isLoading by remember { mutableStateOf(true) }
-            var startDestination by remember { mutableStateOf<String?>(null) }
-
-            LaunchedEffect(Unit) {
-                val hasCompletedOnboarding = preferencesRepository.hasCompletedOnboardingFlow.first()
-                val existingName = preferencesRepository.userNameFlow.first()
-                startDestination = if (hasCompletedOnboarding || !existingName.isNullOrBlank()) Screen.Home.route else Screen.Welcome.route
-                isLoading = false
-            }
-
-            if (!isLoading && startDestination != null) {
-                TrackFiTheme(isPremium = isPremiumUser) {
-                    TrackFiAppContent(startDestination!!, preferencesRepository)
-                }
-            } else {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {}
+            TrackFiTheme(isPremium = isPremiumUser) {
+                TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
             }
         }
     }
 }
 
 @Composable
-fun TrackFiAppContent(startDestination: String, preferencesRepository: UserPreferencesRepository? = null) {
+fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: UserPreferencesRepository? = null) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -179,7 +168,7 @@ fun TrackFiAppContent(startDestination: String, preferencesRepository: UserPrefe
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = startDestination,
+            startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
             modifier = Modifier.padding(paddingValues),
             enterTransition = {
                 androidx.compose.animation.slideInHorizontally(
