@@ -222,7 +222,7 @@ fun AnalyticsScreen(
                     )
                     Spacer(modifier = Modifier.height(40.dp))
                     Button(
-                        onClick = { },
+                        onClick = { viewModel.syncMockData() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -231,28 +231,6 @@ fun AnalyticsScreen(
                         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp)
                     ) {
                         Text("Sync Transactions", fontWeight = FontWeight.Bold)
-                    }
-
-                    // Asymmetric Hint Cards
-                    Spacer(modifier = Modifier.height(48.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).alpha(0.5f),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Card(
-                            modifier = Modifier.weight(1f).height(100.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)))
-                        }
-                        Card(
-                            modifier = Modifier.weight(1f).height(100.dp).padding(top = 16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)))
-                        }
                     }
                 }
             }

@@ -24,26 +24,51 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 
 data class PortfolioItem(
     val exchange: String,
     val ticker: String,
     val companyName: String,
-    val marketPrice: String,
+    val marketPrice: Double,
+    val prefix: String = "",
     val purchasePrice: String = "—",
-    val date: String = "—"
+    val date: String = "—",
+    val change: Double = 2.4
 )
 
-val portfolioItems = listOf(
-    PortfolioItem("NSE", "HAL", "Hindustan Aeronautics Ltd", "₹3,995.00"),
-    PortfolioItem("NSE", "TATAMOTORS", "Tata Motors (PV/CV)", "₹335.35"),
-    PortfolioItem("Nasdaq 100", "RTX", "RTX Corporation", "$207.00"),
-    PortfolioItem("Nasdaq 100", "WMT", "Walmart Inc.", "$125.12")
+val initialPortfolioItems = listOf(
+    PortfolioItem("NSE", "HAL", "Hindustan Aeronautics Ltd", 3995.00, "₹"),
+    PortfolioItem("NSE", "TATAMOTORS", "Tata Motors (PV/CV)", 335.35, "₹"),
+    PortfolioItem("Nasdaq 100", "RTX", "RTX Corporation", 207.00, "$"),
+    PortfolioItem("Nasdaq 100", "WMT", "Walmart Inc.", 125.12, "$")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    var portfolioItems by remember { mutableStateOf(initialPortfolioItems) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5000)
+            portfolioItems = portfolioItems.map { item ->
+                val fluctuation = (Math.random() - 0.5) * (if (item.marketPrice > 1000) 10.0 else 2.0)
+                item.copy(
+                    marketPrice = item.marketPrice + fluctuation,
+                    change = item.change + (fluctuation * 0.1)
+                )
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -200,12 +225,16 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
                             exchange = item.exchange,
                             ticker = item.ticker,
                             companyName = item.companyName,
-                            marketPrice = item.marketPrice,
+                            marketPrice = "${item.prefix}${String.format(java.util.Locale.getDefault(), "%.2f", item.marketPrice)}",
                             isPremium = false,
+                            isPositive = item.change >= 0,
+                            percentageChange = "${if(item.change >= 0) "+" else ""}${String.format(java.util.Locale.getDefault(), "%.1f", item.change)}%",
                             modifier = Modifier
                                 .padding(bottom = 12.dp)
                                 .clickable {
                                     onNavigateToDetail(item.ticker)
+                                    val url = "https://www.google.com/finance/quote/${item.ticker}:NSE"
+                                    try { uriHandler.openUri(url) } catch (e: Exception) { }
                                 }
                         )
                     }
@@ -228,11 +257,15 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
                             exchange = "NYSE",
                             ticker = item.ticker,
                             companyName = item.companyName,
-                            marketPrice = item.marketPrice,
+                            marketPrice = "${item.prefix}${String.format(java.util.Locale.getDefault(), "%.2f", item.marketPrice)}",
+                            isPositive = item.change >= 0,
+                            percentageChange = "${if(item.change >= 0) "+" else ""}${String.format(java.util.Locale.getDefault(), "%.1f", item.change)}%",
                             modifier = Modifier
                                 .padding(bottom = 12.dp)
                                 .clickable {
                                     onNavigateToDetail(item.ticker)
+                                    val url = "https://www.google.com/finance/quote/${item.ticker}:NYSE"
+                                    try { uriHandler.openUri(url) } catch (e: Exception) { }
                                 }
                         )
                     }
@@ -248,6 +281,8 @@ fun NysePortfolioStockCard(
     ticker: String,
     companyName: String,
     marketPrice: String,
+    isPositive: Boolean = true,
+    percentageChange: String = "+2.4%",
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -299,18 +334,26 @@ fun NysePortfolioStockCard(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Details",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(14.dp)
+                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.ArrowDropUp,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(16.dp)
-                    )
                     Text(
-                        text = "+2.4%",
+                        text = percentageChange,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = if (isPositive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Details",
+                        tint = (if (isPositive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error).copy(alpha = 0.7f),
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }
