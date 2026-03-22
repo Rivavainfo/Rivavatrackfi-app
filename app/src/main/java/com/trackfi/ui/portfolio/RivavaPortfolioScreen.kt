@@ -180,8 +180,9 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
             // ---------------- HEADER ----------------
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         "Market Overview",
@@ -333,13 +334,6 @@ fun NysePortfolioStockCard(
                         text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Details",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        modifier = Modifier.size(14.dp)
                     )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
