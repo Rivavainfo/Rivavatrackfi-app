@@ -210,8 +210,8 @@ fun HomeScreen(
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 32.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(32.dp)
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 // Premium Portfolio Card
                 item {
@@ -503,29 +503,12 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
+                            .background(MaterialTheme.colorScheme.surface),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(24.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "About",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "About Rivava",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Empowering your wealth journey through sophisticated analytics and bespoke investment curation. At Rivava.in, we blend technology with human expertise to redefine financial liberation.",
                                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -538,7 +521,7 @@ fun HomeScreen(
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                                         .padding(16.dp)
                                 ) {
                                     Text("01", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
@@ -547,68 +530,11 @@ fun HomeScreen(
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
                                         .padding(16.dp)
                                 ) {
                                     Text("02", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = com.trackfi.ui.theme.EmeraldGreen))
                                     Text("GROWTH", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                                }
-                            }
-                        }
-                    }
-
-                    // Wealth Card
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp)),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                        colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.3f), com.trackfi.ui.theme.DeepBlueVariant.copy(alpha = 0.6f))
-                                    )
-                                )
-                                .padding(24.dp)
-                        ) {
-                            Column {
-                                Text(
-                                    text = "PORTFOLIO VALUE",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = Color.White.copy(alpha = 0.8f),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "₹1,24,50,000",
-                                    style = MaterialTheme.typography.headlineLarge.copy(
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.Star, contentDescription = "Trending", tint = Color.White, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("+12.4% this year", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                                }
-                                Spacer(modifier = Modifier.height(32.dp))
-                                Button(
-                                    onClick = { },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Text("Manage Wealth", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
