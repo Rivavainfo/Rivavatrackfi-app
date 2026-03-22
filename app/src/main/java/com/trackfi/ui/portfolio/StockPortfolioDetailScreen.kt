@@ -27,37 +27,6 @@ import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.QueryStats
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Insights
-import androidx.compose.material.icons.filled.Settings
-
-@Composable
-fun StatRow(label: String, value: String, valueColor: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-            color = Color(0xFFBEC7D4) // on-surface-variant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = valueColor
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +35,7 @@ fun StockPortfolioDetailScreen(
     onBack: () -> Unit
 ) {
     // Mock Data based on ticker
-    val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
+    val exchange = if (ticker == "RTX" || ticker == "WMT") "Nasdaq 100" else "NSE"
 
     // States that will simulate real-time updates
     var lastPrice by remember { mutableStateOf(if (ticker == "RTX") 205.00 else 150.00) }
@@ -91,7 +60,7 @@ fun StockPortfolioDetailScreen(
     val uriHandler = LocalUriHandler.current
 
     Scaffold(
-        containerColor = Color(0xFF131313) // Dark background from design
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -110,141 +79,268 @@ fun StockPortfolioDetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(
                             onClick = onBack,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF98CBFF)) // primary
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = "$ticker ($exchange)",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF98CBFF) // primary color
-                            )
-                        )
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Icon(
-                            Icons.Default.Star,
-                            contentDescription = "Star",
-                            tint = Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF353535)), // surface-container-highest
-                            contentAlignment = Alignment.Center
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                         ) {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(24.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "RIVAVA+",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        )
+                    }
+                    Row {
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        IconButton(onClick = { }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
 
-            // Hero Price Display
+            // Hero Section: Stock Identity
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Text(
-                        text = "CURRENT HOLDING",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 2.sp),
-                        color = Color(0xFFBEC7D4), // on-surface-variant
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Text(
-                        text = String.format("%.2f", lastPrice),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-2).sp,
-                            fontSize = 60.sp
-                        ),
-                        color = Color(0xFFE2E2E2), // on-surface
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .background(
-                                if (isPositive) Color(0xFF00E471).copy(alpha = 0.2f) else Color(0xFFFFB4AB).copy(alpha = 0.2f),
-                                RoundedCornerShape(50)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "TECHNOLOGY",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(50))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            if (isPositive) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                            contentDescription = null,
-                            tint = if (isPositive) Color(0xFF00E471) else Color(0xFFFFB4AB),
-                            modifier = Modifier.size(16.dp)
+                            Text(
+                                text = exchange.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                                modifier = Modifier
+                                    .background(com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.1f), RoundedCornerShape(50))
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                color = com.trackfi.ui.theme.EmeraldGreen
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = ticker,
+                            style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Black, letterSpacing = (-2).sp)
                         )
                         Text(
-                            text = "${if(isPositive) "+" else ""}${String.format("%.2f", changeValue)} (${String.format("%.2f", pnlPercent)}%)",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = if (isPositive) Color(0xFF00E471) else Color(0xFFFFB4AB)
+                            text = if (ticker == "RTX") "Raytheon Tech" else "Company Corp",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "$${String.format("%.2f", lastPrice)}",
+                            style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold, color = Color.White)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                tint = if (isPositive) com.trackfi.ui.theme.EmeraldGreen else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${if(isPositive) "+" else ""}${String.format("%.2f", pnlPercent)}%",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = if (isPositive) com.trackfi.ui.theme.EmeraldGreen else MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Today",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 }
             }
 
-            // Statistics List Section
+            // Intraday Live Chart
             item {
-                Column(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1B1B1B)) // surface-container-low
-                        .padding(vertical = 8.dp)
+                        .height(300.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                 ) {
-                    StatRow("Unrealized P&L", "71.8%", Color(0xFF00E471))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                    StatRow("Daily P&L", "-2.30", Color(0xFFFFB4AB))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                    StatRow("Position", "2.99", Color(0xFFE2E2E2))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                    StatRow("Avg Price", "119.31", Color(0xFFE2E2E2))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                    StatRow("Cost Basis", "356.74", Color(0xFFE2E2E2))
-                    HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                    StatRow("Avg Volume", "6.10M", Color(0xFFE2E2E2))
+                    Column(modifier = Modifier.padding(24.dp).fillMaxSize()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column {
+                                Text("Market Performance", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                                Text("Real-time intraday tracking", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+                                    .padding(4.dp)
+                            ) {
+                                Text(
+                                    text = "1D",
+                                    modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "1W",
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Text(
+                                    text = "1M",
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                        }
+
+                        // Abstract Line Chart Representation
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp)
+                        ) {
+                            // Abstract graph visually replacing SVG
+                            androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+                                val width = size.width
+                                val height = size.height
+                                val path = androidx.compose.ui.graphics.Path().apply {
+                                    moveTo(0f, height * 0.8f)
+                                    quadraticBezierTo(width * 0.1f, height * 0.6f, width * 0.2f, height * 0.7f)
+                                    quadraticBezierTo(width * 0.4f, height * 0.4f, width * 0.6f, height * 0.5f)
+                                    quadraticBezierTo(width * 0.8f, height * 0.1f, width, height * 0.2f)
+                                }
+
+                                drawPath(
+                                    path = path,
+                                    color = com.trackfi.ui.theme.DeepBlueVariant,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
+                                )
+
+                                drawCircle(
+                                    color = com.trackfi.ui.theme.DeepBlueVariant,
+                                    radius = 6.dp.toPx(),
+                                    center = androidx.compose.ui.geometry.Offset(width, height * 0.2f)
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("09:30 AM", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                            Text("12:00 PM", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                            Text("02:30 PM", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                            Text("04:00 PM", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        }
+                    }
                 }
             }
 
-            // CTA Button
+            // Bento Grid: Full Metrics
             item {
-                Button(
-                    onClick = {
-                        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
-                        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
-                        try { uriHandler.openUri(url) } catch (e: Exception) { }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFF00A3FF), Color(0xFF98CBFF)) // primary-container to primary
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        contentAlignment = Alignment.Center
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Metric Card 1
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                            Text(
-                                text = "View Full Stock Price",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFF003354) // on-primary
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Icon(Icons.Default.ShowChart, contentDescription = null, tint = Color(0xFF003354))
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("SESSION HIGH", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("$${String.format("%.2f", lastPrice + 8.75)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Box(modifier = Modifier.fillMaxWidth().height(6.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(50))) {
+                                Box(modifier = Modifier.fillMaxWidth(0.8f).fillMaxHeight().background(com.trackfi.ui.theme.EmeraldGreen, RoundedCornerShape(50)))
+                            }
+                        }
+                    }
+                    // Metric Card 2
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("SESSION LOW", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("$${String.format("%.2f", lastPrice - 17.40)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Box(modifier = Modifier.fillMaxWidth().height(6.dp).background(MaterialTheme.colorScheme.background, RoundedCornerShape(50))) {
+                                Box(modifier = Modifier.fillMaxWidth(0.2f).fillMaxHeight().background(MaterialTheme.colorScheme.error, RoundedCornerShape(50)))
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Metric Card 3
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("MARKET OPEN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("$${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("09:30:01 EST", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    // Metric Card 4
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("52W CHANGE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("+284.15%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black), color = com.trackfi.ui.theme.EmeraldGreen)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Exponential Trend", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -301,248 +397,6 @@ fun StockPortfolioDetailScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Icon(Icons.Default.OpenInNew, contentDescription = null)
                     }
-                }
-            }
-
-            // Cash Balances Section
-            item {
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Text(
-                        text = "CASH BALANCES",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                        color = Color(0xFFBEC7D4), // on-surface-variant
-                        modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF1F1F1F)) // surface-container
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(20.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF353535)), // surface-container-highest
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.Payments,
-                                        contentDescription = null,
-                                        tint = Color(0xFF98CBFF),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text("USD Cash", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE2E2E2))
-                                    Text("Available for trade", style = MaterialTheme.typography.labelMedium, color = Color(0xFFBEC7D4))
-                                }
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("8.90", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE2E2E2))
-                                Text("Settled", style = MaterialTheme.typography.labelSmall, color = Color(0xFF00E471))
-                            }
-                        }
-                        HorizontalDivider(color = Color.White.copy(alpha = 0.05f))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color(0xFF353535).copy(alpha = 0.3f))
-                                .padding(20.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF353535)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        Icons.Default.AccountBalanceWallet,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFFAEDB), // secondary
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text("Total Cash", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE2E2E2))
-                                    Text("Market Value", style = MaterialTheme.typography.labelMedium, color = Color(0xFFBEC7D4))
-                                }
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("8.90", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color(0xFFE2E2E2))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Market Insights Preview Section
-            item {
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 48.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp, start = 8.dp, end = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "MARKET INSIGHTS",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
-                            color = Color(0xFFBEC7D4)
-                        )
-                        Text(
-                            text = "See all",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF98CBFF)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF1B1B1B)) // surface-container-low
-                            .padding(24.dp)
-                    ) {
-                        // Background icon placeholder
-                        Icon(
-                            Icons.Default.QueryStats,
-                            contentDescription = null,
-                            tint = Color(0xFF98CBFF).copy(alpha = 0.2f),
-                            modifier = Modifier
-                                .size(72.dp)
-                                .align(Alignment.TopEnd)
-                                .offset(x = 16.dp, y = (-16).dp)
-                        )
-
-                        Column {
-                            Text(
-                                text = "BULLISH TREND",
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                                color = Color(0xFF00A3FF), // primary-container
-                                modifier = Modifier
-                                    .background(Color(0xFF98CBFF).copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
-                                    .padding(bottom = 8.dp)
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "$ticker maintains strong support at 115.00 level.",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFFE2E2E2)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Quarterly results show a 12% increase in institutional holdings despite recent volatility.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFBEC7D4),
-                                maxLines = 2,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Bottom Navigation Bar
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 0.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp))
-                    .background(Color(0xFF1B1B1B).copy(alpha = 0.8f)) // #1B1B1B/80
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Home
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Home,
-                        contentDescription = "Home",
-                        tint = Color.Gray
-                    )
-                    Text(
-                        text = "HOME",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                // History
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.History,
-                        contentDescription = "History",
-                        tint = Color.Gray
-                    )
-                    Text(
-                        text = "HISTORY",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                // Insights
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .background(Color(0xFF98CBFF).copy(alpha = 0.1f), RoundedCornerShape(50))
-                        .padding(horizontal = 24.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Insights,
-                        contentDescription = "Insights",
-                        tint = Color(0xFF00A3FF)
-                    )
-                    Text(
-                        text = "INSIGHTS",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
-                        color = Color(0xFF00A3FF),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                // Settings
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint = Color.Gray
-                    )
-                    Text(
-                        text = "SETTINGS",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
                 }
             }
         }
