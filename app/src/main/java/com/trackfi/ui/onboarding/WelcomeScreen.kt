@@ -66,7 +66,6 @@ fun WelcomeScreen(
             onClick = {
                 if (name.isNotBlank()) {
                     viewModel.saveName(name)
-                    viewModel.completeOnboarding() // Completes onboarding so it doesn't return here
                     onNavigateNext()
                 }
             },
