@@ -22,6 +22,11 @@ import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.glassMorphism
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+
 @Composable
 fun PortfolioMetricsTable(
     ticker: String,
@@ -32,10 +37,14 @@ fun PortfolioMetricsTable(
     avgPrice: String,
     lastPrice: String,
     costBasis: String,
+    dayHigh: String,
+    dayLow: String,
+    openPrice: String,
     pnl: String,
     pnlPercent: String,
     unrealizedPnl: String,
-    isPositive: Boolean
+    isPositive: Boolean,
+    focusedMetric: String? = null
 ) {
     val valueColor by androidx.compose.animation.animateColorAsState(
         targetValue = if (isPositive) EmeraldGreen else VibrantRed,
@@ -73,15 +82,18 @@ fun PortfolioMetricsTable(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        MetricRow("Change:", change, valueColor, openUrl)
-        MetricRow("Position:", position, onClick = openUrl)
-        MetricRow("Avg Volume:", avgVolume, onClick = openUrl)
-        MetricRow("Avg Price:", avgPrice, onClick = openUrl)
-        MetricRow("Last Price:", lastPrice, onClick = openUrl)
-        MetricRow("Cost Basis:", costBasis, onClick = openUrl)
-        MetricRow("P&L:", pnl, valueColor, openUrl)
-        MetricRow("P&L %:", pnlPercent, valueColor, openUrl)
-        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor, openUrl)
+        MetricRow("Change:", change, valueColor, openUrl, isFocused = focusedMetric == "change")
+        MetricRow("Position:", position, onClick = openUrl, isFocused = focusedMetric == "position")
+        MetricRow("Avg Volume:", avgVolume, onClick = openUrl, isFocused = focusedMetric == "avgVolume")
+        MetricRow("Avg Price:", avgPrice, onClick = openUrl, isFocused = focusedMetric == "avgPrice")
+        MetricRow("Last Price:", lastPrice, onClick = openUrl, isFocused = focusedMetric == "lastPrice")
+        MetricRow("Day High:", dayHigh, onClick = openUrl, isFocused = focusedMetric == "dayHigh")
+        MetricRow("Day Low:", dayLow, onClick = openUrl, isFocused = focusedMetric == "dayLow")
+        MetricRow("Open Price:", openPrice, onClick = openUrl, isFocused = focusedMetric == "openPrice")
+        MetricRow("Cost Basis:", costBasis, onClick = openUrl, isFocused = focusedMetric == "costBasis")
+        MetricRow("P&L:", pnl, valueColor, openUrl, isFocused = focusedMetric == "pnl")
+        MetricRow("P&L %:", pnlPercent, valueColor, openUrl, isFocused = focusedMetric == "pnlPercent")
+        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor, openUrl, isFocused = focusedMetric == "unrealizedPnl")
     }
 }
 
@@ -90,13 +102,26 @@ fun MetricRow(
     label: String,
     value: String,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    isFocused: Boolean = false
 ) {
-    Column {
+    val glowAlpha = remember { Animatable(0f) }
+    LaunchedEffect(isFocused) {
+        if (isFocused) {
+            glowAlpha.animateTo(0.2f, tween(300))
+            glowAlpha.animateTo(0f, tween(1500))
+        }
+    }
+
+    Column(
+        modifier = Modifier.background(
+            MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha.value)
+        )
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp, horizontal = if (isFocused) 8.dp else 0.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

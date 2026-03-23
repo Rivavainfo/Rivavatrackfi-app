@@ -115,12 +115,14 @@ fun PortfolioStockCard(
     isPremium: Boolean = true,
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
-    percentageChange: String = "+2.4%"
+    percentageChange: String = "+2.4%",
+    onValueClick: ((String) -> Unit)? = null
 ) {
     val priceColor by androidx.compose.animation.animateColorAsState(
         targetValue = if (isPositive) EmeraldGreen else VibrantRed,
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
     )
+
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
         val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
@@ -130,11 +132,29 @@ fun PortfolioStockCard(
         } catch (e: Exception) {}
     }
 
-    Card(
-        modifier = modifier
+    val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+    val cardModifier = if (isNyse) {
+        modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f),
+            .background(Color(0xFF121212)) // Dark/Black background for NYSE
+    } else {
+        modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f)
+    }
+
+    val exchangeBgColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.primary // Gold for NYSE
+    val exchangeTextColor = if (isNyse) Color.Black else MaterialTheme.colorScheme.onPrimary
+
+    val tickerColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
+    val companyNameColor = if (isNyse) Color(0xFFB0B0B0) else MaterialTheme.colorScheme.onSurfaceVariant
+    val priceTextColor = if (isNyse) Color.White else MaterialTheme.colorScheme.onSurface
+
+    Card(
+        modifier = cardModifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isPremium) 4.dp else 0.dp)
@@ -150,10 +170,10 @@ fun PortfolioStockCard(
                 Text(
                     text = exchange,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = exchangeTextColor,
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = exchangeBgColor,
                             shape = RoundedCornerShape(6.dp)
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -163,34 +183,50 @@ fun PortfolioStockCard(
                     Text(
                         text = ticker,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = tickerColor
                     )
                     Text(
                         text = companyName,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = companyNameColor
                     )
                 }
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.bounceClick {
+                        if (onValueClick != null) {
+                            onValueClick("lastPrice")
+                        } else {
+                            openUrl()
+                        }
+                    }
+                ) {
                     Text(
                         text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = priceTextColor
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Details",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(14.dp)
-                            .bounceClick { openUrl() }
+                        tint = exchangeBgColor.copy(alpha = 0.7f),
+                        modifier = Modifier.size(14.dp)
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.bounceClick {
+                        if (onValueClick != null) {
+                            onValueClick("pnlPercent")
+                        } else {
+                            openUrl()
+                        }
+                    }
+                ) {
                     Text(
                         text = percentageChange,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
@@ -201,9 +237,7 @@ fun PortfolioStockCard(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Details",
                         tint = priceColor.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(12.dp)
-                            .bounceClick { openUrl() }
+                        modifier = Modifier.size(12.dp)
                     )
                 }
             }

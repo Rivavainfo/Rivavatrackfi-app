@@ -1,37 +1,40 @@
 package com.trackfi.ui.portfolio
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.trackfi.ui.components.PortfolioStockCard
-import com.trackfi.ui.theme.PremiumGradientStart
-import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.trackfi.domain.api.FinnhubNewsResponse
+import com.trackfi.ui.components.PortfolioStockCard
+import com.trackfi.ui.components.SectionHeader
+import com.trackfi.ui.theme.EmeraldGreen
+import com.trackfi.ui.theme.VibrantRed
+import com.trackfi.ui.theme.glassMorphism
+import java.util.Locale
 
 data class PortfolioItem(
     val exchange: String,
@@ -39,9 +42,6 @@ data class PortfolioItem(
     val companyName: String,
     val marketPrice: Double,
     val prefix: String = "",
-    val purchasePrice: String = "—",
-    val date: String = "—",
-    val change: Double = 2.4
 )
 
 val initialPortfolioItems = listOf(
@@ -53,304 +53,203 @@ val initialPortfolioItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
+fun RivavaPortfolioScreen(
+    onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
+    viewModel: StockViewModel = hiltViewModel(),
+    cryptoViewModel: CryptoViewModel = hiltViewModel()
+) {
+    val stockStates by viewModel.stockStates.collectAsState()
+    val marketNews by viewModel.marketNews.collectAsState()
+    val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
     val uriHandler = LocalUriHandler.current
-    var portfolioItems by remember { mutableStateOf(initialPortfolioItems) }
+
+    val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(5000)
-            portfolioItems = portfolioItems.map { item ->
-                val fluctuation = (Math.random() - 0.5) * (if (item.marketPrice > 1000) 10.0 else 2.0)
-                item.copy(
-                    marketPrice = item.marketPrice + fluctuation,
-                    change = item.change + (fluctuation * 0.1)
-                )
-            }
-        }
+        viewModel.startPolling(initialPortfolioItems.map { it.ticker })
+        cryptoViewModel.startPolling(cryptoIds)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF131313))
-    ) {
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 24.dp,
-                end = 24.dp,
-                top = 16.dp,
-                bottom = 120.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-            // ---------------- TOP BAR ----------------
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+    Scaffold(
+        containerColor = Color(0xFF131313),
+        topBar = {
+            TopAppBar(
+                title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFF353535)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Person, null, tint = Color.LightGray)
+                            Icon(Icons.Default.Person, null, tint = Color.LightGray, modifier = Modifier.size(18.dp))
                         }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = "Rivava",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF98CBFF)
-                            )
-                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text("Rivava Portfolio", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                     }
-
+                },
+                actions = {
                     IconButton(onClick = {}) {
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color(0xFF98CBFF)
-                        )
+                        Icon(Icons.Default.Notifications, "Notifications", tint = Color(0xFF98CBFF))
                     }
-                }
-            }
-
-            // ---------------- HERO ----------------
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF131313),
+                    titleContentColor = Color(0xFF98CBFF)
+                )
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            // --- Net Worth Section ---
             item {
-                Column(modifier = Modifier.padding(bottom = 32.dp)) {
-
+                Column {
                     Text(
                         "TOTAL NET WORTH",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 2.sp
-                        ),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 2.sp),
                         color = Color(0xFFBEC7D4)
                     )
-
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            "$142,850",
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            color = Color(0xFFE2E2E2)
-                        )
-                        Text(
-                            ".42",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = Color(0xFF98CBFF)
-                        )
+                        Text("$142,850", style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold), color = Color.White)
+                        Text(".42", style = MaterialTheme.typography.titleLarge, color = Color(0xFF98CBFF))
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
+                    Spacer(Modifier.height(12.dp))
                     Row(
                         modifier = Modifier
-                            .background(
-                                Color(0xFF00E471).copy(alpha = 0.1f),
-                                RoundedCornerShape(50)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                            .background(Color(0xFF00E471).copy(alpha = 0.1f), RoundedCornerShape(50))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.TrendingUp,
-                            null,
-                            tint = Color(0xFF00E471),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("+12.4%", color = Color(0xFF00E471))
+                        Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = Color(0xFF00E471), modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("+12.4%", style = MaterialTheme.typography.labelMedium, color = Color(0xFF00E471))
                     }
                 }
             }
 
-            // ---------------- HEADER ----------------
+            // --- Market News ---
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Market Overview",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = Color.White
-                    )
+                SectionHeader(title = "Market News")
+                if (marketNews.isNotEmpty()) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        items(marketNews) { news -> NewsCard(news = news) }
+                    }
+                } else {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth().clip(CircleShape))
+                }
+            }
 
-                    Row(
-                        modifier = Modifier.clickable { },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "See all",
-                            color = Color(0xFF98CBFF)
-                        )
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            null,
-                            tint = Color(0xFF98CBFF),
-                            modifier = Modifier.size(12.dp)
-                        )
+            // --- Crypto Section ---
+            item {
+                SectionHeader(title = "Crypto Assets")
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    cryptoIds.forEach { id ->
+                        cryptoStates[id]?.let { data ->
+                            item { CryptoCard(id = id, data = data) }
+                        }
                     }
                 }
             }
 
-            // ---------------- NSE ----------------
+            // --- Equities Portfolio ---
             item {
-                Column {
-                    Text(
-                        "NSE MARKET",
-                        color = Color(0xFF98CBFF),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    val nseItems = portfolioItems.filter { it.exchange == "NSE" }
-
-                    nseItems.forEach { item ->
-                        PortfolioStockCard(
-                            exchange = item.exchange,
-                            ticker = item.ticker,
-                            companyName = item.companyName,
-                            marketPrice = "${item.prefix}${String.format(java.util.Locale.getDefault(), "%.2f", item.marketPrice)}",
-                            isPremium = false,
-                            isPositive = item.change >= 0,
-                            percentageChange = "${if(item.change >= 0) "+" else ""}${String.format(java.util.Locale.getDefault(), "%.1f", item.change)}%",
-                            modifier = Modifier
-                                .padding(bottom = 12.dp)
-                                .clickable {
-                                    onNavigateToDetail(item.ticker)
-                                    val url = "https://www.google.com/finance/quote/${item.ticker}:NSE"
-                                    try { uriHandler.openUri(url) } catch (e: Exception) { }
-                                }
-                        )
-                    }
-                }
+                SectionHeader(title = "Equities Portfolio")
+                Text("Real-time Tracking", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
 
-            // ---------------- NYSE ----------------
-            item {
-                Column {
-                    Text(
-                        "NYSE MARKET",
-                        color = Color(0xFFFFD700),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+            items(initialPortfolioItems) { item ->
+                val state = stockStates[item.ticker]
+                val currency = if (item.exchange == "NSE") "₹" else "$"
 
-                    val nyseItems = portfolioItems.filter { it.exchange != "NSE" }
+                val displayPrice = state?.data?.let {
+                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
+                } ?: (item.prefix + item.marketPrice.toString())
 
-                    nyseItems.forEach { item ->
-                        NysePortfolioStockCard(
-                            exchange = "NYSE",
-                            ticker = item.ticker,
-                            companyName = item.companyName,
-                            marketPrice = "${item.prefix}${String.format(java.util.Locale.getDefault(), "%.2f", item.marketPrice)}",
-                            isPositive = item.change >= 0,
-                            percentageChange = "${if(item.change >= 0) "+" else ""}${String.format(java.util.Locale.getDefault(), "%.1f", item.change)}%",
-                            modifier = Modifier
-                                .padding(bottom = 12.dp)
-                                .clickable {
-                                    onNavigateToDetail(item.ticker)
-                                    val url = "https://www.google.com/finance/quote/${item.ticker}:NYSE"
-                                    try { uriHandler.openUri(url) } catch (e: Exception) { }
-                                }
-                        )
+                val displayChange = state?.data?.let {
+                    val sign = if (it.dp >= 0) "+" else ""
+                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
+                } ?: "0.00%"
+
+                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+
+                PortfolioStockCard(
+                    exchange = item.exchange,
+                    ticker = item.ticker,
+                    companyName = item.companyName,
+                    marketPrice = displayPrice,
+                    isPremium = true,
+                    isPositive = isPositive,
+                    percentageChange = displayChange,
+                    onValueClick = { focus -> onNavigateToDetail(item.ticker, focus) },
+                    modifier = Modifier.clickable { 
+                        val url = "https://www.google.com/finance/quote/${item.ticker}:${if(item.exchange=="NSE") "NSE" else "NASDAQ"}"
+                        try { uriHandler.openUri(url) } catch(_: Exception) {}
+                        onNavigateToDetail(item.ticker, null) 
                     }
-                }
+                )
             }
         }
     }
 }
 
 @Composable
-fun NysePortfolioStockCard(
-    exchange: String,
-    ticker: String,
-    companyName: String,
-    marketPrice: String,
-    isPositive: Boolean = true,
-    percentageChange: String = "+2.4%",
-    modifier: Modifier = Modifier
-) {
+fun NewsCard(news: FinnhubNewsResponse) {
+    val uriHandler = LocalUriHandler.current
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+        modifier = Modifier
+            .width(260.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { try { uriHandler.openUri(news.url) } catch (_: Exception) {} }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = exchange,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = Color.Black,
-                    modifier = Modifier
-                        .background(
-                            color = Color(0xFFFFD700),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+        Column(modifier = Modifier.padding(12.dp)) {
+            if (news.image.isNotBlank()) {
+                AsyncImage(
+                    model = news.image,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = ticker,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = Color(0xFFFFD700)
-                    )
-                    Text(
-                        text = companyName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Spacer(Modifier.height(12.dp))
             }
+            Text(
+                text = news.headline,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(text = news.source, style = MaterialTheme.typography.bodySmall, color = Color(0xFF98CBFF))
+        }
+    }
+}
 
-            Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = marketPrice,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = percentageChange,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = if (isPositive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Details",
-                        tint = (if (isPositive) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error).copy(alpha = 0.7f),
-                        modifier = Modifier.size(12.dp)
-                    )
-                }
-            }
+@Composable
+fun CryptoCard(id: String, data: CryptoData) {
+    val isPositive = data.change24h >= 0
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(id.replaceFirstChar { it.uppercase() }, fontWeight = FontWeight.Bold, color = Color.White)
+            Spacer(Modifier.height(8.dp))
+            Text("$${String.format("%.2f", data.price)}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                "${if (isPositive) "+" else ""}${String.format("%.2f", data.change24h)}%",
+                color = if (isPositive) EmeraldGreen else VibrantRed,
+                style = MaterialTheme.typography.labelSmall
+            )
         }
     }
 }

@@ -1,142 +1,82 @@
 package com.trackfi.ui.home
 
-import java.util.Calendar
-import java.util.Locale
-
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.trackfi.data.local.TransactionEntity
-import com.trackfi.domain.usecase.FinancialSummaryState
 import com.trackfi.ui.add.AddTransactionBottomSheet
+import com.trackfi.ui.portfolio.PasswordDialog
 import com.trackfi.ui.theme.CategoryVisuals
 import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.glassMorphism
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.Star
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.foundation.border
-import androidx.compose.material.icons.filled.ArrowForwardIos
-
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Fastfood
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import com.trackfi.ui.portfolio.PasswordDialog
-import androidx.compose.material.icons.filled.Person
-
-import com.trackfi.ui.components.PremiumCard
-import com.trackfi.ui.components.SectionHeader
-
-import android.Manifest
-import android.os.Build
-import android.content.Intent
-import android.net.Uri
-import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.VideoCall
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Star
-import coil.compose.rememberAsyncImagePainter
-import androidx.compose.foundation.border
-import androidx.compose.material.icons.filled.ArrowForwardIos
-
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToTransactionDetail: (Long) -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
-    val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
-    val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
-    val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
+    val showDetails by viewModel.showSmsDetails.collectAsState()
+
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
-    var showSmsRationaleDialog by remember { mutableStateOf(false) }
-    var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    val activity = context as? android.app.Activity
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val smsGranted = permissions[Manifest.permission.READ_SMS] == true &&
-                         permissions[Manifest.permission.RECEIVE_SMS] == true
-
-        if (smsGranted) {
-            viewModel.setSmsTrackingEnabled(true)
-            Toast.makeText(context, "SMS Tracking Enabled", Toast.LENGTH_SHORT).show()
-        } else {
-            val shouldShowRationale = activity?.let {
-                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
-            } ?: false
-
-            if (!shouldShowRationale) {
-                showSmsSettingsDialog = true
-            } else {
-                Toast.makeText(context, "SMS tracking remains disabled.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (!isSmsTrackingEnabled) {
-                        showSmsRationaleDialog = true
-                    } else {
-                        showAddSheet = true
-                    }
+                    showAddSheet = true
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -165,20 +105,20 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                            .clickable { onNavigateToProfile() },
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                                .clickable { onNavigateToProfile() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            androidx.compose.foundation.Image(painter = rememberAsyncImagePainter("https://lh3.googleusercontent.com/aida-public/AB6AXuBBjANjvVTJAwCuIEzqpOGqmarYPRvZnQVkQJx54L43CqAUi_pc4O7sZDw5K8TGWaP5nI0kTE-mwudhufM9oyOzq6elZlmiD9M_p_5NcUsiLbuYSlrGUtYfQMmEX4uhpJ6TjZ0AMeTLoB2Q6yFXMBCnKAlFU8ZV8HAQ17koJO4T757BC7tfQKeunLSHhoWynDL9ar6xFSX3l5Ajo8KvoN0QgWwTG98l4l0AgFZWF_RjkO2weIX9mBbGBSVMee-b2n9sszX-mgaeCt7u"), contentDescription = "User Avatar", contentScale = androidx.compose.ui.layout.ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                        }
+                        AsyncImage(
+                            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuBBjANjvVTJAwCuIEzqpOGqmarYPRvZnQVkQJx54L43CqAUi_pc4O7sZDw5K8TGWaP5nI0kTE-mwudhufM9oyOzq6elZlmiD9M_p_5NcUsiLbuYSlrGUtYfQMmEX4uhpJ6TjZ0AMeTLoB2Q6yFXMBCnKAlFU8ZV8HAQ17koJO4T757BC7tfQKeunLSHhoWynDL9ar6xFSX3l5Ajo8KvoN0QgWwTG98l4l0AgFZWF_RjkO2weIX9mBbGBSVMee-b2n9sszX-mgaeCt7u",
+                            contentDescription = "User Avatar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                     Text(
                         text = "Rivava",
@@ -187,13 +127,7 @@ fun HomeScreen(
                             color = Color(0xFF38bdf8)
                         )
                     )
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(Color.Transparent)
-                    ) {
+                    IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
@@ -211,11 +145,12 @@ fun HomeScreen(
                 // Premium Portfolio Card
                 item {
                     Box(
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(brush = androidx.compose.ui.graphics.Brush.linearGradient(colors = listOf(Color(0xFF2A2A2A), Color(0xFF1B1B1B)))).border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp)).bounceClick {
-                                if (!isPremiumUser) {
-                                    showPasswordDialog = true
-                                }
-                            }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Brush.linearGradient(colors = listOf(Color(0xFF2A2A2A), Color(0xFF1B1B1B))))
+                            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+                            .bounceClick { if (!isPremiumUser) showPasswordDialog = true }
                     ) {
                         Column(modifier = Modifier.padding(32.dp)) {
                             Row(
@@ -249,571 +184,82 @@ fun HomeScreen(
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Lock,
-                                            contentDescription = "Locked",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                        Icon(Icons.Default.Lock, contentDescription = "Locked", modifier = Modifier.size(20.dp))
                                     }
                                 }
                             }
-
                             Spacer(modifier = Modifier.height(48.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
-                            ) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                                 Button(
-                                    onClick = {
-                                        if (!isPremiumUser) showPasswordDialog = true
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                                    ),
-                                    shape = RoundedCornerShape(50),
-                                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                                    onClick = { if (!isPremiumUser) showPasswordDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                                 ) {
-                                    Text(
-                                        text = if (isPremiumUser) "Manage" else "Unlock Now",
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
+                                    Text(if (isPremiumUser) "Manage" else "Unlock Now", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     }
                 }
 
-                // Dashboard Overview Grid
+                // Budget Grid
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Daily Budget
-                        val todayStart = Calendar.getInstance().apply {
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }.timeInMillis
+                    val todayStart = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                    val spentToday = transactions.filter { (it.type == "EXPENSE" || it.type == "BILL_PENDING") && it.date >= todayStart }.sumOf { it.amount }
+                    val remaining = (dailyBudget - spentToday).coerceAtLeast(0.0)
+                    val progress = if (dailyBudget > 0) (spentToday / dailyBudget).toFloat().coerceIn(0f, 1f) else 1f
 
-                        var spentToday = 0.0
-                        transactions.forEach {
-                            if ((it.type == "EXPENSE" || it.type == "BILL_PENDING") && it.date >= todayStart) {
-                                spentToday += it.amount
-                            }
-                        }
-
-                        val remaining = (dailyBudget - spentToday).coerceAtLeast(0.0)
-                        val progress = if (dailyBudget > 0) (spentToday / dailyBudget).toFloat().coerceIn(0f, 1f) else 1f
-
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(200.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AccountBalanceWallet,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.tertiary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    Text(
-                                        text = "ON TRACK",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = MaterialTheme.colorScheme.tertiary,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                }
-
-                                Column {
-                                    Text(
-                                        text = "DAILY BUDGET",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            letterSpacing = 1.sp
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Row(verticalAlignment = Alignment.Bottom) {
-                                        Text(
-                                            text = "₹${String.format(Locale.getDefault(), "%.0f", dailyBudget)}",
-                                            style = MaterialTheme.typography.headlineMedium.copy(
-                                                fontWeight = FontWeight.ExtraBold,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                        )
-                                        Text(
-                                            text = " / day",
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        )
-                                    }
-                                }
-
-                                Column {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = "Remaining",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        )
-                                        Text(
-                                            text = "₹${String.format(Locale.getDefault(), "%.0f", remaining)}",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.tertiary,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    LinearProgressIndicator(
-                                        progress = { progress },
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(8.dp)
-                                            .clip(RoundedCornerShape(4.dp)),
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                                    )
-                                }
-                            }
-                        }
-
-                        // Today Spending
-                        Card(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(200.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.ShoppingCart,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = "TODAY",
-                                            style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 1.sp
-                                            )
-                                        )
-                                        Text(
-                                            text = java.text.SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(java.util.Date()),
-                                            style = MaterialTheme.typography.bodySmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        )
-                                    }
-                                }
-
-                                Column {
-                                    Text(
-                                        text = "TODAY SPENDING",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            letterSpacing = 1.sp
-                                        )
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "₹${String.format(Locale.getDefault(), "%.0f", spentToday)}",
-                                        style = MaterialTheme.typography.headlineMedium.copy(
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    )
-                                }
-                            }
-                        }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        BudgetMiniCard("DAILY BUDGET", "₹${String.format("%.0f", dailyBudget)}", progress, "Remaining: ₹${String.format("%.0f", remaining)}", Modifier.weight(1f))
+                        BudgetMiniCard("TODAY SPENDING", "₹${String.format("%.0f", spentToday)}", null, SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date()), Modifier.weight(1f))
                     }
                 }
 
-
-
+                // Recent Insights Header
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                         Column {
-                            Text(
-                                text = "Recent Insights",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Your financial health at a glance",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
+                            Text(text = "Recent Insights", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                            Text(text = "Your financial health at a glance", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Text(
-                            text = "View All",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.clickable { }
-                        )
+                        Text(text = "View All", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { })
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "Support & Advice",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        )
-                        Text(
-                            text = "We're here to help you grow",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Chat
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
-                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                                .clickable { showChatDialog = true }
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Chat, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Chat with Us", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
-                                Text("Instant response from our experts", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                            }
-                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                        }
-
-                        // Call
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
-                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                                .clickable { Toast.makeText(context, "Redirecting...", Toast.LENGTH_SHORT).show() }
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Call, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(32.dp))
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Schedule Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
-                                Text("Book a 15-minute voice session", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                            }
-                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                        }
-
-                        // Video
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
-                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
-                                .clickable { showVideoCallDialog = true }
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.VideoCall, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(32.dp))
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Schedule Video Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface))
-                                Text("Deep dive with screen sharing", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                            }
-                            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                }
-
+                // Transaction List
                 if (transactions.isEmpty()) {
-                    item {
-                        EmptyState()
-                    }
+                    item { EmptyState() }
                 } else {
                     items(items = transactions.take(5), key = { it.id }) { transaction ->
-                        AnimatedVisibility(
-                            visible = true,
-                            enter = fadeIn(animationSpec = tween(500)) + expandVertically(
-                                animationSpec = spring(
-                                    dampingRatio = 0.5f,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            ),
-                            exit = fadeOut(animationSpec = tween(500)) + shrinkVertically(
-                                animationSpec = spring(
-                                    dampingRatio = 0.5f,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            )
-                        ) {
+                        AnimatedVisibility(visible = true, enter = fadeIn() + expandVertically()) {
                             TransactionItem(transaction, showDetails = showDetails, onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                selectedTransaction = transaction
+                                onNavigateToTransactionDetail(transaction.id)
                             })
                         }
+                    }
+                }
+
+                // Support Section
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(text = "Support & Advice", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                        SupportRow("Chat with Us", "Instant response", Icons.Default.Chat, MaterialTheme.colorScheme.primary) { showChatDialog = true }
+                        SupportRow("Schedule Call", "15-min voice session", Icons.Default.Call, MaterialTheme.colorScheme.tertiary) { Toast.makeText(context, "Redirecting...", Toast.LENGTH_SHORT).show() }
+                        SupportRow("Schedule Video Call", "Deep dive session", Icons.Default.VideoCall, MaterialTheme.colorScheme.secondary) { showVideoCallDialog = true }
                     }
                 }
             }
         }
 
-        selectedTransaction?.let { transaction ->
-            TransactionDetailsBottomSheet(
-                transaction = transaction,
-                onDismiss = { selectedTransaction = null }
-            )
-        }
-
-        if (showSmsRationaleDialog) {
-            AlertDialog(
-                onDismissRequest = { showSmsRationaleDialog = false },
-                title = { Text("Enable Automatic Tracking?") },
-                text = { Text("This feature can read transaction SMS to help track financial activity. This is optional.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSmsRationaleDialog = false
-                        val perms = mutableListOf(
-                            Manifest.permission.READ_SMS,
-                            Manifest.permission.RECEIVE_SMS,
-                            Manifest.permission.READ_CONTACTS
-                        )
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        permissionLauncher.launch(perms.toTypedArray())
-                    }) {
-                        Text("Enable")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        showSmsRationaleDialog = false
-                        showAddSheet = true
-                    }) {
-                        Text("Skip")
-                    }
-                }
-            )
-        }
-
-        if (showSmsSettingsDialog) {
-            AlertDialog(
-                onDismissRequest = { showSmsSettingsDialog = false },
-                title = { Text("Permission Denied") },
-                text = { Text("You have permanently denied SMS permissions. Please enable them manually in the app settings if you wish to use automatic tracking.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSmsSettingsDialog = false
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                        context.startActivity(intent)
-                    }) {
-                        Text("Open Settings")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        showSmsSettingsDialog = false
-                        showAddSheet = true
-                    }) {
-                        Text("Continue Manually")
-                    }
-                }
-            )
-        }
-
+        // Dialogs
         if (showVideoCallDialog) {
-            var name by remember { mutableStateOf("") }
-            var preferredTime by remember { mutableStateOf("") }
-            var contactInfo by remember { mutableStateOf("") }
-
-            AlertDialog(
-                onDismissRequest = { showVideoCallDialog = false },
-                title = { Text("Schedule a Video Call") },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Fill out the details below to book a consultation.")
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = { Text("Name") },
-                            singleLine = true
-                        )
-                        OutlinedTextField(
-                            value = preferredTime,
-                            onValueChange = { preferredTime = it },
-                            label = { Text("Preferred Time") },
-                            singleLine = true
-                        )
-                        OutlinedTextField(
-                            value = contactInfo,
-                            onValueChange = { contactInfo = it },
-                            label = { Text("Email / Phone") },
-                            singleLine = true
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showVideoCallDialog = false
-                        Toast.makeText(context, "Consultation requested!", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text("Submit")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showVideoCallDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
+            ScheduleDialog(onDismiss = { showVideoCallDialog = false }) { Toast.makeText(context, "Requested!", Toast.LENGTH_SHORT).show() }
         }
 
         if (showChatDialog) {
-            var message by remember { mutableStateOf("") }
-
-            AlertDialog(
-                onDismissRequest = { showChatDialog = false },
-                title = { Text("Chat with Rivava") },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Send us a message and our support team will get back to you.")
-                        OutlinedTextField(
-                            value = message,
-                            onValueChange = { message = it },
-                            label = { Text("Your Message") },
-                            minLines = 3,
-                            maxLines = 5
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showChatDialog = false
-                        Toast.makeText(context, "Message sent!", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text("Send")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showChatDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-
-        if (showAddSheet) {
-            val dynamicCategories by viewModel.categories.collectAsState()
-            AddTransactionBottomSheet(
-                categories = dynamicCategories.map { it.name }.ifEmpty { listOf("General") },
-                onDismiss = { showAddSheet = false },
-                onSave = { title, amount, type, category ->
-                    viewModel.addTransaction(title, amount, type, category)
-                    showAddSheet = false
-                },
-                onAddCategory = { newCategoryName, type ->
-                    viewModel.addCategory(newCategoryName, type)
-                }
-            )
+            ChatDialog(onDismiss = { showChatDialog = false }) { Toast.makeText(context, "Message sent!", Toast.LENGTH_SHORT).show() }
         }
 
         if (showPasswordDialog) {
@@ -821,11 +267,10 @@ fun HomeScreen(
                 onDismiss = { showPasswordDialog = false },
                 onUnlock = { password ->
                     if (password.trim() == userName?.trim()) {
-                        showPasswordDialog = false
                         viewModel.setPremiumUser(true)
-                        Toast.makeText(context, "Premium Unlocked!", Toast.LENGTH_SHORT).show()
+                        showPasswordDialog = false
                     } else {
-                        Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Incorrect", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -834,351 +279,88 @@ fun HomeScreen(
 }
 
 @Composable
-fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
-    val now = System.currentTimeMillis()
-    val todayStart = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
-    val weekStart = Calendar.getInstance().apply {
-        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
-    val monthStart = Calendar.getInstance().apply {
-        set(Calendar.DAY_OF_MONTH, 1)
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
-    var todaySpending = 0.0
-    var weeklySpending = 0.0
-    var monthlySpending = 0.0
-
-    transactions.forEach {
-        if (it.type == "EXPENSE" || it.type == "BILL_PENDING") {
-            if (it.date >= todayStart.toLong()) todaySpending += it.amount
-            if (it.date >= weekStart.toLong()) weeklySpending += it.amount
-            if (it.date >= monthStart.toLong()) monthlySpending += it.amount
+fun BudgetMiniCard(label: String, amount: String, progress: Float?, subtext: String, modifier: Modifier) {
+    Card(
+        modifier = modifier.height(180.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(amount, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            if (progress != null) {
+                LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().clip(CircleShape))
+            }
+            Text(subtext, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
+}
 
-    SpendingCard("Today Spending", todaySpending, Modifier.fillMaxWidth())
-    Spacer(modifier = Modifier.height(16.dp))
+@Composable
+fun SupportRow(title: String, subtitle: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: Color, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.4f))
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        SpendingCard("This Week", weeklySpending, Modifier.weight(1f))
-        SpendingCard("This Month", monthlySpending, Modifier.weight(1f))
-    }
-}
-
-@Composable
-fun SpendingCard(title: String, amount: Double, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier.glassMorphism(cornerRadius = 24f, alpha = 0.15f),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                text = title,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.titleLarge
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "₹" + String.format(java.util.Locale.getDefault(), "%.0f", amount),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.displayMedium
-            )
+        Box(modifier = Modifier.size(48.dp).background(color.copy(alpha = 0.1f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = null, tint = color)
         }
-    }
-}
-
-@Composable
-fun DailyBudgetCard(
-    transactions: List<TransactionEntity>,
-    dailyBudget: Double,
-    onBudgetUpdate: (Double) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var showEditDialog by remember { mutableStateOf(false) }
-    var budgetInput by remember { mutableStateOf(dailyBudget.toString()) }
-
-    val todayStart = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
-    var spentToday = 0.0
-    transactions.forEach {
-        if ((it.type == "EXPENSE" || it.type == "BILL_PENDING") && it.date >= todayStart) {
-            spentToday += it.amount
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-    }
-
-    val remaining = (dailyBudget - spentToday).coerceAtLeast(0.0)
-    val progress = if (dailyBudget > 0) (spentToday / dailyBudget).toFloat().coerceIn(0f, 1f) else 1f
-
-    if (showEditDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Edit Daily Budget") },
-            text = {
-                OutlinedTextField(
-                    value = budgetInput,
-                    onValueChange = { budgetInput = it },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    label = { Text("Budget Amount") }
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val newBudget = budgetInput.toDoubleOrNull()
-                        if (newBudget != null && newBudget >= 0) {
-                            onBudgetUpdate(newBudget)
-                        }
-                        showEditDialog = false
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(28.dp))
-            .glassMorphism(cornerRadius = 28f, alpha = 0.15f),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Daily Budget", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "₹${String.format(Locale.getDefault(), "%.0f", dailyBudget)}",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(
-                        onClick = {
-                            budgetInput = dailyBudget.toString()
-                            showEditDialog = true
-                        },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit Budget",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "₹${String.format(Locale.getDefault(), "%.0f", remaining)}",
-                color = if (remaining > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold)
-            )
-            Text("Remaining Today", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (progress >= 1f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Spent: ₹${String.format(Locale.getDefault(), "%.0f", spentToday)}",
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
-        }
+        Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp))
     }
 }
 
 @Composable
 fun EmptyState() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "No transactions yet",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Tap + to add your first income or expense",
-            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-            modifier = Modifier.padding(horizontal = 32.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
+    Column(modifier = Modifier.fillMaxWidth().padding(40.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("No transactions yet", fontWeight = FontWeight.Bold)
+        Text("Tap + to get started", textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-fun RealBalanceCard(transactions: List<TransactionEntity>) {
-    val bankBalances = remember(transactions) {
-        val balances = mutableMapOf<String, Double>()
-        // transactions are already ordered by timestamp desc, so first found is latest
-        transactions.forEach { t ->
-            if (t.bankName != null && t.availableBalance != null) {
-                if (!balances.containsKey(t.bankName)) {
-                    balances[t.bankName] = t.availableBalance
-                }
-            }
-        }
-        balances
-    }
-
-    if (bankBalances.isNotEmpty()) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .glassMorphism(cornerRadius = 28f, alpha = 0.2f),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "Estimated Bank Balance",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                bankBalances.forEach { (bank, balance) ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = bank,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "₹" + String.format(java.util.Locale.getDefault(), "%.2f", balance),
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit) {
+fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean, onClick: () -> Unit) {
     val isCredit = transaction.type == "INCOME" || transaction.type == "REWARD"
-
-    val catVisual = if (transaction.subcategory != null)
-        CategoryVisuals.getSubcategoryVisual(transaction.subcategory!!)
-    else
-        CategoryVisuals.getCategoryVisual(transaction.category)
-
-    val iconColor = catVisual.color
+    val visual = CategoryVisuals.getCategoryVisual(transaction.category)
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable { onClick() }
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).clickable { onClick() }.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = catVisual.icon,
-                    contentDescription = null,
-                    tint = iconColor
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = if (showDetails) transaction.merchantName else "Hidden",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                val formatter = java.text.SimpleDateFormat("MMM dd, yyyy • h:mm a", java.util.Locale.getDefault())
-                val dateString = if (showDetails) formatter.format(java.util.Date(transaction.date)) else "****"
-                Text(
-                    text = dateString,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-            }
+        Icon(visual.icon, contentDescription = null, tint = visual.color, modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape).padding(8.dp))
+        Spacer(Modifier.width(16.dp))
+        Column(Modifier.weight(1f)) {
+            Text(if (showDetails) transaction.merchantName else "Hidden", fontWeight = FontWeight.Bold)
+            Text(if (showDetails) SimpleDateFormat("MMM dd", Locale.getDefault()).format(Date(transaction.date)) else "****", style = MaterialTheme.typography.bodySmall)
         }
-        Text(
-            text = "${if (isCredit) "+" else "-"}₹${String.format(java.util.Locale.getDefault(), "%.0f", transaction.amount)}",
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold,
-                color = if (isCredit) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
-            )
-        )
+        Text("${if (isCredit) "+" else "-"}₹${transaction.amount.toInt()}", fontWeight = FontWeight.Bold, color = if (isCredit) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurface)
     }
+}
+
+@Composable
+fun ScheduleDialog(onDismiss: () -> Unit, onSubmit: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Schedule") },
+        text = { Text("Request a consultation session.") },
+        confirmButton = { TextButton(onClick = { onSubmit(); onDismiss() }) { Text("Submit") } }
+    )
+}
+
+@Composable
+fun ChatDialog(onDismiss: () -> Unit, onSend: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Chat") },
+        text = { Text("Send a message to support.") },
+        confirmButton = { TextButton(onClick = { onSend(); onDismiss() }) { Text("Send") } }
+    )
 }
