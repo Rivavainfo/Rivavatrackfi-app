@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.trackfi.data.local.TransactionEntity
 import com.trackfi.domain.usecase.GetTransactionsUseCase
-import com.trackfi.data.local.TransactionDao
 
 sealed class AnalyticsUiState {
     object Loading : AnalyticsUiState()
@@ -22,8 +21,7 @@ sealed class AnalyticsUiState {
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     private val getFinancialSummaryUseCase: GetFinancialSummaryUseCase,
-    private val getTransactionsUseCase: GetTransactionsUseCase,
-    private val transactionDao: TransactionDao
+    private val getTransactionsUseCase: GetTransactionsUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<AnalyticsUiState> = combine(
@@ -42,14 +40,4 @@ class AnalyticsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = AnalyticsUiState.Loading
     )
-
-    fun syncMockData() {
-        viewModelScope.launch {
-            val mockData = listOf(
-                TransactionEntity(merchantName = "Mock Store 1", amount = 50.0, type = "EXPENSE", category = "Food", date = System.currentTimeMillis()),
-                TransactionEntity(merchantName = "Mock Store 2", amount = 100.0, type = "EXPENSE", category = "Shopping", date = System.currentTimeMillis())
-            )
-            mockData.forEach { transactionDao.insertTransaction(it) }
-        }
-    }
 }
