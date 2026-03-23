@@ -220,6 +220,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 GreetingScreen(onNavigateNext = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Greeting.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 })
             }
