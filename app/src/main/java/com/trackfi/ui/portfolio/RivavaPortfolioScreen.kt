@@ -107,14 +107,13 @@ fun RivavaPortfolioScreen(
                     title = "Crypto Assets"
                 )
                 if (cryptoStates.isNotEmpty()) {
+                    val availableCryptoIds = cryptoIds.filter { cryptoStates.containsKey(it) }
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        cryptoIds.forEach { id ->
+                        items(availableCryptoIds) { id ->
                             cryptoStates[id]?.let { crypto ->
-                                item {
-                                    CryptoCard(id = id, data = crypto)
-                                }
+                                CryptoCard(id = id, data = crypto)
                             }
                         }
                     }
