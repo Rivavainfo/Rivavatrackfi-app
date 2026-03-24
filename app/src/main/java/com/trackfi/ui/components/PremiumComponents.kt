@@ -139,7 +139,6 @@ fun PortfolioStockCard(
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
     percentageChange: String = "+2.4%",
-    errorMessage: String? = null,
     latestNews: FinnhubNewsResponse? = null,
     onValueClick: ((String) -> Unit)? = null
 ) {
@@ -179,7 +178,7 @@ fun PortfolioStockCard(
     val priceTextColor = if (isNyse) Color.White else MaterialTheme.colorScheme.onSurface
 
     Card(
-        modifier = cardModifier.bounceClick { openUrl() },
+        modifier = cardModifier,
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isPremium) 8.dp else 0.dp)
@@ -219,62 +218,50 @@ fun PortfolioStockCard(
                 }
             }
 
-                if (errorMessage != null) {
-                    Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                            text = errorMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                    )
-                }
-                } else {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.bounceClick {
-                                if (onValueClick != null) {
-                                    onValueClick("lastPrice")
-                                } else {
-                                    openUrl()
-                                }
-                        }
-                        ) {
-                            Text(
-                                text = marketPrice,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = priceTextColor
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = "Details",
-                                tint = exchangeBgColor.copy(alpha = 0.7f),
-                                modifier = Modifier.size(14.dp)
-                            )
-                    }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.bounceClick {
-                                if (onValueClick != null) {
-                                    onValueClick("pnlPercent")
-                                } else {
-                                    openUrl()
-                                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.bounceClick {
+                            if (onValueClick != null) {
+                                onValueClick("lastPrice")
                             }
-                        ) {
-                            Text(
-                                text = percentageChange,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = priceColor
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = "Details",
-                                tint = priceColor.copy(alpha = 0.7f),
-                                modifier = Modifier.size(12.dp)
-                            )
                         }
+                    ) {
+                        Text(
+                            text = marketPrice,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = priceTextColor
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = "Details",
+                            tint = exchangeBgColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(14.dp)
+                                .bounceClick { openUrl() }
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.bounceClick {
+                            if (onValueClick != null) {
+                                onValueClick("pnlPercent")
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = percentageChange,
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = priceColor
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = "Details",
+                            tint = priceColor.copy(alpha = 0.7f),
+                            modifier = Modifier.size(12.dp)
+                                .bounceClick { openUrl() }
+                        )
                     }
                 }
             }

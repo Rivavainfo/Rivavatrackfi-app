@@ -166,7 +166,6 @@ fun RivavaPortfolioScreen(
                         isPremium = true,
                         isPositive = isPositive,
                         percentageChange = displayChange,
-                        errorMessage = state?.error,
                         latestNews = latestNewsItem,
                         onValueClick = { focus ->
                             onNavigateToDetail(item.ticker, focus)
