@@ -53,6 +53,7 @@ fun RivavaPortfolioScreen(
     val stockStates by viewModel.stockStates.collectAsState()
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+    val companyNews by viewModel.companyNews.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
@@ -60,6 +61,8 @@ fun RivavaPortfolioScreen(
         viewModel.startPolling(portfolioItems.map { it.ticker })
         cryptoViewModel.startPolling(cryptoIds)
     }
+
+    val groupedPortfolio = portfolioItems.groupBy { it.exchange }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -127,48 +130,51 @@ fun RivavaPortfolioScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            item {
-                SectionHeader(
-                    title = "Equities Portfolio"
-                )
-                Text(
-                    text = "Strictly For Educational Purposes",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = com.trackfi.ui.theme.LightPink
+            groupedPortfolio.forEach { (exchange, items) ->
+                item {
+                    val subtitle = if (exchange == "NSE") "India Market" else "US Market"
+                    SectionHeader(
+                        title = exchange,
+                        subtitle = subtitle
                     )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            items(portfolioItems) { item ->
-                val state = stockStates[item.ticker]
-                val currency = if (item.exchange == "NSE") "₹" else "$"
+                items(items) { item ->
+                    val state = stockStates[item.ticker]
+                    val currency = if (item.exchange == "NSE") "₹" else "$"
 
-                // Use live data if available, else fall back to initial static mock string
-                val displayPrice = state?.data?.let {
-                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                } ?: item.marketPrice
+                    // Use live data if available, else fall back to initial static mock string
+                    val displayPrice = state?.data?.let {
+                        currency + String.format(Locale.getDefault(), "%.2f", it.c)
+                    } ?: item.marketPrice
 
-                val displayChange = state?.data?.let {
-                    val sign = if (it.dp >= 0) "+" else ""
-                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                } ?: "+0.00%"
+                    val displayChange = state?.data?.let {
+                        val sign = if (it.dp >= 0) "+" else ""
+                        "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
+                    } ?: "+0.00%"
 
-                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+                    val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+                    val latestNewsItem = companyNews[item.ticker]?.firstOrNull()
 
-                PortfolioStockCard(
-                    exchange = item.exchange,
-                    ticker = item.ticker,
-                    companyName = item.companyName,
-                    marketPrice = displayPrice,
-                    isPremium = true,
-                    isPositive = isPositive,
-                    percentageChange = displayChange,
-                    onValueClick = { focus ->
-                        onNavigateToDetail(item.ticker, focus)
-                    },
-                    modifier = Modifier.clickable { onNavigateToDetail(item.ticker, null) }
-                )
+                    PortfolioStockCard(
+                        exchange = item.exchange,
+                        ticker = item.ticker,
+                        companyName = item.companyName,
+                        marketPrice = displayPrice,
+                        isPremium = true,
+                        isPositive = isPositive,
+                        percentageChange = displayChange,
+                        errorMessage = state?.error,
+                        latestNews = latestNewsItem,
+                        onValueClick = { focus ->
+                            onNavigateToDetail(item.ticker, focus)
+                        },
+                        modifier = Modifier.clickable { onNavigateToDetail(item.ticker, null) }
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(24.dp)) }
             }
         }
     }
