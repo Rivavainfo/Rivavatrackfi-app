@@ -52,8 +52,8 @@ fun PortfolioMetricsTable(
     )
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
-        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
-        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+        val exchangeSuffix = if (exchange.equals("NSE", ignoreCase = true)) "NSE" else "NYSE"
+        val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
         try {
             uriHandler.openUri(url)
         } catch (e: Exception) {}

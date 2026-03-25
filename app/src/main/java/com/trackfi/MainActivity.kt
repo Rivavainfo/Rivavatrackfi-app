@@ -83,17 +83,18 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
     object Analytics : Screen("analytics", "Insights", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
-    object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
+    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
+    object Profile : Screen("profile", "Profile", Icons.Outlined.Person)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
-        object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
+    object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
 }
 
 val BaseBottomNavigationItems = listOf(
     Screen.Home,
     Screen.Transactions,
     Screen.Analytics,
-    Screen.Settings
+    Screen.Profile
 )
 
 @AndroidEntryPoint
@@ -132,7 +133,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 
     val isPremiumUser = preferencesRepository?.isPremiumUserFlow?.collectAsState(initial = false)?.value ?: false
     val bottomNavigationItems = if (isPremiumUser) {
-        listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Settings)
+        listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Profile)
     } else {
         BaseBottomNavigationItems
     }
@@ -252,10 +253,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.Home.route) {
                 HomeScreen(
-                    onNavigateToProfile = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
                     onNavigateToTransactionDetail = { transactionId ->
                         navController.navigate("${Screen.TransactionDetail.route}/$transactionId")
                     }
+                )
+            }
+            composable(Screen.Profile.route) {
+                com.trackfi.ui.profile.ProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
                 )
             }
             composable(Screen.Transactions.route) {
