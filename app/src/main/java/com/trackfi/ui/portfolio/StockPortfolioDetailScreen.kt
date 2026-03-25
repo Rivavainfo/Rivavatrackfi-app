@@ -153,8 +153,8 @@ fun StockPortfolioDetailScreen(
             PremiumButton(
                 text = "View Full Stock Price",
                 onClick = {
-                    val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
-                    val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+                    val exchangeSuffix = if (exchange.equals("NSE", ignoreCase = true)) "NSE" else "NYSE"
+                    val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
                     try {
                         uriHandler.openUri(url)
                     } catch (e: Exception) {
