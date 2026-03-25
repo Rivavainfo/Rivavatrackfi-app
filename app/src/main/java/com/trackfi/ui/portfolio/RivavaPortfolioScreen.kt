@@ -175,6 +175,17 @@ fun RivavaPortfolioScreen(
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
             }
+
+            item {
+                Text(
+                    text = "Rates may not be updated, kindly check the redirect to see real prices.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }
@@ -226,12 +237,19 @@ fun NewsCard(news: com.trackfi.domain.api.FinnhubNewsResponse) {
 
 @Composable
 fun CryptoCard(id: String, data: CryptoData) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val isPositive = data.change24h >= 0
     val color = if (isPositive) com.trackfi.ui.theme.EmeraldGreen else com.trackfi.ui.theme.VibrantRed
     Card(
         modifier = Modifier
             .width(180.dp)
             .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                val url = "https://www.google.com/search?q=$id+crypto+price"
+                try {
+                    uriHandler.openUri(url)
+                } catch(e: Exception) {}
+            }
             .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
