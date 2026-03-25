@@ -83,53 +83,6 @@ fun RivavaPortfolioScreen(
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                SectionHeader(
-                    title = "Market News"
-                )
-                if (marketNews.isNotEmpty()) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(marketNews) { news ->
-                            NewsCard(news = news)
-                        }
-                    }
-                } else {
-                    Text(
-                        "Loading news...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            item {
-                SectionHeader(
-                    title = "Crypto Assets"
-                )
-                if (cryptoStates.isNotEmpty()) {
-                    val availableCryptoIds = cryptoIds.filter { cryptoStates.containsKey(it) }
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(availableCryptoIds) { id ->
-                            cryptoStates[id]?.let { crypto ->
-                                CryptoCard(id = id, data = crypto)
-                            }
-                        }
-                    }
-                } else {
-                    Text(
-                        "Loading crypto...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
             groupedPortfolio.forEach { (exchange, items) ->
                 item {
                     val subtitle = if (exchange == "NSE") "India Market" else "US Market"
@@ -174,6 +127,53 @@ fun RivavaPortfolioScreen(
                     )
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
+            }
+
+            item {
+                SectionHeader(
+                    title = "Crypto Assets"
+                )
+                if (cryptoStates.isNotEmpty()) {
+                    val availableCryptoIds = cryptoIds.filter { cryptoStates.containsKey(it) }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(availableCryptoIds) { id ->
+                            cryptoStates[id]?.let { crypto ->
+                                CryptoCard(id = id, data = crypto)
+                            }
+                        }
+                    }
+                } else {
+                    Text(
+                        "Loading crypto...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                SectionHeader(
+                    title = "Market News"
+                )
+                if (marketNews.isNotEmpty()) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(marketNews) { news ->
+                            NewsCard(news = news)
+                        }
+                    }
+                } else {
+                    Text(
+                        "Loading news...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
             item {
