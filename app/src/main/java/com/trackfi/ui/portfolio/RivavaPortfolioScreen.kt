@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import coil.compose.AsyncImage
 import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,9 +71,18 @@ fun RivavaPortfolioScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Rivava Portfolio") },
+                actions = {
+                    IconButton(onClick = {
+                        viewModel.refresh()
+                        cryptoViewModel.refresh()
+                    }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = PremiumGradientStart.copy(alpha = 0.1f),
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    actionIconContentColor = MaterialTheme.colorScheme.primary
                 )
             )
         }

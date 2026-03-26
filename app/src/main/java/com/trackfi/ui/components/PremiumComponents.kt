@@ -299,6 +299,15 @@ fun PortfolioStockCard(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Rates may vary. Click arrow icon for live search.",
+                style = MaterialTheme.typography.labelSmall,
+                color = companyNameColor.copy(alpha = 0.7f),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
         }
     }
 }
