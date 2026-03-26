@@ -131,7 +131,8 @@ fun RivavaPortfolioScreen(
                         isPositive = isPositive,
                         percentageChange = displayChange,
                         latestNews = latestNewsItem,
-                        onValueClick = null
+                        onValueClick = null,
+                        modifier = Modifier.clickable { onNavigateToDetail(item.ticker, null) }
                     )
                 }
                 item { Spacer(modifier = Modifier.height(24.dp)) }
