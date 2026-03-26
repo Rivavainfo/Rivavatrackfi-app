@@ -12,4 +12,5 @@ interface TransactionRepository {
     suspend fun getAllTransactionsSync(): List<TransactionEntity>
     suspend fun addTransaction(transaction: TransactionEntity)
     suspend fun deleteTransaction(transaction: TransactionEntity)
+    suspend fun deleteAllTransactions()
 }

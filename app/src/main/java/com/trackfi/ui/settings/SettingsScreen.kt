@@ -369,7 +369,7 @@ fun SettingsScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                "Clear All Data",
+                                "Clear History",
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
@@ -440,14 +440,14 @@ fun SettingsScreen(
     if (showClearDataDialog) {
         AlertDialog(
             onDismissRequest = { showClearDataDialog = false },
-            title = { Text("Clear All Data?") },
-            text = { Text("This will permanently delete all your transactions, custom categories, and preferences. You will need to restart the app.") },
+            title = { Text("Clear Transaction History?") },
+            text = { Text("This will permanently delete all your logged transactions. Your profile and portfolio access will remain intact.") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.clearAllData()
+                        viewModel.clearTransactionHistory()
                         showClearDataDialog = false
-                        onRestartApp()
+                        Toast.makeText(context, "Transaction history cleared.", Toast.LENGTH_SHORT).show()
                     }
                 ) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)

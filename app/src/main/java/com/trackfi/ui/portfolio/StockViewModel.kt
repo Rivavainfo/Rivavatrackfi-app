@@ -41,8 +41,13 @@ class StockViewModel @Inject constructor(
     private val _companyNews = MutableStateFlow<Map<String, List<FinnhubNewsResponse>>>(emptyMap())
     val companyNews: StateFlow<Map<String, List<FinnhubNewsResponse>>> = _companyNews
 
+    private var currentSymbols: List<String> = emptyList()
+    private var pollingJob: kotlinx.coroutines.Job? = null
+
     fun startPolling(symbols: List<String>) {
-        viewModelScope.launch {
+        currentSymbols = symbols
+        pollingJob?.cancel()
+        pollingJob = viewModelScope.launch {
             // Initial one-off fetches for profiles and general news
             fetchMarketNews()
             symbols.forEach { symbol ->
@@ -51,33 +56,50 @@ class StockViewModel @Inject constructor(
             }
 
             while (true) {
-                symbols.forEach { symbol ->
-                    _stockStates.value = _stockStates.value.toMutableMap().apply {
-                        put(symbol, get(symbol)?.copy(isLoading = true) ?: StockState(isLoading = true))
-                    }
+                fetchQuotes(symbols)
+                delay(15000) // Poll every 15 seconds
+            }
+        }
+    }
 
-                    repository.getRealtimeQuote(symbol).collect { result ->
-                        result.onSuccess { quote ->
-                            // Basic sanity check on Finnhub API rate limiting/empty responses (c == 0 usually means invalid symbol/key)
-                            if (quote.c != 0.0) {
-                                _stockStates.value = _stockStates.value.toMutableMap().apply {
-                                    put(symbol, StockState(isLoading = false, data = quote, error = null))
-                                }
-                            } else {
-                                val mockData = generateMockData(symbol)
-                                _stockStates.value = _stockStates.value.toMutableMap().apply {
-                                    put(symbol, StockState(isLoading = false, data = mockData, error = null))
-                                }
-                            }
-                        }.onFailure {
-                            val mockData = generateMockData(symbol)
-                            _stockStates.value = _stockStates.value.toMutableMap().apply {
-                                put(symbol, StockState(isLoading = false, data = mockData, error = null))
-                            }
+    fun refresh() {
+        if (currentSymbols.isNotEmpty()) {
+            viewModelScope.launch {
+                fetchMarketNews()
+                currentSymbols.forEach { symbol ->
+                    fetchCompanyProfile(symbol)
+                    fetchCompanyNews(symbol)
+                }
+                fetchQuotes(currentSymbols)
+            }
+        }
+    }
+
+    private suspend fun fetchQuotes(symbols: List<String>) {
+        symbols.forEach { symbol ->
+            _stockStates.value = _stockStates.value.toMutableMap().apply {
+                put(symbol, get(symbol)?.copy(isLoading = true) ?: StockState(isLoading = true))
+            }
+
+            repository.getRealtimeQuote(symbol).collect { result ->
+                result.onSuccess { quote ->
+                    // Basic sanity check on Finnhub API rate limiting/empty responses (c == 0 usually means invalid symbol/key)
+                    if (quote.c != 0.0) {
+                        _stockStates.value = _stockStates.value.toMutableMap().apply {
+                            put(symbol, StockState(isLoading = false, data = quote, error = null))
+                        }
+                    } else {
+                        val mockData = generateMockData(symbol)
+                        _stockStates.value = _stockStates.value.toMutableMap().apply {
+                            put(symbol, StockState(isLoading = false, data = mockData, error = null))
                         }
                     }
+                }.onFailure {
+                    val mockData = generateMockData(symbol)
+                    _stockStates.value = _stockStates.value.toMutableMap().apply {
+                        put(symbol, StockState(isLoading = false, data = mockData, error = null))
+                    }
                 }
-                delay(15000) // Poll every 15 seconds
             }
         }
     }
