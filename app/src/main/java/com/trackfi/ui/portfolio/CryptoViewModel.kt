@@ -26,6 +26,9 @@ class CryptoViewModel @Inject constructor(
     fun startPolling(ids: List<String>) {
         viewModelScope.launch {
             val idsString = ids.joinToString(",")
+            // Immediately initialize state so it never displays a hanging "Loading" message.
+            _cryptoStates.value = generateMockCryptoData(ids)
+
             while (true) {
                 repository.getSimplePrices(idsString).collect { result ->
                     result.onSuccess { data ->
