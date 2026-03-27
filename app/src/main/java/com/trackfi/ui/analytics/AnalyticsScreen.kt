@@ -1,5 +1,9 @@
 package com.trackfi.ui.analytics
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.border
+
 import android.graphics.Color as AndroidColor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,8 +17,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.AutoGraph
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.foundation.border
+import androidx.compose.ui.unit.sp
+import com.trackfi.ui.theme.glassMorphism
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.AutoGraph
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.foundation.border
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,97 +68,353 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.clickable
 
+
 @Composable
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // User selection for chart view
-    var selectedChartView by remember { mutableStateOf("Weekly") }
-    var selectedChartType by remember { mutableStateOf("Bar") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp, vertical = 60.dp)
-    ) {
-        Text(
-            text = "Analytics",
-            style = MaterialTheme.typography.displayLarge.copy(color = MaterialTheme.colorScheme.onBackground)
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        when (val state = uiState) {
-            is AnalyticsUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-            is AnalyticsUiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No data available.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            is AnalyticsUiState.Success -> {
-                // Toggles for charts
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF131313).copy(alpha = 0.8f))
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterChip(
-                        selected = selectedChartView == "Weekly",
-                        onClick = { selectedChartView = "Weekly" },
-                        label = { Text("Weekly") }
-                    )
-                    FilterChip(
-                        selected = selectedChartView == "Monthly",
-                        onClick = { selectedChartView = "Monthly" },
-                        label = { Text("Monthly") }
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    FilterChip(
-                        selected = selectedChartType == "Bar",
-                        onClick = { selectedChartType = "Bar" },
-                        label = { Text("Bar") }
-                    )
-                    FilterChip(
-                        selected = selectedChartType == "Line",
-                        onClick = { selectedChartType = "Line" },
-                        label = { Text("Line") }
-                    )
-                }
-
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    item {
-                        AnimatedChartCard(
-                            transactions = state.transactions,
-                            viewMode = selectedChartView,
-                            chartType = selectedChartType
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            coil.compose.AsyncImage(
+                                model = "https://lh3.googleusercontent.com/aida-public/AB6AXuBILzZlxVWZCMc98EAwl3BEa7-p13umhpLAR3__VgG8tkDN9T6JyrzdsojE82ke5Dx_JSHc9V-ON1R_qIsbTi1_xoAIebboUz9I-WPcA9NLlsntD22v50cvJohKY2fTGvwVdafd2hNiuQ6f4igDjL58278Ht0Vn0zAnjT8Udo7j3twOefnS5_9SYa3ysvGSUtDW7ZJPHVlmAMyULVqDXZH-PZtX2qKleQj7XZJfCcSfhs_hj-ExLEZVzb40eC0L7MTfkIl2OlMwlpKz",
+                                contentDescription = "Profile",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "RIVAVA",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
+                            color = com.trackfi.ui.theme.PrimaryContainerSky,
+                            letterSpacing = 2.sp
                         )
                     }
-                    item {
-                        CategoryBreakdown(transactions = state.transactions)
-                    }
-                    item {
-                        SubscriptionTrackerCard(transactions = state.transactions)
+                    IconButton(onClick = { /* Notifications */ }) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
-            is AnalyticsUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error)
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Column {
+                Text(
+                    text = "Analytics",
+                    style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.ExtraBold),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Insights into your financial ecosystem",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            when (val state = uiState) {
+                is AnalyticsUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(400.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
+                is AnalyticsUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxWidth().height(400.dp), contentAlignment = Alignment.Center) {
+                        Text(state.message, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                is AnalyticsUiState.Empty -> {
+                    // Screen 8 Empty State Bento Layout
+                    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+
+                        // Large Focus Card
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).glassMorphism(cornerRadius = 24f, alpha = 0.05f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(modifier = Modifier.size(128.dp), contentAlignment = Alignment.Center) {
+                                    Box(modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.radialGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), Color.Transparent))))
+                                    Box(modifier = Modifier.size(80.dp).border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                                        Icon(androidx.compose.material.icons.Icons.Default.AutoGraph, contentDescription = null, modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text("No data available.", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    "We haven't detected enough transaction activity to generate your intelligence reports. Start trading or fund your wallet to unlock real-time insights.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(32.dp))
+                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    Button(
+                                        onClick = { /* Deposit */ },
+                                        shape = RoundedCornerShape(50),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                        contentPadding = PaddingValues(0.dp),
+                                        modifier = Modifier.height(48.dp).weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer))),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("Deposit Assets", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 1.sp)
+                                        }
+                                    }
+                                    Button(
+                                        onClick = { /* Learn More */ },
+                                        shape = RoundedCornerShape(50),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                        modifier = Modifier.height(48.dp).weight(1f)
+                                    ) {
+                                        Text("Learn More", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface, letterSpacing = 1.sp)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Side Cards (Stacked horizontally if space permits, but vertically is safer for mobile)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Card(
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                                        Box(modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                                            Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(16.dp))
+                                        }
+                                        Text("PROJECTED\nYIELD", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, textAlign = androidx.compose.ui.text.style.TextAlign.End)
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Box(modifier = Modifier.fillMaxWidth().height(8.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))) {
+                                        Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.3f).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f), RoundedCornerShape(50)))
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Waiting for historical data...", style = MaterialTheme.typography.bodySmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+
+                            Card(
+                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("NETWORK STATUS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Box(modifier = Modifier.size(56.dp).border(4.dp, MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                                        Icon(androidx.compose.material.icons.Icons.Default.CloudOff, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text("Offline Sync", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Analytics engine standby", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+
+                        // Bottom Action Rows
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        ) {
+                            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                                    Icon(androidx.compose.material.icons.Icons.Default.QueryStats, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("Predictive Models", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Unlock via Pro tier", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        ) {
+                            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                                    Icon(androidx.compose.material.icons.Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("AI Curator", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Ready to initialize", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                        ) {
+                            Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.05f), androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                                    Icon(androidx.compose.material.icons.Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text("Deep Privacy", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Encrypted processing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+                is AnalyticsUiState.Success -> {
+                    // Restoring Original Success Logic
+                    OverviewCards(summary = state.summary)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SpendingChartCard(transactions = state.transactions)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SubscriptionTrackerCard(transactions = state.transactions)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    CategoryBreakdown(transactions = state.transactions)
+                }
+            }
+            Spacer(modifier = Modifier.height(120.dp))
+        }
+    }
+}
+
+@Composable
+fun OverviewCards(summary: FinancialSummaryState) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            modifier = Modifier.weight(1f).shadow(8.dp, RoundedCornerShape(24.dp)),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Total Balance", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalIncome - summary.totalExpense)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+            }
+        }
+        Card(
+            modifier = Modifier.weight(1f).shadow(8.dp, RoundedCornerShape(24.dp)),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Monthly Spent", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalExpense)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.error)
             }
         }
     }
 }
 
+@Composable
+fun SpendingChartCard(transactions: List<TransactionEntity>) {
+    var selectedViewMode by remember { mutableStateOf("Weekly") }
+    var selectedChartType by remember { mutableStateOf("Bar") }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Spending Trends",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                // View Mode Toggle
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(20.dp))
+                        .padding(2.dp)
+                ) {
+                    listOf("Weekly", "Monthly").forEach { mode ->
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(if (selectedViewMode == mode) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                .clickable { selectedViewMode = mode }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = mode,
+                                color = if (selectedViewMode == mode) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Chart Type Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                listOf("Bar", "Line").forEach { type ->
+                    Text(
+                        text = type,
+                        modifier = Modifier
+                            .clickable { selectedChartType = type }
+                            .padding(start = 16.dp),
+                        color = if (selectedChartType == type) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = if (selectedChartType == type) FontWeight.Bold else FontWeight.Normal)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AnimatedChartCard(transactions = transactions, viewMode = selectedViewMode, chartType = selectedChartType, modifier = Modifier.height(220.dp))
+        }
+    }
+}
 @Composable
 fun AnimatedChartCard(transactions: List<TransactionEntity>, viewMode: String, chartType: String, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
