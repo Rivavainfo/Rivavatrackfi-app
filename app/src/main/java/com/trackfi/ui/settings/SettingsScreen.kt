@@ -30,6 +30,10 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import com.trackfi.ui.theme.glassMorphism
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.Color
+import com.trackfi.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +89,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color(0xFF131313)
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -95,12 +99,33 @@ fun SettingsScreen(
                 .padding(horizontal = 24.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.rivava_logo),
+                    contentDescription = "Rivava Logo",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Rivava+",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF98CBFF)
+                    )
+                )
+            }
+
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Settings",
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = Color.White
                     ),
                     letterSpacing = androidx.compose.ui.unit.TextUnit(-1f, androidx.compose.ui.unit.TextUnitType.Sp)
                 )
@@ -108,7 +133,7 @@ fun SettingsScreen(
                 Text(
                     text = "Manage your financial data and privacy preferences.",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFFBEC7D4)
                 )
             }
 
@@ -172,13 +197,13 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Privacy",
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -193,19 +218,23 @@ fun SettingsScreen(
                             Text(
                                 text = "Show Transaction Details",
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.White
                             )
                             Text(
                                 text = "Display merchant, category, and date",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFFBEC7D4)
                             )
                         }
                         Switch(
                             checked = showSmsDetails,
                             onCheckedChange = { isChecked ->
                                 viewModel.setShowSmsDetails(isChecked)
-                            }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF00A3FF)
+                            )
                         )
                     }
                 }
@@ -216,13 +245,13 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "AI & Learning",
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold
                         )
                     )
@@ -237,12 +266,12 @@ fun SettingsScreen(
                             Text(
                                 text = "Automatic SMS Tracking",
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = Color.White
                             )
                             Text(
                                 text = "Detect income and expenses from bank messages",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color(0xFFBEC7D4)
                             )
                         }
                         Switch(
@@ -253,7 +282,11 @@ fun SettingsScreen(
                                 } else {
                                     viewModel.setSmsTrackingEnabled(false)
                                 }
-                            }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF00A3FF)
+                            )
                         )
                     }
                 }
@@ -265,13 +298,13 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "Appearance",
                         style = MaterialTheme.typography.titleLarge.copy(
-                            color = MaterialTheme.colorScheme.primary,
+                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
                             fontWeight = FontWeight.SemiBold
                         )
                     )

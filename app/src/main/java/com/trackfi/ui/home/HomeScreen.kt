@@ -33,6 +33,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.trackfi.R
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackfi.data.local.TransactionEntity
@@ -111,45 +114,7 @@ fun HomeScreen(
             }
         },
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f))
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "RIVAVA",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 4.sp,
-                            color = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)))
-                            .clickable { onNavigateToProfile() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        coil.compose.AsyncImage(
-                            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAsBHwd6-XF0ZxqFSBzCChJAbDHzMPf5YUJSjKN-uGTbmT7_ZbwcBQqdKr5dzurY9ECkBgWxvezCG5wNTj5kMPl_mKB6r5SZUPQ5JPpY47O6Mb8t7cx4_1zxwpj2kU200A2hAAtIHxvPx8zV0uhTwBt70GnMV6WuJxmuhAf6eZfqkAdrxdpXXk_2owm39s0wFEc2u0ui2GozziYlcN3UeS8oZnBNo2gOO9i-oN34O3ktyvC_BTBef9C-pYco-8u6kS4bqddzAa1RxAJ",
-                            contentDescription = "Profile",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    }
-                    IconButton(onClick = { /* Handle Notifications */ }) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.primaryContainer)
-                    }
-                }
-            }
+            // Removed header top bar as requested
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -157,11 +122,19 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
                 Column {
+                    Image(
+                        painter = painterResource(id = R.drawable.rivava_logo),
+                        contentDescription = "Rivava Logo",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(32.dp))
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
                         style = MaterialTheme.typography.headlineMedium.copy(
@@ -218,17 +191,20 @@ fun HomeScreen(
                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
                             context.startActivity(intent)
                         },
-                        icon = Icons.Default.Call
+                        icon = Icons.Default.Call,
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
-                        icon = Icons.Default.VideoCall
+                        icon = Icons.Default.VideoCall,
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
-                        icon = Icons.Default.Chat
+                        icon = Icons.Default.Chat,
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
