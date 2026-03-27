@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trackfi.ui.components.PortfolioStockCard
+import com.trackfi.ui.theme.PrimaryContainerSky
 import com.trackfi.ui.components.SectionHeader
 import com.trackfi.ui.theme.PremiumGradientStart
 import androidx.compose.foundation.clickable
@@ -55,7 +56,6 @@ fun RivavaPortfolioScreen(
     val stockStates by viewModel.stockStates.collectAsState()
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
-    val companyNews by viewModel.companyNews.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
@@ -70,7 +70,13 @@ fun RivavaPortfolioScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Rivava Portfolio") },
+                title = {
+                    Text(
+                        text = "Rivava Portfolio",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                        color = PrimaryContainerSky
+                    )
+                },
                 actions = {
                     IconButton(onClick = {
                         viewModel.refresh()
@@ -80,8 +86,8 @@ fun RivavaPortfolioScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PremiumGradientStart.copy(alpha = 0.1f),
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color.Transparent,
+                    titleContentColor = PrimaryContainerSky,
                     actionIconContentColor = MaterialTheme.colorScheme.primary
                 )
             )
@@ -92,49 +98,59 @@ fun RivavaPortfolioScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
             contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             groupedPortfolio.forEach { (exchange, items) ->
                 item {
                     val subtitle = if (exchange == "NSE") "India Market" else "US Market"
-                    SectionHeader(
-                        title = exchange,
-                        subtitle = subtitle
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                    Spacer(modifier = Modifier.height(16.dp))
+                    val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+                    val glassAlpha = if (isNyse) 0.6f else 0.03f
+                    val glassStrokeAlpha = if (isNyse) 0.1f else 0.2f
+                    val glassColor = if (isNyse) com.trackfi.ui.theme.NyseBlack else PrimaryContainerSky
+
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SectionHeader(
+                            title = exchange,
+                            subtitle = subtitle
+                        )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(40.dp))
+                                .glassMorphism(cornerRadius = 40f, alpha = glassAlpha, strokeAlpha = glassStrokeAlpha, color = glassColor)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items.forEach { item ->
+                                val state = stockStates[item.ticker]
+                                val currency = if (item.exchange == "NSE") "₹" else "$"
+
+                                val displayPrice = state?.data?.let {
+                                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
+                                } ?: item.marketPrice
+
+                                val displayChange = state?.data?.let {
+                                    val sign = if (it.dp >= 0) "+" else ""
+                                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
+                                } ?: "+0.00%"
+
+                                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+
+                                PortfolioStockCard(
+                                    exchange = item.exchange,
+                                    ticker = item.ticker,
+                                    companyName = item.companyName,
+                                    marketPrice = displayPrice,
+                                    isPositive = isPositive,
+                                    percentageChange = displayChange,
+                                    onValueClick = null
+                                )
+                            }
+                        }
+                    }
                 }
-
-                items(items) { item ->
-                    val state = stockStates[item.ticker]
-                    val currency = if (item.exchange == "NSE") "₹" else "$"
-
-                    // Use live data if available, else fall back to initial static mock string
-                    val displayPrice = state?.data?.let {
-                        currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                    } ?: item.marketPrice
-
-                    val displayChange = state?.data?.let {
-                        val sign = if (it.dp >= 0) "+" else ""
-                        "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                    } ?: "+0.00%"
-
-                    val isPositive = state?.data?.let { it.dp >= 0 } ?: true
-                    val latestNewsItem = companyNews[item.ticker]?.firstOrNull()
-
-                    PortfolioStockCard(
-                        exchange = item.exchange,
-                        ticker = item.ticker,
-                        companyName = item.companyName,
-                        marketPrice = displayPrice,
-                        isPremium = true,
-                        isPositive = isPositive,
-                        percentageChange = displayChange,
-                        latestNews = latestNewsItem,
-                        onValueClick = null
-                    )
-                }
-                item { Spacer(modifier = Modifier.height(24.dp)) }
             }
 
             item {
