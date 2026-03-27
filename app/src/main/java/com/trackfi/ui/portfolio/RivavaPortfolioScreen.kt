@@ -145,7 +145,9 @@ fun RivavaPortfolioScreen(
                                     marketPrice = displayPrice,
                                     isPositive = isPositive,
                                     percentageChange = displayChange,
-                                    onValueClick = null
+                                    onValueClick = { focus ->
+                                        onNavigateToDetail(item.ticker, focus)
+                                    }
                                 )
                             }
                         }
