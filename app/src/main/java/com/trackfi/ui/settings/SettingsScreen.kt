@@ -29,6 +29,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
+import com.trackfi.ui.theme.glassMorphism
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,24 +92,34 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Settings",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    ),
+                    letterSpacing = androidx.compose.ui.unit.TextUnit(-1f, androidx.compose.ui.unit.TextUnitType.Sp)
                 )
-            )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Manage your financial data and privacy preferences.",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
 
 
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp)),
+                    .clip(RoundedCornerShape(24.dp))
+                    .glassMorphism(cornerRadius = 24f, alpha = 0.05f),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(

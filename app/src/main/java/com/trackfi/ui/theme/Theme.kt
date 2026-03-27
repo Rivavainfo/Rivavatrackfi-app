@@ -1,19 +1,20 @@
 package com.trackfi.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 val StandardColorScheme = darkColorScheme(
-    primary = DeepBlue,
-    secondary = EmeraldGreen,
+    primary = PrimarySky,
+    primaryContainer = PrimaryContainerSky,
+    secondary = SecondaryPink,
+    tertiary = TertiaryEmerald,
     onPrimary = OnDarkSurface,
+    onPrimaryContainer = OnDarkSurface,
     background = AmoledBlack,
     onBackground = OnDarkSurface,
     surface = DarkSurface,
@@ -24,10 +25,12 @@ val StandardColorScheme = darkColorScheme(
 )
 
 val PremiumColorScheme = darkColorScheme(
-    primary = DeepBlueVariant,
-    secondary = EmeraldGreen,
-    tertiary = LightPink,
+    primary = PrimarySky,
+    primaryContainer = PrimaryContainerSky,
+    secondary = SecondaryPink,
+    tertiary = TertiaryEmerald,
     onPrimary = OnDarkSurface,
+    onPrimaryContainer = OnDarkSurface,
     background = AmoledBlack,
     onBackground = OnDarkSurface,
     surface = DarkSurface,

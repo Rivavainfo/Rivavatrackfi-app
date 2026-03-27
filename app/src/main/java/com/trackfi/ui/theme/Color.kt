@@ -2,16 +2,23 @@ package com.trackfi.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val AmoledBlack = Color(0xFF090B10)
-val DarkSurface = Color(0xFF13161F)
-val DarkSurfaceVariant = Color(0xFF1E2230)
-val DeepBlue = Color(0xFF0B3D91)
-val DeepBlueVariant = Color(0xFF1553B8)
-val EmeraldGreen = Color(0xFF00C853)
-val VibrantRed = Color(0xFFFF3B30)
-val LightPink = Color(0xFFFF80AB)
-val OnDarkSurface = Color(0xFFFFFFFF)
-val OnDarkSurfaceVariant = Color(0xFFA0A4B8)
+val AmoledBlack = Color(0xFF131313)
+val DarkSurface = Color(0xFF1B1B1B)
+val DarkSurfaceVariant = Color(0xFF353535)
+val PrimarySky = Color(0xFF98CBFF)
+val PrimaryContainerSky = Color(0xFF00A3FF)
+val SecondaryPink = Color(0xFFFFAEDB)
+val TertiaryEmerald = Color(0xFF00E471)
+val VibrantRed = Color(0xFFFFB4AB)
+val LightPink = Color(0xFFFFAEDB)
+val OnDarkSurface = Color(0xFFE2E2E2)
+val OnDarkSurfaceVariant = Color(0xFFBEC7D4)
 
-val PremiumGradientStart = Color(0xFF0B3D91)
-val PremiumGradientEnd = Color(0xFF04193F)
+val NyseBlack = Color(0xFF121212)
+val NyseGold = Color(0xFFFFD700)
+
+val PremiumGradientStart = PrimarySky
+val PremiumGradientEnd = PrimaryContainerSky
+val EmeraldGreen = TertiaryEmerald
+val DeepBlue = PrimarySky
+val DeepBlueVariant = PrimaryContainerSky
