@@ -45,16 +45,16 @@ fun ProfileScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Profile", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = Color.White)) },
+                title = { Text("Profile", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(Color.White.copy(alpha = 0.05f))) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    IconButton(onClick = onBack, modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -88,13 +88,13 @@ fun ProfileScreen(
                         Text(
                             text = initial,
                             style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Avatar",
-                            tint = Color.White,
+                            tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -106,7 +106,7 @@ fun ProfileScreen(
             Text(
                 text = userName ?: "Unknown",
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 letterSpacing = (-1).sp
             )
 
@@ -134,7 +134,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(80.dp)
                     .clip(RoundedCornerShape(32.dp))
-                    .glassMorphism(cornerRadius = 32f, alpha = 0.03f, color = Color.White),
+                    .glassMorphism(cornerRadius = 32f, alpha = 0.03f, color = MaterialTheme.colorScheme.onSurface),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(32.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp)
@@ -156,14 +156,14 @@ fun ProfileScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
-                            Text("App Settings", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = Color.White)
-                            Text("Preferences, Security, Data", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.4f))
+                            Text("App Settings", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
+                            Text("Preferences, Security, Data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                         }
                     }
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Navigate",
-                        tint = Color.White.copy(alpha = 0.2f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     )
                 }
             }

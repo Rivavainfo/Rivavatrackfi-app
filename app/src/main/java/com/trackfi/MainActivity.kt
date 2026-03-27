@@ -158,7 +158,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                                 start = 16.dp,
                                 end = 16.dp,
                                 top = 16.dp,
-                                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 32.dp
+                                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                             ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
