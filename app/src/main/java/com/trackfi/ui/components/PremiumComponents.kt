@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trackfi.ui.theme.glassMorphism
+import com.trackfi.ui.theme.glowEffect
 import androidx.compose.ui.graphics.Brush
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
@@ -21,6 +22,7 @@ import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.bounceClick
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.foundation.clickable
 import com.trackfi.domain.api.FinnhubNewsResponse
 import java.text.SimpleDateFormat
@@ -142,134 +144,123 @@ fun PortfolioStockCard(
     latestNews: FinnhubNewsResponse? = null,
     onValueClick: ((String) -> Unit)? = null
 ) {
+    val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+    val containerColor = if (isNyse) com.trackfi.ui.theme.NyseBlack else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
+    val glassAlpha = if (isNyse) 0.6f else 0.03f
+    val glassStrokeAlpha = if (isNyse) 0.15f else 0.2f
+    val glassColor = if (isNyse) Color.Black else Color.White
+
+    val accentColor = if (isNyse) com.trackfi.ui.theme.NyseGold else MaterialTheme.colorScheme.primary
+    val tickerColor = if (isNyse) Color.White else MaterialTheme.colorScheme.primary
+
     val priceColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isPositive) EmeraldGreen else VibrantRed,
+        targetValue = if (isPositive) com.trackfi.ui.theme.TertiaryEmerald else com.trackfi.ui.theme.VibrantRed,
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
     )
 
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
-        val exchangeSuffix = if (exchange.equals("NSE", ignoreCase = true)) "NSE" else "NYSE"
+        val exchangeSuffix = if (isNyse) "NYSE" else "NSE"
         val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
         try {
             uriHandler.openUri(url)
         } catch (e: Exception) {}
     }
 
-    val isNyse = exchange.equals("NYSE", ignoreCase = true)
-
-    val cardModifier = if (isNyse) {
-        modifier
+    androidx.compose.material3.Card(
+        modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFF121212)) // Dark/Black background for NYSE
-    } else {
-        modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f)
-    }
-
-    val exchangeBgColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.primary // Gold for NYSE
-    val exchangeTextColor = if (isNyse) Color.Black else MaterialTheme.colorScheme.onPrimary
-
-    val tickerColor = if (isNyse) Color(0xFFFFD700) else MaterialTheme.colorScheme.onSurface
-    val companyNameColor = if (isNyse) Color(0xFFB0B0B0) else MaterialTheme.colorScheme.onSurfaceVariant
-    val priceTextColor = if (isNyse) Color.White else MaterialTheme.colorScheme.onSurface
-
-    Card(
-        modifier = cardModifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isPremium) 8.dp else 0.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = glassAlpha, strokeAlpha = glassStrokeAlpha, color = glassColor)
+            .bounceClick {
+                onValueClick?.invoke("market_price") ?: openUrl()
+            },
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = containerColor),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(20.dp)
-        ) {
+        Column(modifier = Modifier.padding(24.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = exchange,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = exchangeTextColor,
-                    modifier = Modifier
-                        .background(
-                            color = exchangeBgColor,
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = ticker,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = tickerColor
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Black,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = tickerColor
+                        )
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = companyName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = companyNameColor
+                        text = "($exchange)",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .background(priceColor.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = percentageChange,
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = priceColor
                     )
                 }
             }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
+                    Text(
+                        text = "POSITION",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "—",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
+                }
                 Column(horizontalAlignment = Alignment.End) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.bounceClick {
-                            if (onValueClick != null) {
-                                onValueClick("lastPrice")
-                            }
-                        }
-                    ) {
-                        Text(
-                            text = marketPrice,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = priceTextColor
+                    Text(
+                        text = "LAST PRICE",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = "Details",
-                            tint = exchangeBgColor.copy(alpha = 0.7f),
-                            modifier = Modifier.size(14.dp)
-                                .bounceClick { openUrl() }
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.bounceClick {
-                            if (onValueClick != null) {
-                                onValueClick("pnlPercent")
-                            }
-                        }
-                    ) {
-                        Text(
-                            text = percentageChange,
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = priceColor
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = "Details",
-                            tint = priceColor.copy(alpha = 0.7f),
-                            modifier = Modifier.size(12.dp)
-                                .bounceClick { openUrl() }
-                        )
-                    }
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = marketPrice,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = accentColor,
+                        modifier = Modifier.glowEffect(color = accentColor, radius = 10f, isSelected = true)
+                    )
                 }
             }
 
             if (latestNews != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = companyNameColor.copy(alpha = 0.3f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                 Spacer(modifier = Modifier.height(12.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth().clickable {
                         try { uriHandler.openUri(latestNews.url) } catch(e: Exception) {}
@@ -277,37 +268,28 @@ fun PortfolioStockCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                        tint = companyNameColor,
+                        imageVector = androidx.compose.material.icons.Icons.Default.Article,
+                        contentDescription = "News",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                    Text(
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
                             text = latestNews.headline,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = priceTextColor,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
+                        )
                         Text(
                             text = "${latestNews.source} • ${getRelativeTimeString(latestNews.datetime)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = companyNameColor
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Rates may vary. Click arrow icon for live search.",
-                style = MaterialTheme.typography.labelSmall,
-                color = companyNameColor.copy(alpha = 0.7f),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
         }
     }
 }
