@@ -152,13 +152,13 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.2f)
+                            .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp))
+                            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.8f))
                             .padding(
                                 start = 16.dp,
                                 end = 16.dp,
-                                top = 12.dp,
-                                bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                                top = 16.dp,
+                                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 32.dp
                             ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically

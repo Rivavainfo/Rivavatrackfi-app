@@ -17,6 +17,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.trackfi.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +39,27 @@ fun WelcomeScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.weight(1f))
+
+        Box(
+            modifier = Modifier
+                .size(112.dp)
+                .clip(RoundedCornerShape(40.dp))
+                .background(Color.White.copy(alpha = 0.03f))
+                .glassMorphism(cornerRadius = 40f, alpha = 0.1f)
+                .padding(4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.rivava_logo),
+                contentDescription = "Rivava Logo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(36.dp)),
+                contentScale = ContentScale.Crop
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
             text = "EXPERIENCE EXCELLENCE",
