@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -108,67 +110,71 @@ fun HomeScreen(
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction", modifier = Modifier.size(32.dp))
             }
         },
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "RIVAVA",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 4.sp,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)))
+                            .clickable { onNavigateToProfile() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        coil.compose.AsyncImage(
+                            model = "https://lh3.googleusercontent.com/aida-public/AB6AXuAsBHwd6-XF0ZxqFSBzCChJAbDHzMPf5YUJSjKN-uGTbmT7_ZbwcBQqdKr5dzurY9ECkBgWxvezCG5wNTj5kMPl_mKB6r5SZUPQ5JPpY47O6Mb8t7cx4_1zxwpj2kU200A2hAAtIHxvPx8zV0uhTwBt70GnMV6WuJxmuhAf6eZfqkAdrxdpXXk_2owm39s0wFEc2u0ui2GozziYlcN3UeS8oZnBNo2gOO9i-oN34O3ktyvC_BTBef9C-pYco-8u6kS4bqddzAa1RxAJ",
+                            contentDescription = "Profile",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+                    IconButton(onClick = { /* Handle Notifications */ }) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.primaryContainer)
+                    }
+                }
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 60.dp, bottom = 120.dp), // One UI large top padding
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 120.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = onNavigateToProfile,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    androidx.compose.ui.graphics.Brush.linearGradient(
-                                        listOf(com.trackfi.ui.theme.PremiumGradientStart, com.trackfi.ui.theme.EmeraldGreen)
-                                    )
-                                )
-                        ) {
-                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                            if (initial.isNotEmpty()) {
-                                Text(
-                                    text = initial,
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = Color.White
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    color = MaterialTheme.colorScheme.onBackground,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Text(
-                                text = "Smart financial insights and portfolio tracking.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
+                Column {
+                    Text(
+                        text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                    Text(
+                        text = "Smart financial insights and portfolio tracking.",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
                 }
             }
 

@@ -81,7 +81,8 @@ fun PremiumButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: ImageVector? = null
+    icon: ImageVector? = null,
+    colors: List<Color> = listOf(PremiumGradientStart, EmeraldGreen)
 ) {
     Button(
         onClick = onClick,
@@ -90,7 +91,7 @@ fun PremiumButton(
             .height(56.dp)
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(PremiumGradientStart, EmeraldGreen)
+                    colors = colors
                 ),
                 shape = RoundedCornerShape(28.dp)
             ),
