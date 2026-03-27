@@ -16,7 +16,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.AddChart
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.VibrantRed
@@ -82,18 +96,18 @@ fun PortfolioMetricsTable(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        MetricRow("Change:", change, valueColor, openUrl, isFocused = focusedMetric == "change")
-        MetricRow("Position:", position, onClick = openUrl, isFocused = focusedMetric == "position")
-        MetricRow("Avg Volume:", avgVolume, onClick = openUrl, isFocused = focusedMetric == "avgVolume")
-        MetricRow("Avg Price:", avgPrice, onClick = openUrl, isFocused = focusedMetric == "avgPrice")
-        MetricRow("Last Price:", lastPrice, onClick = openUrl, isFocused = focusedMetric == "lastPrice")
-        MetricRow("Day High:", dayHigh, onClick = openUrl, isFocused = focusedMetric == "dayHigh")
-        MetricRow("Day Low:", dayLow, onClick = openUrl, isFocused = focusedMetric == "dayLow")
-        MetricRow("Open Price:", openPrice, onClick = openUrl, isFocused = focusedMetric == "openPrice")
-        MetricRow("Cost Basis:", costBasis, onClick = openUrl, isFocused = focusedMetric == "costBasis")
-        MetricRow("P&L:", pnl, valueColor, openUrl, isFocused = focusedMetric == "pnl")
-        MetricRow("P&L %:", pnlPercent, valueColor, openUrl, isFocused = focusedMetric == "pnlPercent")
-        MetricRow("Unrealized P&L %:", unrealizedPnl, valueColor, openUrl, isFocused = focusedMetric == "unrealizedPnl")
+        MetricRow("Change", change, Icons.AutoMirrored.Filled.TrendingUp, EmeraldGreen, valueColor, openUrl, isFocused = focusedMetric == "change")
+        MetricRow("Position", position, Icons.Default.PieChart, MaterialTheme.colorScheme.primary, onClick = openUrl, isFocused = focusedMetric == "position")
+        MetricRow("Avg Volume", avgVolume, Icons.Default.BarChart, MaterialTheme.colorScheme.primaryContainer, onClick = openUrl, isFocused = focusedMetric == "avgVolume")
+        MetricRow("Avg Price", avgPrice, Icons.Default.Payments, MaterialTheme.colorScheme.secondary, onClick = openUrl, isFocused = focusedMetric == "avgPrice")
+        MetricRow("Last Price", lastPrice, Icons.Default.Sell, MaterialTheme.colorScheme.primary, onClick = openUrl, isFocused = focusedMetric == "lastPrice")
+        MetricRow("Day High", dayHigh, Icons.Default.ArrowUpward, EmeraldGreen, EmeraldGreen, openUrl, isFocused = focusedMetric == "dayHigh")
+        MetricRow("Day Low", dayLow, Icons.Default.ArrowDownward, VibrantRed, VibrantRed, openUrl, isFocused = focusedMetric == "dayLow")
+        MetricRow("Open Price", openPrice, Icons.Default.ArrowUpward, MaterialTheme.colorScheme.outline, onClick = openUrl, isFocused = focusedMetric == "openPrice")
+        MetricRow("Cost Basis", costBasis, Icons.Default.AccountBalanceWallet, MaterialTheme.colorScheme.secondary, onClick = openUrl, isFocused = focusedMetric == "costBasis")
+        MetricRow("P&L", pnl, Icons.Default.AddChart, EmeraldGreen, valueColor, openUrl, isFocused = focusedMetric == "pnl")
+        MetricRow("P&L %", pnlPercent, Icons.Default.Percent, EmeraldGreen, valueColor, openUrl, isFocused = focusedMetric == "pnlPercent")
+        MetricRow("Unrealized P&L %", unrealizedPnl, Icons.Default.PieChart, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primary, openUrl, isFocused = focusedMetric == "unrealizedPnl")
     }
 }
 
@@ -101,6 +115,8 @@ fun PortfolioMetricsTable(
 fun MetricRow(
     label: String,
     value: String,
+    icon: ImageVector,
+    iconColor: Color,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: (() -> Unit)? = null,
     isFocused: Boolean = false
@@ -125,11 +141,20 @@ fun MetricRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = iconColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = value,
@@ -175,14 +200,14 @@ fun CashBalanceSection(usdCash: String, totalCash: String) {
                 .glassMorphism(cornerRadius = 16f, alpha = 0.1f)
                 .padding(16.dp)
         ) {
-            BalanceRow("USD Cash", usdCash)
-            BalanceRow("Total Cash", totalCash, showDivider = false)
+            BalanceRow("USD Cash", usdCash, Icons.Default.AttachMoney, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), "CURRENCY BALANCE")
+            BalanceRow("Total Cash", totalCash, Icons.Default.Savings, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f), "AGGREGATE", showDivider = false)
         }
     }
 }
 
 @Composable
-fun BalanceRow(label: String, value: String, showDivider: Boolean = true) {
+fun BalanceRow(label: String, value: String, icon: ImageVector, iconColor: Color, iconBgColor: Color, subtitle: String, showDivider: Boolean = true) {
     Column {
         Row(
             modifier = Modifier
@@ -191,18 +216,41 @@ fun BalanceRow(label: String, value: String, showDivider: Boolean = true) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(iconBgColor, shape = androidx.compose.foundation.shape.CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = iconColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 1.sp
+                    )
+                }
+            }
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = value,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Market Value",
                     style = MaterialTheme.typography.bodySmall,

@@ -141,12 +141,12 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (isBottomBarVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
                         .background(androidx.compose.ui.graphics.Color.Transparent)
                 ) {
                     Row(
@@ -154,7 +154,12 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                             .glassMorphism(cornerRadius = 24f, alpha = 0.2f)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                top = 12.dp,
+                                bottom = 12.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                            ),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {

@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,20 +62,42 @@ fun StockPortfolioDetailScreen(
     val profile = companyProfiles[ticker]?.profile
     val newsList = companyNews[ticker] ?: emptyList()
 
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Blurred background decorative circles
+        Box(
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.TopEnd)
+                .size(500.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f), shape = androidx.compose.foundation.shape.CircleShape)
+                .blur(120.dp)
+        )
+        Box(
+            modifier = Modifier
+                .align(androidx.compose.ui.Alignment.BottomStart)
+                .size(400.dp)
+                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f), shape = androidx.compose.foundation.shape.CircleShape)
+                .blur(100.dp)
+        )
+
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         topBar = {
             TopAppBar(
-                title = { Text("Portfolio") },
+                title = { Text("$ticker ($exchange)") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    IconButton(onClick = { /* TODO: Add to favorites */ }) {
+                        Icon(Icons.Default.Star, contentDescription = "Favorite", tint = MaterialTheme.colorScheme.primary)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PremiumGradientStart.copy(alpha = 0.1f),
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
         }
@@ -148,8 +172,26 @@ fun StockPortfolioDetailScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(100.dp))
+        }
+
+        // Fixed bottom action button container
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(androidx.compose.ui.Alignment.BottomCenter)
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            androidx.compose.ui.graphics.Color.Transparent,
+                            MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+                .padding(24.dp)
+        ) {
             val uriHandler = LocalUriHandler.current
-            Spacer(modifier = Modifier.height(24.dp))
             PremiumButton(
                 text = "View Full Stock Price",
                 onClick = {
@@ -162,9 +204,10 @@ fun StockPortfolioDetailScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                icon = Icons.Default.ShowChart
+                icon = Icons.AutoMirrored.Filled.ShowChart,
+                colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
             )
-            Spacer(modifier = Modifier.height(32.dp))
         }
+    }
     }
 }
