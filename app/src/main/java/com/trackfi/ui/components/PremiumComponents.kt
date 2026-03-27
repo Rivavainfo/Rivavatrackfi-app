@@ -21,6 +21,7 @@ import com.trackfi.ui.theme.PremiumGradientEnd
 import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.bounceClick
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.foundation.clickable
@@ -141,22 +142,19 @@ fun PortfolioStockCard(
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
     percentageChange: String = "+2.4%",
-    latestNews: FinnhubNewsResponse? = null,
+    latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
     onValueClick: ((String) -> Unit)? = null
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-    val containerColor = if (isNyse) com.trackfi.ui.theme.NyseBlack else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
-    val glassAlpha = if (isNyse) 0.6f else 0.03f
-    val glassStrokeAlpha = if (isNyse) 0.15f else 0.2f
-    val glassColor = if (isNyse) Color.Black else Color.White
-
-    val accentColor = if (isNyse) com.trackfi.ui.theme.NyseGold else MaterialTheme.colorScheme.primary
-    val tickerColor = if (isNyse) Color.White else MaterialTheme.colorScheme.primary
+    val badgeColor = if (isNyse) com.trackfi.ui.theme.NyseGold.copy(alpha = 0.9f) else Color(0xFF2563EB)
+    val badgeTextColor = if (isNyse) Color.Black else Color.White
+    val tickerColor = if (isNyse) com.trackfi.ui.theme.NyseGold else Color.White
 
     val priceColor by androidx.compose.animation.animateColorAsState(
         targetValue = if (isPositive) com.trackfi.ui.theme.TertiaryEmerald else com.trackfi.ui.theme.VibrantRed,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500),
+        label = "priceColor"
     )
 
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
@@ -171,124 +169,75 @@ fun PortfolioStockCard(
     androidx.compose.material3.Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .glassMorphism(cornerRadius = 24f, alpha = glassAlpha, strokeAlpha = glassStrokeAlpha, color = glassColor)
+            .clip(RoundedCornerShape(32.dp))
+            .glassMorphism(cornerRadius = 32f, alpha = 0.05f, strokeAlpha = 0.08f, color = Color.White)
             .bounceClick {
                 onValueClick?.invoke("market_price") ?: openUrl()
             },
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = containerColor),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = ticker,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Black,
-                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                            color = tickerColor
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "($exchange)",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Normal,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        )
-                    )
-                }
                 Box(
                     modifier = Modifier
-                        .background(priceColor.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(badgeColor),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = percentageChange,
+                        text = exchange,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = priceColor
+                        color = badgeTextColor
                     )
                 }
-            }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
                 Column {
-                    Text(
-                        text = "POSITION",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "—",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "LAST PRICE",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = marketPrice,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = accentColor,
-                        modifier = Modifier.glowEffect(color = accentColor, radius = 10f, isSelected = true)
-                    )
-                }
-            }
-
-            if (latestNews != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth().clickable {
-                        try { uriHandler.openUri(latestNews.url) } catch(e: Exception) {}
-                    },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Article,
-                        contentDescription = "News",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
-                            text = latestNews.headline,
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            text = if (!isNyse) ticker.uppercase() else ticker,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = tickerColor
                         )
-                        Text(
-                            text = "${latestNews.source} • ${getRelativeTimeString(latestNews.datetime)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = "Open",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(12.dp)
                         )
                     }
+                    Text(
+                        text = companyName,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
                 }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = marketPrice,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White
+                )
+                Text(
+                    text = percentageChange,
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = priceColor
+                )
             }
         }
     }
