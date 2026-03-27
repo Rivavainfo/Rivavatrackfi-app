@@ -192,19 +192,19 @@ fun HomeScreen(
                             context.startActivity(intent)
                         },
                         icon = Icons.Default.Call,
-                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
+                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
                         icon = Icons.Default.VideoCall,
-                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
+                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
                         icon = Icons.Default.Chat,
-                        colors = listOf(Color(0xFF00A3FF), Color(0xFF00629D))
+                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))

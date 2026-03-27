@@ -2,7 +2,7 @@ package com.trackfi.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val AmoledBlack = Color(0xFF131313)
+val AmoledBlack = Color(0xFF0A0A0A)
 val DarkSurface = Color(0xFF1B1B1B)
 val DarkSurfaceVariant = Color(0xFF353535)
 val PrimarySky = Color(0xFF98CBFF)

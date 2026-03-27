@@ -402,7 +402,7 @@ fun TransactionsEmptyState() {
                         .size(48.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
                         .rotate(-12f),
                     contentAlignment = Alignment.Center
                 ) {
@@ -454,7 +454,7 @@ fun TransactionsEmptyState() {
                         .offset(x = 8.dp, y = 24.dp)
                         .clip(RoundedCornerShape(percent = 50))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(percent = 50))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(percent = 50))
                         .rotate(6f)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center
