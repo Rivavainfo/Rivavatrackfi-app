@@ -172,7 +172,7 @@ fun PortfolioStockCard(
             .clip(RoundedCornerShape(32.dp))
             .glassMorphism(cornerRadius = 32f, alpha = 0.05f, strokeAlpha = 0.08f, color = Color.White)
             .bounceClick {
-                onValueClick?.invoke("market_price") ?: openUrl()
+                onValueClick?.invoke("market_price")
             },
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -205,19 +205,24 @@ fun PortfolioStockCard(
                 Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = if (!isNyse) ticker.uppercase() else ticker,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = tickerColor
                         )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                            contentDescription = "Open",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.size(12.dp)
-                        )
+                        IconButton(
+                            onClick = openUrl,
+                            modifier = Modifier.size(20.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                contentDescription = "Open",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
                     }
                     Text(
                         text = companyName,
