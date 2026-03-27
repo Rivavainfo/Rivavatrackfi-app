@@ -64,7 +64,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.VideoCall
-import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Chat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,25 +73,19 @@ fun HomeScreen(
     onNavigateToProfile: () -> Unit = {},
     onNavigateToTransactionDetail: (Long) -> Unit = {}
 ) {
-    val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
-    val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
-    var showSmsRationaleDialog by remember { mutableStateOf(false) }
-    var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
-    var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    val activity = context as? android.app.Activity
 
     Scaffold(
         floatingActionButton = {
@@ -222,7 +216,7 @@ fun HomeScreen(
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
-                        icon = Icons.Default.Chat
+                        icon = Icons.AutoMirrored.Filled.Chat
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -468,7 +462,6 @@ fun HomeScreen(
 
 @Composable
 fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
-    val now = System.currentTimeMillis()
     val todayStart = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
@@ -754,7 +747,6 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
     val isCredit = transaction.type == "INCOME"
     val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
 
-    val interactionSource = remember { MutableInteractionSource() }
     val categoryVisual = CategoryVisuals.getCategoryVisual(transaction.category)
     val subCategoryVisual = transaction.subcategory?.let { CategoryVisuals.getSubcategoryVisual(it) }
 
