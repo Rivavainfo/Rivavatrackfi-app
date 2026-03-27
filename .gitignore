@@ -6,6 +6,7 @@
 /.idea/codeStyles/Project.xml
 /.idea/libraries/empty.xml
 /.idea/modules.xml
+temp_auto_push.bat
 /.idea/workspace.xml
 .DS_Store
 /build
@@ -15,3 +16,5 @@
 local.properties
 app/build/
 build/
+.gitignore
+branch_structure.json
