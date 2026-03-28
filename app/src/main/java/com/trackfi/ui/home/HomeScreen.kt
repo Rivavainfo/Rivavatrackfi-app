@@ -141,29 +141,27 @@ fun HomeScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Box(
-                            modifier = Modifier.size(48.dp),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.size(48.dp)
                         ) {
-                            // Blue Box
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .size(30.dp)
-                                    .background(Color(0xFF00A3FF))
-                            )
                             // Pink Box
                             Box(
                                 modifier = Modifier
-                                    .align(Alignment.CenterStart)
-                                    .size(30.dp)
+                                    .offset(x = 0.dp, y = 14.dp)
+                                    .size(22.dp)
                                     .background(Color(0xFFFF00FF))
+                            )
+                            // Blue Box
+                            Box(
+                                modifier = Modifier
+                                    .offset(x = 16.dp, y = 0.dp)
+                                    .size(26.dp)
+                                    .background(Color(0xFF00A3FF))
                             )
                             // Lime Green Box
                             Box(
                                 modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .padding(end = 6.dp)
-                                    .size(20.dp)
+                                    .offset(x = 10.dp, y = 36.dp)
+                                    .size(18.dp)
                                     .background(Color(0xFFB5FF00))
                             )
                         }
@@ -270,15 +268,20 @@ fun HomeScreen(
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF90A4AE).copy(alpha = 0.9f),
-                                        Color(0xFFB0BEC5).copy(alpha = 0.7f)
+                                        Color(0xFF8DA3B5),
+                                        Color(0xFF8DA3B5)
                                     )
                                 )
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.1f),
+                                color = Color.White.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(24.dp)
+                            )
+                            .glowEffect(
+                                color = Color(0xFF98CBFF),
+                                radius = 20f,
+                                isSelected = true
                             ),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),

@@ -4,7 +4,20 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Pink Box (Top Left equivalent) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 46 28 C 42 28 42 32 42 36 L 42 44 L 34 44 C 30 44 30 50 34 50 L 42 50 L 42 70 C 42 76 46 80 52 80 C 56 80 58 78 58 74 C 58 70 56 68 52 68 C 50 68 50 66 50 64 L 50 50 L 62 50 C 66 50 66 44 62 44 L 50 44 L 50 36 C 50 32 50 28 46 28 Z" />
+        android:fillColor="#FFFF00FF"
+        android:pathData="M 30,44 h 22 v 22 h -22 z" />
+
+    <!-- Blue Box (Top Right equivalent) -->
+    <path
+        android:fillColor="#FF00A3FF"
+        android:pathData="M 46,30 h 26 v 26 h -26 z" />
+
+    <!-- Lime Green Box (Bottom Center equivalent) -->
+    <path
+        android:fillColor="#FFB5FF00"
+        android:pathData="M 40,66 h 18 v 18 h -18 z" />
+
 </vector>

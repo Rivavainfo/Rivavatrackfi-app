@@ -88,25 +88,26 @@ fun TransactionsScreen(
                 )
 
                 Box(
-                    modifier = Modifier.size(32.dp),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.size(32.dp)
                 ) {
+                    // Pink Box
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(20.dp)
-                            .background(Color(0xFF00A3FF))
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .size(20.dp)
+                            .offset(x = 0.dp, y = 9.dp)
+                            .size(15.dp)
                             .background(Color(0xFFFF00FF))
                     )
+                    // Blue Box
                     Box(
                         modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(end = 4.dp)
+                            .offset(x = 11.dp, y = 0.dp)
+                            .size(17.dp)
+                            .background(Color(0xFF00A3FF))
+                    )
+                    // Lime Green Box
+                    Box(
+                        modifier = Modifier
+                            .offset(x = 7.dp, y = 24.dp)
                             .size(12.dp)
                             .background(Color(0xFFB5FF00))
                     )
