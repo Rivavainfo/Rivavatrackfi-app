@@ -44,6 +44,7 @@ import com.trackfi.ui.add.AddTransactionBottomSheet
 import com.trackfi.ui.theme.CategoryVisuals
 import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.glassMorphism
+import com.trackfi.ui.theme.glowEffect
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
@@ -70,6 +71,9 @@ import androidx.core.app.ActivityCompat
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.AutoAwesome
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,58 +135,132 @@ fun HomeScreen(
                         painter = painterResource(id = R.drawable.rivava),
                         contentDescription = "Rivava Logo",
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(RoundedCornerShape(32.dp))
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(12.dp))
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
                         style = MaterialTheme.typography.headlineMedium.copy(
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = (-0.5).sp
                         )
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Smart financial insights and portfolio tracking.",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
                         )
                     )
                 }
             }
 
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text(
-                            text = "About Rivava",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(24.dp)
                             )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Rivava provides a unified platform to track, manage, and understand your financial portfolio with advanced analytics and seamless integrations.",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            .glowEffect(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                radius = 20f,
+                                isSelected = true
                             )
-                        )
+                    )
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.6f, strokeAlpha = 0.1f),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Text(
+                                    text = "About Rivava",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = (-0.5).sp
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Rivava is your high-fidelity financial ecosystem designed for the modern investor. We blend institutional-grade security with a curator's eye for detail, giving you the clarity needed to scale your wealth through intelligent automation and real-time portfolio analytics.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                text = "PRECISION MEET PERFORMANCE",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.5.sp
+                                )
+                            )
+                        }
                     }
                 }
             }
 
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Talk to Rivava")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Talk to Rivava",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(1.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+                }
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     com.trackfi.ui.components.PremiumButton(
@@ -192,19 +270,19 @@ fun HomeScreen(
                             context.startActivity(intent)
                         },
                         icon = Icons.Default.Call,
-                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
+                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, Color(0xFF1D4ED8)) // Blue-700 approx
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
                         icon = Icons.Default.VideoCall,
-                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
+                        colors = listOf(MaterialTheme.colorScheme.tertiaryContainer, Color(0xFF047857)) // Emerald-700 approx
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
                         icon = Icons.Default.Chat,
-                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
+                        colors = listOf(MaterialTheme.colorScheme.secondaryContainer, Color(0xFFBE185D)) // Pink-700 approx
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -252,7 +330,39 @@ fun HomeScreen(
             }
 
             item {
-                SectionHeader(title = "Dashboard Overview")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dashboard Overview",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .bounceClick {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showAddSheet = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                DashboardOverviewBento(summary = summary)
             }
 
             when (layoutPreset) {
@@ -671,6 +781,141 @@ fun EmptyState() {
             modifier = Modifier.padding(horizontal = 32.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun DashboardOverviewBento(summary: FinancialSummaryState) {
+    val netWorth = summary.totalIncome + summary.netSavings
+    val savings = summary.netSavings
+    val investments = summary.totalIncome
+
+    val netWorthChange = if (netWorth > 0) "+4.2%" else "0.0%"
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Net Worth Card (full width)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .glassMorphism(cornerRadius = 24f, alpha = 0.15f),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    text = "NET WORTH",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", netWorth)}",
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    Text(
+                        text = netWorthChange,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                }
+            }
+        }
+
+        // Row for Savings & Investments
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Savings Card (half width)
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalanceWallet,
+                        contentDescription = "Savings",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Savings",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", savings)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+
+            // Investments Card (half width)
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Insights,
+                        contentDescription = "Investments",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Investments",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", investments)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
