@@ -148,7 +148,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(androidx.compose.ui.graphics.Color.Transparent)
-                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp),
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
