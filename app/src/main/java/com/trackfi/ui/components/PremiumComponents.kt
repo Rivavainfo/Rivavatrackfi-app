@@ -24,6 +24,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.filled.SouthEast
 import androidx.compose.foundation.clickable
 import com.trackfi.domain.api.FinnhubNewsResponse
 import java.text.SimpleDateFormat
@@ -148,9 +150,8 @@ fun PortfolioStockCard(
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-    val badgeColor = if (isNyse) com.trackfi.ui.theme.NyseGold.copy(alpha = 0.9f) else Color(0xFF2563EB)
-    val badgeTextColor = if (isNyse) Color.Black else Color.White
-    val tickerColor = if (isNyse) com.trackfi.ui.theme.NyseGold else Color.White
+    val primaryColor = if (isNyse) com.trackfi.ui.theme.NyseGold else com.trackfi.ui.theme.PrimaryContainerSky
+    val badgeBgColor = primaryColor.copy(alpha = 0.1f)
 
     val priceColor by androidx.compose.animation.animateColorAsState(
         targetValue = if (isPositive) com.trackfi.ui.theme.TertiaryEmerald else com.trackfi.ui.theme.VibrantRed,
@@ -167,12 +168,14 @@ fun PortfolioStockCard(
         } catch (e: Exception) {}
     }
 
+    val arrowIcon = if (isPositive) Icons.Default.NorthEast else Icons.Default.SouthEast
+
     androidx.compose.material3.Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(32.dp))
-            .glassMorphism(cornerRadius = 32f, alpha = 0.05f, strokeAlpha = 0.08f, color = Color.White)
-            .bounceClick {
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.6f, strokeAlpha = 0.0f, color = Color(0xFF1B1B1B))
+            .clickable {
                 onValueClick?.invoke("market_price")
             },
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -192,43 +195,28 @@ fun PortfolioStockCard(
                 Box(
                     modifier = Modifier
                         .size(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(badgeColor),
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(badgeBgColor)
+                        .clickable { openUrl() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = exchange,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = badgeTextColor
+                        text = if (ticker.length > 4) ticker.take(4).uppercase() else ticker.uppercase(),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        color = primaryColor
                     )
                 }
 
                 Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = if (!isNyse) ticker.uppercase() else ticker,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = tickerColor
-                        )
-                        IconButton(
-                            onClick = openUrl,
-                            modifier = Modifier.size(20.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = "Open",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                modifier = Modifier.size(12.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = ticker.uppercase(),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
                     Text(
                         text = companyName,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -239,11 +227,22 @@ fun PortfolioStockCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
-                Text(
-                    text = percentageChange,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = priceColor
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Icon(
+                        imageVector = arrowIcon,
+                        contentDescription = null,
+                        tint = priceColor,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = percentageChange.replace("+", "").replace("-", ""),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = priceColor
+                    )
+                }
             }
         }
     }
