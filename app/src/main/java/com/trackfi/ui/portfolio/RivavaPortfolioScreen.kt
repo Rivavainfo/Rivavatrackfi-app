@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ import com.trackfi.ui.theme.TertiaryEmerald
 import com.trackfi.ui.theme.SecondaryPink
 import com.trackfi.ui.theme.PrimarySky
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 data class PortfolioItem(
     val exchange: String,
@@ -54,7 +57,7 @@ val portfolioItems = listOf(
     PortfolioItem("NYSE", "WMT", "Walmart Inc.", "$125.12")
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
@@ -171,85 +174,140 @@ fun RivavaPortfolioScreen(
             }
 
             item {
-                // Market News Hero Card
+                // Market News Hero Carousel
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                val firstNews = marketNews.firstOrNull()
-                val newsUrl = firstNews?.url ?: "https://www.google.com/search?q=tech+bull+run"
-                val newsImage = if (firstNews?.image?.isNotBlank() == true) firstNews.image else "https://lh3.googleusercontent.com/aida-public/AB6AXuDkis73_T0NNSoeGJQffY8Z3c2_kh8XAYY3-jj_WdL8Q1OymlG8efhS6OaUL-_qw2dU33CJaKgrgmLU-xGZ88qVzkF8RoJJetdnfb8XdufoJUajQMf71dAQtaunyiCL8JpFCUPM9wgdoagj8lbAyNobPjIDMZmsWjKB6J8M7eJtPlFzQdcbVGXM7bD-bQJVbBMO1GfZuWKGfjxIN-FVV2HW6H1KonSt1__l78xI1rftWBlsPi55XYsrj2GTFWvW4IgbnoltaM_v_CAl"
-                val newsHeadline = firstNews?.headline ?: "The Tech Bull Run: Semis lead the next global rally"
 
-                Box(
+                val defaultFallbackNews = listOf(
+                    com.trackfi.domain.api.FinnhubNewsResponse(
+                        datetime = 0L,
+                        headline = "The Tech Bull Run: Semis lead the next global rally",
+                        id = 0,
+                        image = "https://lh3.googleusercontent.com/aida-public/AB6AXuDkis73_T0NNSoeGJQffY8Z3c2_kh8XAYY3-jj_WdL8Q1OymlG8efhS6OaUL-_qw2dU33CJaKgrgmLU-xGZ88qVzkF8RoJJetdnfb8XdufoJUajQMf71dAQtaunyiCL8JpFCUPM9wgdoagj8lbAyNobPjIDMZmsWjKB6J8M7eJtPlFzQdcbVGXM7bD-bQJVbBMO1GfZuWKGfjxIN-FVV2HW6H1KonSt1__l78xI1rftWBlsPi55XYsrj2GTFWvW4IgbnoltaM_v_CAl",
+                        source = "",
+                        summary = "",
+                        url = "https://www.google.com/search?q=tech+bull+run"
+                    )
+                )
+
+                val displayNews = if (marketNews.isNotEmpty()) marketNews.take(5) else defaultFallbackNews
+                val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
+
+                LaunchedEffect(pagerState.currentPage) {
+                    if (displayNews.size > 1) {
+                        delay(4000)
+                        val nextPage = (pagerState.currentPage + 1) % displayNews.size
+                        pagerState.animateScrollToPage(nextPage)
+                    }
+                }
+
+                androidx.compose.foundation.pager.HorizontalPager(
+                    state = pagerState,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(280.dp)
                         .clip(RoundedCornerShape(32.dp))
-                        .clickable {
-                            try {
-                                uriHandler.openUri(newsUrl)
-                            } catch (e: Exception) {}
-                        }
-                ) {
-                    AsyncImage(
-                        model = newsImage,
-                        contentDescription = "Abstract digital visualization",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        alpha = 0.4f
-                    )
+                ) { page ->
+                    val newsItem = displayNews[page]
+                    val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
+                    val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else defaultFallbackNews.first().image
+                    val newsHeadline = newsItem.headline
 
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                androidx.compose.ui.graphics.Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
-                                        MaterialTheme.colorScheme.background
+                            .clickable {
+                                try {
+                                    uriHandler.openUri(newsUrl)
+                                } catch (e: Exception) {}
+                            }
+                    ) {
+                        AsyncImage(
+                            model = newsImage,
+                            contentDescription = "Abstract digital visualization",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                            alpha = 0.4f
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Transparent,
+                                            MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
+                                            MaterialTheme.colorScheme.background
+                                        )
                                     )
                                 )
-                            )
-                    )
+                        )
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Text(
-                            text = "MARKET NEWS",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp
-                            ),
-                            color = SecondaryPink
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = newsHeadline,
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = Color.White,
-                            lineHeight = 32.sp,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.Bottom
                         ) {
                             Text(
-                                text = "READ ANALYSIS",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = PrimarySky
+                                text = "MARKET NEWS",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp
+                                ),
+                                color = SecondaryPink
                             )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = PrimarySky,
-                                modifier = Modifier.size(16.dp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = newsHeadline,
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                color = Color.White,
+                                lineHeight = 32.sp,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "READ ANALYSIS",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = PrimarySky
+                                    )
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null,
+                                        tint = PrimarySky,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+
+                                // Pager Indicators
+                                if (displayNews.size > 1) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        repeat(displayNews.size) { index ->
+                                            val isSelected = pagerState.currentPage == index
+                                            Box(
+                                                modifier = Modifier
+                                                    .height(6.dp)
+                                                    .width(if (isSelected) 16.dp else 6.dp)
+                                                    .clip(RoundedCornerShape(3.dp))
+                                                    .background(if (isSelected) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

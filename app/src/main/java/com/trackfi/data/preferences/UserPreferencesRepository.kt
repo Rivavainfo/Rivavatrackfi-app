@@ -30,6 +30,17 @@ class UserPreferencesRepository @Inject constructor(
         val HOME_LAYOUT_PRESET_KEY = stringPreferencesKey("home_layout_preset")
         val SHOW_SMS_DETAILS_KEY = booleanPreferencesKey("show_sms_details")
         val IS_PREMIUM_USER_KEY = booleanPreferencesKey("is_premium_user")
+        val PROFILE_IMAGE_URI_KEY = stringPreferencesKey("profile_image_uri")
+    }
+
+    val profileImageUriFlow: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[PROFILE_IMAGE_URI_KEY]
+    }
+
+    suspend fun setProfileImageUri(uri: String) {
+        dataStore.edit { preferences ->
+            preferences[PROFILE_IMAGE_URI_KEY] = uri
+        }
     }
 
     val isPremiumUserFlow: Flow<Boolean> = dataStore.data.map { preferences ->

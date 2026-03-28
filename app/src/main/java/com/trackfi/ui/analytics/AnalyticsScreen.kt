@@ -91,16 +91,30 @@ fun AnalyticsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                            modifier = Modifier.size(32.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            coil.compose.AsyncImage(
-                                model = "https://lh3.googleusercontent.com/aida-public/AB6AXuBILzZlxVWZCMc98EAwl3BEa7-p13umhpLAR3__VgG8tkDN9T6JyrzdsojE82ke5Dx_JSHc9V-ON1R_qIsbTi1_xoAIebboUz9I-WPcA9NLlsntD22v50cvJohKY2fTGvwVdafd2hNiuQ6f4igDjL58278Ht0Vn0zAnjT8Udo7j3twOefnS5_9SYa3ysvGSUtDW7ZJPHVlmAMyULVqDXZH-PZtX2qKleQj7XZJfCcSfhs_hj-ExLEZVzb40eC0L7MTfkIl2OlMwlpKz",
-                                contentDescription = "Profile",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                            // Blue Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(20.dp)
+                                    .background(Color(0xFF00A3FF))
+                            )
+                            // Pink Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .size(20.dp)
+                                    .background(Color(0xFFFF00FF))
+                            )
+                            // Lime Green Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(end = 4.dp)
+                                    .size(12.dp)
+                                    .background(Color(0xFFB5FF00))
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))

@@ -60,6 +60,8 @@ import androidx.compose.material.icons.filled.Person
 
 import com.trackfi.ui.components.PremiumCard
 import com.trackfi.ui.components.SectionHeader
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 import android.Manifest
 import android.os.Build
@@ -90,6 +92,7 @@ fun HomeScreen(
     val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
+    val profileImageUri by viewModel.profileImageUri.collectAsState()
     val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -131,51 +134,111 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                Column {
-                    Box(
-                        modifier = Modifier.size(48.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Blue Box
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .size(30.dp)
-                                .background(Color(0xFF00A3FF))
+                            modifier = Modifier.size(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Blue Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .size(30.dp)
+                                    .background(Color(0xFF00A3FF))
+                            )
+                            // Pink Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .size(30.dp)
+                                    .background(Color(0xFFFF00FF))
+                            )
+                            // Lime Green Box
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(end = 6.dp)
+                                    .size(20.dp)
+                                    .background(Color(0xFFB5FF00))
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
+                            )
                         )
-                        // Pink Box
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .size(30.dp)
-                                .background(Color(0xFFFF00FF))
-                        )
-                        // Lime Green Box
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(end = 6.dp)
-                                .size(20.dp)
-                                .background(Color(0xFFB5FF00))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Smart financial insights and portfolio tracking.",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.5).sp
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Smart financial insights and portfolio tracking.",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium
-                        )
-                    )
+
+                    // Profile Icon Top Right
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(2.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f), CircleShape)
+                            .clickable { onNavigateToProfile() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profileImageUri != null) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                                if (initial.isNotEmpty()) {
+                                    Text(
+                                        text = initial,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Profile Avatar",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+
+                                AsyncImage(
+                                    model = profileImageUri,
+                                    contentDescription = "Profile Avatar",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                            if (initial.isNotEmpty()) {
+                                Text(
+                                    text = initial,
+                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Profile Avatar",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
