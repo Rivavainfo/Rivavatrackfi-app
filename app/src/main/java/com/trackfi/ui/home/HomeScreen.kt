@@ -128,7 +128,7 @@ fun HomeScreen(
             item {
                 Column {
                     Image(
-                        painter = painterResource(id = R.drawable.rivava_logo),
+                        painter = painterResource(id = R.drawable.rivava),
                         contentDescription = "Rivava Logo",
                         modifier = Modifier
                             .size(64.dp)
@@ -213,28 +213,30 @@ fun HomeScreen(
             if (!isPremiumUser) {
                 item {
                     PremiumCard(
-                        modifier = Modifier.bounceClick {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            showPasswordDialog = true
-                        }
+                        modifier = Modifier
+                            .heightIn(min = 120.dp)
+                            .bounceClick {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showPasswordDialog = true
+                            }
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
                                 Text(
                                     text = "Rivava Premium Portfolio",
-                                    style = MaterialTheme.typography.titleMedium.copy(
+                                    style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Unlock Premium Features",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -242,7 +244,7 @@ fun HomeScreen(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Locked Premium Feature",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
@@ -480,14 +482,11 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
 
     transactions.forEach {
         if (it.type == "EXPENSE" || it.type == "BILL_PENDING") {
-            if (it.date >= todayStart.toLong()) todaySpending += it.amount
             if (it.date >= weekStart.toLong()) weeklySpending += it.amount
             if (it.date >= monthStart.toLong()) monthlySpending += it.amount
         }
     }
 
-    SpendingCard("Today Spending", todaySpending, Modifier.fillMaxWidth())
-    Spacer(modifier = Modifier.height(16.dp))
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
