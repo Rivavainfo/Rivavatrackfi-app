@@ -148,18 +148,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(androidx.compose.ui.graphics.Color.Transparent)
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(topStart = 48.dp, topEnd = 48.dp))
-                            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.8f))
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 16.dp,
-                                bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                            ),
+                            .fillMaxWidth(0.9f)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.6f))
+                            .glassMorphism(cornerRadius = 999f, alpha = 0.6f)
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -337,22 +335,16 @@ fun CustomBottomNavItem(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    val containerColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent,
-        animationSpec = tween(durationMillis = 300),
-        label = "containerColor"
-    )
-
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
         animationSpec = tween(300),
         label = "iconColor"
     )
 
     Box(
         modifier = Modifier
+            .size(48.dp)
             .clip(CircleShape)
-            .background(containerColor)
             .selectable(
                 selected = isSelected,
                 onClick = {
@@ -360,32 +352,28 @@ fun CustomBottomNavItem(
                     onClick()
                 },
                 interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = true)
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+                indication = rememberRipple(bounded = true, radius = 24.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = screen.icon,
                 contentDescription = screen.title,
                 tint = iconColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(26.dp)
             )
-            AnimatedVisibility(visible = isSelected) {
-                Row {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = screen.title,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-                        color = iconColor,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-                }
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
             }
         }
     }
