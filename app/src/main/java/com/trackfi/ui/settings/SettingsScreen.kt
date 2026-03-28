@@ -32,13 +32,6 @@ import androidx.core.app.ActivityCompat
 import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.ui.graphics.Color
 import com.trackfi.R
 
@@ -54,8 +47,6 @@ fun SettingsScreen(
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val banksDetected by viewModel.banksDetected.collectAsState()
     val showSmsDetails by viewModel.showSmsDetails.collectAsState()
-    val smartCategorizationEnabled by viewModel.smartCategorizationEnabled.collectAsState()
-    val biometricLockEnabled by viewModel.biometricLockEnabled.collectAsState()
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showSmsRationaleDialog by remember { mutableStateOf(false) }
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
@@ -108,420 +99,195 @@ fun SettingsScreen(
                 .padding(horizontal = 24.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.rivava_logo),
+                    contentDescription = "Rivava Logo",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Rivava+",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF98CBFF)
+                    )
+                )
+            }
+
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Settings",
-                    style = MaterialTheme.typography.displayMedium.copy(
+                    style = MaterialTheme.typography.displayLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White
                     ),
-                    letterSpacing = androidx.compose.ui.unit.TextUnit(-0.5f, androidx.compose.ui.unit.TextUnitType.Sp)
+                    letterSpacing = androidx.compose.ui.unit.TextUnit(-1f, androidx.compose.ui.unit.TextUnitType.Sp)
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Manage your financial data and privacy preferences.",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                     color = Color(0xFFBEC7D4)
                 )
             }
 
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .glassMorphism(cornerRadius = 24f, alpha = 0.05f),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "AI & LEARNING",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = Color(0xFF98CBFF).copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp)
+                        text = "Data",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
                         )
                     )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .border(1.dp, Color(0xFF98CBFF).copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                            .background(Color(0xFF98CBFF).copy(alpha = 0.1f))
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ListItem(
+                        headlineContent = { Text("Export to CSV") },
+                        supportingContent = { Text("Offline backup of all your transactions") },
+                        leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            viewModel.exportCsv(context) { result ->
+                                result.onSuccess { path ->
+                                    Toast.makeText(context, "Exported to $path", Toast.LENGTH_LONG).show()
+                                }.onFailure { e ->
+                                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }
+                    )
+
+                    ListItem(
+                        headlineContent = { Text("Import from CSV") },
+                        supportingContent = { Text("Restore transactions from a backup file") },
+                        leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            csvImportLauncher.launch("text/comma-separated-values")
+                        }
+                    )
+
+                    ListItem(
+                        headlineContent = { Text("Reset AI Learning") },
+                        supportingContent = { Text("Clear merchant category corrections") },
+                        leadingContent = { Icon(Icons.Default.Psychology, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            viewModel.clearAiLearning()
+                            Toast.makeText(context, "Learning data reset.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Privacy",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "BETA",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = Color(0xFF98CBFF),
-                                fontWeight = FontWeight.Bold
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Show Transaction Details",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Display merchant, category, and date",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFBEC7D4)
+                            )
+                        }
+                        Switch(
+                            checked = showSmsDetails,
+                            onCheckedChange = { isChecked ->
+                                viewModel.setShowSmsDetails(isChecked)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF00A3FF)
                             )
                         )
-                    }
-                }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFF98CBFF).copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Psychology,
-                                contentDescription = null,
-                                tint = Color(0xFF00A3FF),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Predictive Analysis",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Text(
-                                text = "Allow AI to study spending habits for future budget forecasting.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFBEC7D4),
-                                lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
-                            )
-                        }
-
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            Switch(
-                                checked = isSmsTrackingEnabled,
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) {
-                                        showSmsRationaleDialog = true
-                                    } else {
-                                        viewModel.setSmsTrackingEnabled(false)
-                                    }
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF00A3FF)
-                                )
-                            )
-                        }
-                    }
-                }
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFFFAEDB).copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = Color(0xFFFFAEDB),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = "Smart Categorization",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                            Text(
-                                text = "Automatically tag and group similar transactions across accounts.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFBEC7D4),
-                                lineHeight = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp)
-                            )
-                        }
-
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            Switch(
-                                checked = smartCategorizationEnabled,
-                                onCheckedChange = { isChecked ->
-                                    viewModel.setSmartCategorizationEnabled(isChecked)
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFFFF38C5)
-                                )
-                            )
-                        }
                     }
                 }
             }
 
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    text = "PRIVACY",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color(0xFF98CBFF).copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "AI & Learning",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     )
-                )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-                ) {
-                    Column {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Visibility,
-                                    contentDescription = null,
-                                    tint = Color(0xFF98CBFF),
-                                    modifier = Modifier.padding(end = 16.dp)
-                                )
-                                Column {
-                                    Text(
-                                        text = "Show Transaction Details",
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = "Reveal merchant names in main dashboard",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFFBEC7D4)
-                                    )
-                                }
-                            }
-                            Switch(
-                                checked = showSmsDetails,
-                                onCheckedChange = { isChecked ->
-                                    viewModel.setShowSmsDetails(isChecked)
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF00A3FF)
-                                )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Automatic SMS Tracking",
+                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Detect income and expenses from bank messages",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFBEC7D4)
                             )
                         }
-
-                        Divider(color = Color.White.copy(alpha = 0.05f), modifier = Modifier.padding(horizontal = 24.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(24.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = Color(0xFF98CBFF),
-                                    modifier = Modifier.padding(end = 16.dp)
-                                )
-                                Column {
-                                    Text(
-                                        text = "Biometric Lock",
-                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = "Require FaceID/Fingerprint for transfers",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFFBEC7D4)
-                                    )
-                                }
-                            }
-                            Switch(
-                                checked = biometricLockEnabled,
-                                onCheckedChange = { isChecked ->
-                                    viewModel.setBiometricLockEnabled(isChecked)
-                                },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF00A3FF)
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text(
-                    text = "DATA",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color(0xFF98CBFF).copy(alpha = 0.8f),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp)
-                    )
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable {
-                                viewModel.exportCsv(context) { result ->
-                                    result.onSuccess { path ->
-                                        Toast.makeText(context, "Exported to $path", Toast.LENGTH_LONG).show()
-                                    }.onFailure { e ->
-                                        Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
-                                    }
+                        Switch(
+                            checked = isSmsTrackingEnabled,
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    showSmsRationaleDialog = true
+                                } else {
+                                    viewModel.setSmsTrackingEnabled(false)
                                 }
                             },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Download,
-                                    contentDescription = null,
-                                    tint = Color(0xFF00A3FF),
-                                    modifier = Modifier.padding(end = 16.dp)
-                                )
-                                Text(
-                                    text = "Export CSV Statement",
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = Color(0xFFBEC7D4)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF00A3FF)
                             )
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable {
-                                csvImportLauncher.launch("text/comma-separated-values")
-                            },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Upload,
-                                    contentDescription = null,
-                                    tint = Color(0xFF00A3FF),
-                                    modifier = Modifier.padding(end = 16.dp)
-                                )
-                                Text(
-                                    text = "Import Transaction History",
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = Color.White
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = Color(0xFFBEC7D4)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .border(1.dp, Color(0xFFFFB4AB).copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-                            .clickable {
-                                viewModel.clearAiLearning()
-                                Toast.makeText(context, "Learning data reset.", Toast.LENGTH_SHORT).show()
-                            },
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF93000A).copy(alpha = 0.1f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.RestartAlt,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFFB4AB),
-                                    modifier = Modifier.padding(end = 16.dp)
-                                )
-                                Text(
-                                    text = "Reset AI Learning",
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = Color(0xFFFFB4AB)
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(Color(0xFFFFB4AB).copy(alpha = 0.1f))
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "DESTRUCTIVE",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        color = Color(0xFFFFB4AB).copy(alpha = 0.6f),
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp)
-                                    )
-                                )
-                            }
-                        }
+                        )
                     }
                 }
             }
@@ -604,22 +370,21 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "Advanced Options",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = Color(0xFF98CBFF).copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = androidx.compose.ui.unit.TextUnit(1f, androidx.compose.ui.unit.TextUnitType.Sp)
+                        text = "Advanced",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
                         )
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "All data is securely stored locally on your device. We do not use any tracking analytics or cloud services.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFFBEC7D4)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Row(
@@ -631,55 +396,29 @@ fun SettingsScreen(
                                 viewModel.logout()
                                 onRestartApp()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A3FF).copy(alpha = 0.2f)),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 "Logout",
-                                color = Color(0xFF98CBFF),
-                                fontWeight = FontWeight.Bold
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
 
                         Button(
                             onClick = { showClearDataDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB4AB).copy(alpha = 0.2f)),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 "Clear History",
-                                color = Color(0xFFFFB4AB),
-                                fontWeight = FontWeight.Bold
+                                color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
                     }
                 }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "RIVAVA+ V2.4.0",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = androidx.compose.ui.unit.TextUnit(2f, androidx.compose.ui.unit.TextUnitType.Sp)
-                    ),
-                    color = Color(0xFFBEC7D4)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "By modifying these settings, you agree to our updated Data Processing Agreement and AI Privacy Policy.",
-                    style = MaterialTheme.typography.bodySmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
-                    color = Color(0xFFBEC7D4).copy(alpha = 0.4f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(0.8f)
-                )
             }
         }
     }
