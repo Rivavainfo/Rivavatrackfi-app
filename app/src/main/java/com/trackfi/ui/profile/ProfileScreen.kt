@@ -36,10 +36,18 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.trackfi.ui.home.HomeViewModel
+import java.io.File
+import java.io.FileOutputStream
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.theme.glassMorphism
@@ -57,8 +65,29 @@ fun ProfileScreen(
 ) {
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
+    val profileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+    val context = LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let {
+                try {
+                    val inputStream = context.contentResolver.openInputStream(it)
+                    val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
+                    val outputStream = FileOutputStream(file)
+                    inputStream?.copyTo(outputStream)
+                    inputStream?.close()
+                    outputStream.close()
+                    viewModel.setProfileImageUri(file.absolutePath)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    )
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -87,7 +116,10 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar Component
-            Box(contentAlignment = Alignment.BottomEnd) {
+            Box(
+                contentAlignment = Alignment.BottomEnd,
+                modifier = Modifier.clickable { galleryLauncher.launch("image/*") }
+            ) {
                 Box(
                     modifier = Modifier
                         .size(136.dp)
@@ -109,20 +141,47 @@ fun ProfileScreen(
                             .border(4.dp, MaterialTheme.colorScheme.background, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                        if (initial.isNotEmpty()) {
-                            Text(
-                                text = initial,
-                                style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        if (profileImageUri != null) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                                if (initial.isNotEmpty()) {
+                                    Text(
+                                        text = initial,
+                                        style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Avatar",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(48.dp)
+                                    )
+                                }
+
+                                AsyncImage(
+                                    model = profileImageUri,
+                                    contentDescription = "Avatar",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Avatar",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(48.dp)
-                            )
+                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                            if (initial.isNotEmpty()) {
+                                Text(
+                                    text = initial,
+                                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "Avatar",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
                         }
                     }
                 }

@@ -69,6 +69,12 @@ class HomeViewModel @Inject constructor(
         false
     )
 
+    val profileImageUri = userPreferencesRepository.profileImageUriFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        null
+    )
+
     init {
         viewModelScope.launch {
             userPreferencesRepository.dailyBudgetFlow.collectLatest {
@@ -124,6 +130,12 @@ class HomeViewModel @Inject constructor(
     fun setPremiumUser(isPremium: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setPremiumUser(isPremium)
+        }
+    }
+
+    fun setProfileImageUri(uri: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.setProfileImageUri(uri)
         }
     }
 
