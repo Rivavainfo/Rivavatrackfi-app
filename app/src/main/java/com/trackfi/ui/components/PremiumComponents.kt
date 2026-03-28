@@ -84,7 +84,7 @@ fun PremiumButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    colors: List<Color> = listOf(PremiumGradientStart, EmeraldGreen)
+    colors: List<Color> = listOf(Color(0xFF1E293B), Color(0xFF0F172A)) // Dark blue-grey gradient default
 ) {
     Button(
         onClick = onClick,
@@ -95,25 +95,26 @@ fun PremiumButton(
                 brush = Brush.linearGradient(
                     colors = colors
                 ),
-                shape = RoundedCornerShape(28.dp)
+                shape = RoundedCornerShape(16.dp)
             ),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(16.dp),
         contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                tint = Color.White.copy(alpha = 0.9f),
+                modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
         }
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color.White
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = Color.White.copy(alpha = 0.9f),
+            letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp)
         )
     }
 }

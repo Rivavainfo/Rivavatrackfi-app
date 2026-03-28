@@ -42,6 +42,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
@@ -69,21 +71,26 @@ fun ProfileScreen(
     val summary by viewModel.summary.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
-            uri?.let {
-                try {
-                    val inputStream = context.contentResolver.openInputStream(it)
-                    val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
-                    val outputStream = FileOutputStream(file)
-                    inputStream?.copyTo(outputStream)
-                    inputStream?.close()
-                    outputStream.close()
-                    viewModel.setProfileImageUri(file.absolutePath)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            uri?.let { selectedUri ->
+                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    try {
+                        context.contentResolver.openInputStream(selectedUri)?.use { inputStream ->
+                            val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
+                            FileOutputStream(file).use { outputStream ->
+                                inputStream.copyTo(outputStream)
+                            }
+                            launch(kotlinx.coroutines.Dispatchers.Main) {
+                                viewModel.setProfileImageUri(file.absolutePath)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }
@@ -162,26 +169,17 @@ fun ProfileScreen(
                                 AsyncImage(
                                     model = profileImageUri,
                                     contentDescription = "Avatar",
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                         } else {
-                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                            if (initial.isNotEmpty()) {
-                                Text(
-                                    text = initial,
-                                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Avatar",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = com.trackfi.R.drawable.rivava_logo),
+                                contentDescription = "Avatar Placeholder",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
                         }
                     }
                 }

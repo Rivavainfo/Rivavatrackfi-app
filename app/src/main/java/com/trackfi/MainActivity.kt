@@ -155,8 +155,8 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .clip(RoundedCornerShape(999.dp))
-                            .background(androidx.compose.ui.graphics.Color(0xFF8DA3B5).copy(alpha = 0.7f))
-                            .glassMorphism(cornerRadius = 999f, alpha = 0.7f, strokeAlpha = 0.2f)
+                            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.9f))
+                            .glassMorphism(cornerRadius = 999f, alpha = 0.1f, strokeAlpha = 0.05f)
                             .padding(horizontal = 24.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -183,7 +183,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
     ) { paddingValues ->
         NavHost(
             navController = navController,

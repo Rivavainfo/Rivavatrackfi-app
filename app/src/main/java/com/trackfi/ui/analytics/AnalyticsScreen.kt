@@ -76,66 +76,15 @@ fun AnalyticsScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF131313).copy(alpha = 0.8f))
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            // Pink Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 0.dp, y = 9.dp)
-                                    .size(15.dp)
-                                    .background(Color(0xFFFF00FF))
-                            )
-                            // Blue Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 11.dp, y = 0.dp)
-                                    .size(17.dp)
-                                    .background(Color(0xFF00A3FF))
-                            )
-                            // Lime Green Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 7.dp, y = 24.dp)
-                                    .size(12.dp)
-                                    .background(Color(0xFFB5FF00))
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "RIVAVA",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
-                            color = com.trackfi.ui.theme.PrimaryContainerSky,
-                            letterSpacing = 2.sp
-                        )
-                    }
-                    IconButton(onClick = { /* Notifications */ }) {
-                        Icon(androidx.compose.material.icons.Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
+        containerColor = Color(0xFF0A0A0A),
+        topBar = { }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Column {
