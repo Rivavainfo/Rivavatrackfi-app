@@ -204,44 +204,46 @@ fun RivavaPortfolioScreen(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(280.dp)
-                        .clip(RoundedCornerShape(32.dp))
+                        .height(280.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                    pageSpacing = 16.dp
                 ) { page ->
-                    val newsItem = displayNews[page]
-                    val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
-                    val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else defaultFallbackNews.first().image
-                    val newsHeadline = newsItem.headline
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clickable {
-                                try {
-                                    uriHandler.openUri(newsUrl)
-                                } catch (e: Exception) {}
-                            }
-                    ) {
-                        AsyncImage(
-                            model = newsImage,
-                            contentDescription = "Abstract digital visualization",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                            alpha = 0.4f
-                        )
+                    Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
+                        val newsItem = displayNews[page]
+                        val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
+                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else defaultFallbackNews.first().image
+                        val newsHeadline = newsItem.headline
 
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(
-                                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
-                                            MaterialTheme.colorScheme.background
+                                .clickable {
+                                    try {
+                                        uriHandler.openUri(newsUrl)
+                                    } catch (e: Exception) {}
+                                }
+                        ) {
+                            AsyncImage(
+                                model = newsImage,
+                                contentDescription = "Abstract digital visualization",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                alpha = 0.4f
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
+                                                MaterialTheme.colorScheme.background
+                                            )
                                         )
                                     )
-                                )
-                        )
+                            )
 
                         Column(
                             modifier = Modifier
@@ -309,6 +311,7 @@ fun RivavaPortfolioScreen(
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

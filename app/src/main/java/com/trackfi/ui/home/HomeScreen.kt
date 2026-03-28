@@ -124,7 +124,7 @@ fun HomeScreen(
         topBar = {
             // Removed header top bar as requested
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = Color(0xFF0A0A0A) // Deep Black / Amoled Black
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -140,31 +140,14 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Box(
-                            modifier = Modifier.size(48.dp)
-                        ) {
-                            // Pink Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 0.dp, y = 14.dp)
-                                    .size(22.dp)
-                                    .background(Color(0xFFFF00FF))
-                            )
-                            // Blue Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 16.dp, y = 0.dp)
-                                    .size(26.dp)
-                                    .background(Color(0xFF00A3FF))
-                            )
-                            // Lime Green Box
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 10.dp, y = 36.dp)
-                                    .size(18.dp)
-                                    .background(Color(0xFFB5FF00))
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.rivava_logo),
+                            contentDescription = "Rivava Logo",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
                             text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
@@ -215,26 +198,17 @@ fun HomeScreen(
                                 AsyncImage(
                                     model = profileImageUri,
                                     contentDescription = "Profile Avatar",
-                                    modifier = Modifier.fillMaxSize(),
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
                                     contentScale = ContentScale.Crop
                                 )
                             }
                         } else {
-                            val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                            if (initial.isNotEmpty()) {
-                                Text(
-                                    text = initial,
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Profile Avatar",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
+                            Image(
+                                painter = painterResource(id = R.drawable.rivava_logo),
+                                contentDescription = "Profile Avatar",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
                         }
                     }
                 }
@@ -369,19 +343,25 @@ fun HomeScreen(
                             context.startActivity(intent)
                         },
                         icon = Icons.Default.Call,
-                        colors = listOf(Color(0xFF00A3FF), Color(0xFF1D4ED8)) // Blue-700 approx
+                        modifier = Modifier.bounceClick {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                            context.startActivity(intent)
+                        },
+                        colors = listOf(Color(0xFF004A77), Color(0xFF001D33))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
                         icon = Icons.Default.VideoCall,
-                        colors = listOf(Color(0xFF00E471), Color(0xFF047857)) // Emerald-700 approx
+                        modifier = Modifier.bounceClick { showVideoCallDialog = true },
+                        colors = listOf(Color(0xFF003D19), Color(0xFF00210B))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
                         icon = Icons.Default.Chat,
-                        colors = listOf(Color(0xFFFFAEDB), Color(0xFFBE185D)) // Pink-700 approx
+                        modifier = Modifier.bounceClick { showChatDialog = true },
+                        colors = listOf(Color(0xFF55003F), Color(0xFF3C002B))
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
