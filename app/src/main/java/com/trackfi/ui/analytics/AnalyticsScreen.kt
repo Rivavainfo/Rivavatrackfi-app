@@ -180,69 +180,6 @@ fun AnalyticsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                                 Spacer(modifier = Modifier.height(32.dp))
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    Button(
-                                        onClick = { /* Deposit */ },
-                                        shape = RoundedCornerShape(50),
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                        contentPadding = PaddingValues(0.dp),
-                                        modifier = Modifier.height(48.dp).weight(1f)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer))),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text("Deposit Assets", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onPrimary, letterSpacing = 1.sp)
-                                        }
-                                    }
-                                    Button(
-                                        onClick = { /* Learn More */ },
-                                        shape = RoundedCornerShape(50),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                        modifier = Modifier.height(48.dp).weight(1f)
-                                    ) {
-                                        Text("Learn More", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface, letterSpacing = 1.sp)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Side Cards (Stacked horizontally if space permits, but vertically is safer for mobile)
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Card(
-                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                            ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                                        Box(modifier = Modifier.size(32.dp).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                                            Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary, modifier = Modifier.size(16.dp))
-                                        }
-                                        Text("PROJECTED\nYIELD", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp, textAlign = androidx.compose.ui.text.style.TextAlign.End)
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Box(modifier = Modifier.fillMaxWidth().height(8.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))) {
-                                        Box(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.3f).background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f), RoundedCornerShape(50)))
-                                    }
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Waiting for historical data...", style = MaterialTheme.typography.bodySmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-
-                            Card(
-                                modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).glassMorphism(cornerRadius = 16f, alpha = 0.05f),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                            ) {
-                                Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("NETWORK STATUS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 1.sp)
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Box(modifier = Modifier.size(56.dp).border(4.dp, MaterialTheme.colorScheme.surfaceVariant, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
-                                        Icon(androidx.compose.material.icons.Icons.Default.CloudOff, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Text("Offline Sync", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = MaterialTheme.colorScheme.onSurface)
-                                    Text("Analytics engine standby", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
                             }
                         }
 
