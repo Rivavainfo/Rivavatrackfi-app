@@ -29,6 +29,14 @@ import androidx.compose.material.icons.filled.Refresh
 import coil.compose.AsyncImage
 import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import com.trackfi.ui.theme.AmoledBlack
+import com.trackfi.ui.theme.TertiaryEmerald
+import com.trackfi.ui.theme.SecondaryPink
+import com.trackfi.ui.theme.PrimarySky
+import androidx.compose.ui.unit.sp
 
 data class PortfolioItem(
     val exchange: String,
@@ -67,61 +75,247 @@ fun RivavaPortfolioScreen(
     val groupedPortfolio = portfolioItems.groupBy { it.exchange }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Rivava Portfolio",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                        color = PrimaryContainerSky
-                    )
-                },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.refresh()
-                        cryptoViewModel.refresh()
-                    }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = PrimaryContainerSky,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary
-                )
-            )
-        }
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(20.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
+            item {
+                // Custom Logo Header and Refresh
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.size(32.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .offset(x = 16.dp, y = 0.dp)
+                                .background(PrimaryContainerSky)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .offset(x = 0.dp, y = 8.dp)
+                                .background(SecondaryPink)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .offset(x = 6.dp, y = 24.dp)
+                                .background(TertiaryEmerald)
+                        )
+                    }
+
+                    IconButton(onClick = {
+                        viewModel.refresh()
+                        cryptoViewModel.refresh()
+                    }) {
+                        Icon(
+                            androidx.compose.material.icons.Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Total Valuation
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "TOTAL VALUATION",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "$142,850.42",
+                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = Color.White
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(TertiaryEmerald.copy(alpha = 0.1f))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = null,
+                                tint = TertiaryEmerald,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "+2.4%",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = TertiaryEmerald
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                // Market News Hero Card
+                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                val firstNews = marketNews.firstOrNull()
+                val newsUrl = firstNews?.url ?: "https://www.google.com/search?q=tech+bull+run"
+                val newsImage = if (firstNews?.image?.isNotBlank() == true) firstNews.image else "https://lh3.googleusercontent.com/aida-public/AB6AXuDkis73_T0NNSoeGJQffY8Z3c2_kh8XAYY3-jj_WdL8Q1OymlG8efhS6OaUL-_qw2dU33CJaKgrgmLU-xGZ88qVzkF8RoJJetdnfb8XdufoJUajQMf71dAQtaunyiCL8JpFCUPM9wgdoagj8lbAyNobPjIDMZmsWjKB6J8M7eJtPlFzQdcbVGXM7bD-bQJVbBMO1GfZuWKGfjxIN-FVV2HW6H1KonSt1__l78xI1rftWBlsPi55XYsrj2GTFWvW4IgbnoltaM_v_CAl"
+                val newsHeadline = firstNews?.headline ?: "The Tech Bull Run: Semis lead the next global rally"
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .clickable {
+                            try {
+                                uriHandler.openUri(newsUrl)
+                            } catch (e: Exception) {}
+                        }
+                ) {
+                    AsyncImage(
+                        model = newsImage,
+                        contentDescription = "Abstract digital visualization",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        alpha = 0.4f
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
+                                        MaterialTheme.colorScheme.background
+                                    )
+                                )
+                            )
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        Text(
+                            text = "MARKET NEWS",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
+                            ),
+                            color = SecondaryPink
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = newsHeadline,
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = Color.White,
+                            lineHeight = 32.sp,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "READ ANALYSIS",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = PrimarySky
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = PrimarySky,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
             groupedPortfolio.forEach { (exchange, items) ->
                 item {
-                    val subtitle = if (exchange == "NSE") "India Market" else "US Market"
+                    val titleText = if (exchange == "NSE") "NSE India" else "NYSE US"
+                    val subtitleText = if (exchange == "NSE") "INDIAN BLUE CHIPS" else "WALL STREET TECH"
                     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-                    val glassAlpha = if (isNyse) 0.6f else 0.03f
-                    val glassStrokeAlpha = if (isNyse) 0.1f else 0.2f
-                    val glassColor = if (isNyse) com.trackfi.ui.theme.NyseBlack else PrimaryContainerSky
+                    val primaryColor = if (isNyse) com.trackfi.ui.theme.NyseGold else PrimaryContainerSky
+                    val totalValue = if (isNyse) "$42,912.18" else "₹82,44,120"
+                    val dailyChange = if (isNyse) "+0.9% today" else "+1.8% today"
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        SectionHeader(
-                            title = exchange,
-                            subtitle = subtitle
-                        )
-
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(40.dp))
-                                .glassMorphism(cornerRadius = 40f, alpha = glassAlpha, strokeAlpha = glassStrokeAlpha, color = glassColor)
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                .padding(bottom = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Column {
+                                    Text(
+                                        text = titleText,
+                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = primaryColor
+                                    )
+                                    Text(
+                                        text = subtitleText,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Medium,
+                                            letterSpacing = 0.5.sp
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = totalValue,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = dailyChange,
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = TertiaryEmerald
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(2.dp)
+                                    .background(primaryColor.copy(alpha = 0.2f))
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items.forEach { item ->
                                 val state = stockStates[item.ticker]
@@ -180,27 +374,6 @@ fun RivavaPortfolioScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            item {
-                SectionHeader(
-                    title = "Market News"
-                )
-                if (marketNews.isNotEmpty()) {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(marketNews) { news ->
-                            NewsCard(news = news)
-                        }
-                    }
-                } else {
-                    Text(
-                        "Loading news...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
 
             item {
                 Text(
