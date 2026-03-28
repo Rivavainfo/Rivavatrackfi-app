@@ -44,6 +44,12 @@ class SettingsViewModel @Inject constructor(
         true
     )
 
+    private val _smartCategorizationEnabled = MutableStateFlow(true)
+    val smartCategorizationEnabled: StateFlow<Boolean> = _smartCategorizationEnabled
+
+    private val _biometricLockEnabled = MutableStateFlow(true)
+    val biometricLockEnabled: StateFlow<Boolean> = _biometricLockEnabled
+
     private val _banksDetected = MutableStateFlow<List<String>>(emptyList())
     val banksDetected: StateFlow<List<String>> = _banksDetected
 
@@ -71,6 +77,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.setShowSmsDetails(show)
         }
+    }
+
+    fun setSmartCategorizationEnabled(enabled: Boolean) {
+        _smartCategorizationEnabled.value = enabled
+    }
+
+    fun setBiometricLockEnabled(enabled: Boolean) {
+        _biometricLockEnabled.value = enabled
     }
 
     fun exportCsv(context: Context, onResult: (Result<String>) -> Unit) {
