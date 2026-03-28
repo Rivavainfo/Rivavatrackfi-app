@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -126,18 +127,38 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 120.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
                 Column {
-                    Image(
-                        painter = painterResource(id = R.drawable.rivava),
-                        contentDescription = "Rivava Logo",
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                    )
+                    Box(
+                        modifier = Modifier.size(48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Blue Box
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(30.dp)
+                                .background(Color(0xFF00A3FF))
+                        )
+                        // Pink Box
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .size(30.dp)
+                                .background(Color(0xFFFF00FF))
+                        )
+                        // Lime Green Box
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(end = 6.dp)
+                                .size(20.dp)
+                                .background(Color(0xFFB5FF00))
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
@@ -183,7 +204,19 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.6f, strokeAlpha = 0.1f),
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFF90A4AE).copy(alpha = 0.9f),
+                                        Color(0xFFB0BEC5).copy(alpha = 0.7f)
+                                    )
+                                )
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(24.dp)
+                            ),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -196,13 +229,13 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    tint = Color(0xFF98CBFF),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
                                     text = "About Rivava",
                                     style = MaterialTheme.typography.titleLarge.copy(
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = Color(0xFF98CBFF),
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = (-0.5).sp
                                     )
@@ -212,7 +245,7 @@ fun HomeScreen(
                             Text(
                                 text = "Rivava is your high-fidelity financial ecosystem designed for the modern investor. We blend institutional-grade security with a curator's eye for detail, giving you the clarity needed to scale your wealth through intelligent automation and real-time portfolio analytics.",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = Color.White.copy(alpha = 0.85f),
                                     lineHeight = 24.sp,
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 15.sp
@@ -222,7 +255,7 @@ fun HomeScreen(
                             Text(
                                 text = "PRECISION MEET PERFORMANCE",
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    color = MaterialTheme.colorScheme.secondary,
+                                    color = Color(0xFFFFAEDB),
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 1.5.sp
                                 )
@@ -270,19 +303,19 @@ fun HomeScreen(
                             context.startActivity(intent)
                         },
                         icon = Icons.Default.Call,
-                        colors = listOf(MaterialTheme.colorScheme.primaryContainer, Color(0xFF1D4ED8)) // Blue-700 approx
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF1D4ED8)) // Blue-700 approx
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
                         icon = Icons.Default.VideoCall,
-                        colors = listOf(MaterialTheme.colorScheme.tertiaryContainer, Color(0xFF047857)) // Emerald-700 approx
+                        colors = listOf(Color(0xFF00E471), Color(0xFF047857)) // Emerald-700 approx
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
                         icon = Icons.Default.Chat,
-                        colors = listOf(MaterialTheme.colorScheme.secondaryContainer, Color(0xFFBE185D)) // Pink-700 approx
+                        colors = listOf(Color(0xFFFFAEDB), Color(0xFFBE185D)) // Pink-700 approx
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
