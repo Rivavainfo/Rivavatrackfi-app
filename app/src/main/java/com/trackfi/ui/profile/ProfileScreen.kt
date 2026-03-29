@@ -470,17 +470,27 @@ fun ProfileScreen(
                 QuickActionItem(
                     icon = Icons.Default.Security,
                     title = "Security & Privacy",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = { android.widget.Toast.makeText(context, "Security & Privacy Settings", android.widget.Toast.LENGTH_SHORT).show() }
                 )
                 QuickActionItem(
                     icon = Icons.Default.Notifications,
                     title = "Notifications",
-                    tint = MaterialTheme.colorScheme.secondary
+                    tint = MaterialTheme.colorScheme.secondary,
+                    onClick = { android.widget.Toast.makeText(context, "Notification Settings", android.widget.Toast.LENGTH_SHORT).show() }
                 )
                 QuickActionItem(
                     icon = Icons.Default.HelpOutline,
                     title = "Help Center",
-                    tint = MaterialTheme.colorScheme.tertiary
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://rivavainfo.com/help"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Help Center unavailable", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
                 QuickActionItem(
                     icon = Icons.Default.Logout,

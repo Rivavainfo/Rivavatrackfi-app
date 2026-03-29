@@ -533,7 +533,7 @@ fun HomeScreen(
                 title = { Text("Schedule a Video Call") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Fill out the details below to book a consultation.")
+                        Text("Fill out the details below to book a consultation via WhatsApp.")
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
@@ -557,7 +557,14 @@ fun HomeScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         showVideoCallDialog = false
-                        Toast.makeText(context, "Consultation requested!", Toast.LENGTH_SHORT).show()
+                        val message = "Hi, I want to schedule a video call.\nName: $name\nPreferred Time: $preferredTime\nContact: $contactInfo"
+                        val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919044761170?text=$encodedMessage"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "WhatsApp not found", Toast.LENGTH_SHORT).show()
+                        }
                     }) {
                         Text("Submit")
                     }

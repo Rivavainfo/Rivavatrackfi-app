@@ -492,7 +492,6 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .bounceClick { onClick() }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick

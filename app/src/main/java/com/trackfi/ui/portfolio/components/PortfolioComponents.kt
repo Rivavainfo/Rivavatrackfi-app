@@ -2,6 +2,7 @@ package com.trackfi.ui.portfolio.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -208,7 +209,16 @@ fun CashBalanceSection(usdCash: String, totalCash: String) {
 
 @Composable
 fun BalanceRow(label: String, value: String, icon: ImageVector, iconColor: Color, iconBgColor: Color, subtitle: String, showDivider: Boolean = true) {
-    Column {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                try {
+                    uriHandler.openUri("https://www.google.com/search?q=$label+exchange+rate")
+                } catch (e: Exception) {}
+            }
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
