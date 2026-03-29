@@ -91,8 +91,8 @@ fun TransactionsScreen(
                     painter = androidx.compose.ui.res.painterResource(id = com.trackfi.R.drawable.rivava_logo),
                     contentDescription = "Rivava Logo",
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(6.dp)),
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
             }
@@ -194,7 +194,7 @@ fun TransactionsScreen(
                 TransactionsEmptyState()
             }
             is TransactionsUiState.Success -> {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Box(modifier = Modifier.weight(1f).padding(horizontal = 20.dp)) {
                     TransactionList(transactions = state.transactions, viewModel = viewModel)
                 }
             }

@@ -1,23 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-
-    <!-- Pink Box (Top Left equivalent) -->
-    <path
-        android:fillColor="#FFFF00FF"
-        android:pathData="M 30,44 h 22 v 22 h -22 z" />
-
-    <!-- Blue Box (Top Right equivalent) -->
-    <path
-        android:fillColor="#FF00A3FF"
-        android:pathData="M 46,30 h 26 v 26 h -26 z" />
-
-    <!-- Lime Green Box (Bottom Center equivalent) -->
-    <path
-        android:fillColor="#FFB5FF00"
-        android:pathData="M 40,66 h 18 v 18 h -18 z" />
-
-</vector>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/rivava_logo"
+    android:inset="24%" />
