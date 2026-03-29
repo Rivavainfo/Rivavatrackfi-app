@@ -96,27 +96,6 @@ fun RivavaPortfolioScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(32.dp)) {
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .offset(x = 16.dp, y = 0.dp)
-                                .background(PrimaryContainerSky)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .offset(x = 0.dp, y = 8.dp)
-                                .background(SecondaryPink)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .offset(x = 6.dp, y = 24.dp)
-                                .background(TertiaryEmerald)
-                        )
-                    }
-
                     IconButton(onClick = {
                         viewModel.refresh()
                         cryptoViewModel.refresh()
@@ -127,6 +106,15 @@ fun RivavaPortfolioScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.trackfi.R.drawable.rivava_logo),
+                        contentDescription = "Rivava Logo",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(RoundedCornerShape(6.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
                 }
 
                 // Total Valuation

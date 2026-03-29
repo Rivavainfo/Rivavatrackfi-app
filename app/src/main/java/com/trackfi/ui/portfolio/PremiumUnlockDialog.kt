@@ -148,8 +148,16 @@ fun PremiumUnlockDialog(
 
                             Button(
                                 onClick = {
-                                    val upiIntent = Intent(Intent.ACTION_VIEW, Uri.parse("upi://pay?pa=adityaz190zz@okicici&pn=Rivava&am=11&cu=INR"))
-                                    context.startActivity(Intent.createChooser(upiIntent, "Pay with..."))
+                                    try {
+                                        val encodedNote = java.net.URLEncoder.encode("Rivava Premium Unlock", "UTF-8")
+                                        val uriString = "upi://pay?pa=adityaz190zz@okicici&pn=Rivava&am=11&cu=INR&tn=$encodedNote"
+                                        val upiIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString))
+                                        context.startActivity(Intent.createChooser(upiIntent, "Pay with..."))
+                                    } catch (e: android.content.ActivityNotFoundException) {
+                                        android.widget.Toast.makeText(context, "No UPI app found. Please install one to continue.", android.widget.Toast.LENGTH_LONG).show()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
                                     currentStep = UnlockStep.ConfirmPayment
                                 },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
