@@ -116,7 +116,9 @@ fun HomeScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier
+                    .padding(bottom = 72.dp) // Provide spacing so it doesn't overlap the floating navigation bar
+                    .size(64.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction", modifier = Modifier.size(32.dp))
             }
@@ -130,7 +132,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 100.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 140.dp), // Provide enough bottom padding for the floating nav bar
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
@@ -242,20 +244,15 @@ fun HomeScreen(
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF8DA3B5),
-                                        Color(0xFF8DA3B5)
+                                        Color(0xFF161616),
+                                        Color(0xFF121212)
                                     )
                                 )
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.15f),
+                                color = Color.White.copy(alpha = 0.05f),
                                 shape = RoundedCornerShape(24.dp)
-                            )
-                            .glowEffect(
-                                color = Color(0xFF98CBFF),
-                                radius = 20f,
-                                isSelected = true
                             ),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -928,7 +925,7 @@ fun DashboardOverviewBento(summary: FinancialSummaryState) {
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    .background(Color(0xFF161616)),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -964,7 +961,7 @@ fun DashboardOverviewBento(summary: FinancialSummaryState) {
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    .background(Color(0xFF161616)),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

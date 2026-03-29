@@ -149,7 +149,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             userName = userName,
             onDismiss = { showPremiumUnlockDialog = false },
             onUnlockSuccess = {
-                runBlocking { preferencesRepository?.setPremiumUser(true) }
+                runBlocking { preferencesRepository?.setPremiumUserForCurrent(true) }
                 showPremiumUnlockDialog = false
             }
         )
@@ -163,15 +163,15 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(androidx.compose.ui.graphics.Color.Transparent)
-                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 8.dp),
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(0.9f)
                             .clip(RoundedCornerShape(999.dp))
-                            .background(androidx.compose.ui.graphics.Color(0xFF1B1B1B).copy(alpha = 0.9f))
-                            .glassMorphism(cornerRadius = 999f, alpha = 0.1f, strokeAlpha = 0.05f)
+                            .background(androidx.compose.ui.graphics.Color(0xFF161616).copy(alpha = 0.85f))
+                            .glassMorphism(cornerRadius = 999f, alpha = 0.05f, strokeAlpha = 0.05f)
                             .padding(horizontal = 24.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -208,7 +208,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         NavHost(
             navController = navController,
             startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
                 androidx.compose.animation.scaleIn(
