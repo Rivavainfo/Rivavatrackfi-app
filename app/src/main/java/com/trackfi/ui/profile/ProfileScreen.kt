@@ -119,7 +119,7 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 140.dp), // Provide enough bottom padding for the floating nav bar
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar Component
@@ -482,6 +482,12 @@ fun ProfileScreen(
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary
                 )
+                QuickActionItem(
+                    icon = Icons.Default.Logout,
+                    title = "Logout",
+                    tint = MaterialTheme.colorScheme.error,
+                    onClick = { viewModel.logout() }
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -493,10 +499,11 @@ fun ProfileScreen(
 fun QuickActionItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    tint: Color
+    tint: Color,
+    onClick: () -> Unit = { }
 ) {
     Surface(
-        onClick = { /* TODO */ },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp),

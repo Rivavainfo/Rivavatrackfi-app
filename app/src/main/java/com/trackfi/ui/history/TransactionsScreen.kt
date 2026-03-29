@@ -221,7 +221,7 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 120.dp)
+        contentPadding = PaddingValues(bottom = 140.dp) // Provide enough bottom padding for the floating nav bar
     ) {
         items(transactions, key = { it.id }) { transaction ->
             val swipeableState = rememberSwipeToDismissBoxState(

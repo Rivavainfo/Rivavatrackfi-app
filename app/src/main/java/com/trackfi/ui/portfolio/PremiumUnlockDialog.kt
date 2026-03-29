@@ -44,6 +44,8 @@ fun PremiumUnlockDialog(
 ) {
     var secretKeyInput by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
+    var paymentReferenceInput by remember { mutableStateOf("") }
+    var showPaymentError by remember { mutableStateOf(false) }
     var currentStep by remember { mutableStateOf(UnlockStep.Main) }
     val context = LocalContext.current
 
@@ -167,28 +169,56 @@ fun PremiumUnlockDialog(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
-                                "Did you complete the payment?",
+                                "Verify Payment",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
 
                             Text(
-                                "Once verified, your premium access will be granted instantly.",
+                                "Please enter the UPI Transaction ID below to verify your payment and unlock Rivava+ Premium for your account.",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = paymentReferenceInput,
+                                onValueChange = {
+                                    paymentReferenceInput = it
+                                    showPaymentError = false
+                                },
+                                label = { Text("UPI Transaction ID") },
+                                isError = showPaymentError,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                    errorBorderColor = MaterialTheme.colorScheme.error
+                                ),
+                                singleLine = true
+                            )
+
+                            if (showPaymentError) {
+                                Text("Invalid Transaction ID. It must be at least 12 characters.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                            }
 
                             Button(
-                                onClick = { currentStep = UnlockStep.Success },
+                                onClick = {
+                                    if (paymentReferenceInput.length >= 12) {
+                                        currentStep = UnlockStep.Success
+                                    } else {
+                                        showPaymentError = true
+                                    }
+                                },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
                             ) {
-                                Text("I have paid", fontWeight = FontWeight.Bold)
+                                Text("Verify & Unlock", fontWeight = FontWeight.Bold)
                             }
 
                             TextButton(onClick = { currentStep = UnlockStep.Main }) {

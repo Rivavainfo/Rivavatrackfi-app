@@ -129,7 +129,7 @@ class HomeViewModel @Inject constructor(
 
     fun setPremiumUser(isPremium: Boolean) {
         viewModelScope.launch {
-            userPreferencesRepository.setPremiumUser(isPremium)
+            userPreferencesRepository.setPremiumUserForCurrent(isPremium)
         }
     }
 
@@ -156,6 +156,13 @@ class HomeViewModel @Inject constructor(
                     date = System.currentTimeMillis()
                 )
             )
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            userPreferencesRepository.setOnboardingCompleted(false)
+            userPreferencesRepository.saveUserName("")
         }
     }
 }

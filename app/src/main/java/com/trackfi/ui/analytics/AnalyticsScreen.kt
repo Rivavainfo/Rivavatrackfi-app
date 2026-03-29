@@ -84,7 +84,7 @@ fun AnalyticsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 24.dp),
+                .padding(top = 48.dp, start = 24.dp, end = 24.dp, bottom = 140.dp), // Provide enough bottom padding for the floating nav bar
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Column {
