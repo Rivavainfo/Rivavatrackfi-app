@@ -100,6 +100,7 @@ fun HomeScreen(
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
+    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
@@ -371,7 +372,7 @@ fun HomeScreen(
                             .heightIn(min = 120.dp)
                             .bounceClick {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                showPasswordDialog = true
+                                showPremiumUnlockDialog = true
                             }
                     ) {
                         Row(
@@ -388,11 +389,18 @@ fun HomeScreen(
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Unlock Premium Features",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Button(
+                                    onClick = { showPremiumUnlockDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), contentColor = MaterialTheme.colorScheme.primary),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(36.dp)
+                                ) {
+                                    Text(
+                                        text = "Unlock Premium",
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
                             }
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -580,6 +588,17 @@ fun HomeScreen(
                     TextButton(onClick = { showVideoCallDialog = false }) {
                         Text("Cancel")
                     }
+                }
+            )
+        }
+
+        if (showPremiumUnlockDialog) {
+            com.trackfi.ui.portfolio.PremiumUnlockDialog(
+                userName = userName ?: "",
+                onDismiss = { showPremiumUnlockDialog = false },
+                onUnlockSuccess = {
+                    viewModel.setPremiumUser(true)
+                    showPremiumUnlockDialog = false
                 }
             )
         }
