@@ -73,6 +73,7 @@ import com.trackfi.ui.profile.ProfileScreen
 import com.trackfi.ui.theme.TrackFiTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import androidx.compose.foundation.layout.fillMaxSize
 import javax.inject.Inject
@@ -142,14 +143,17 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
     var showPremiumUnlockDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
 
     if (showPremiumUnlockDialog) {
-        val userName = runBlocking { preferencesRepository?.userNameFlow?.first() ?: "" }
         PremiumUnlockDialog(
-            userName = userName,
+            userName = userName ?: "",
             onDismiss = { showPremiumUnlockDialog = false },
             onUnlockSuccess = {
-                runBlocking { preferencesRepository?.setPremiumUserForCurrent(true) }
+                coroutineScope.launch {
+                    preferencesRepository?.setPremiumUserForCurrent(true)
+                }
                 showPremiumUnlockDialog = false
             }
         )

@@ -118,7 +118,7 @@ fun HomeScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
-                    .padding(bottom = 72.dp) // Provide spacing so it doesn't overlap the floating navigation bar
+                    .padding(bottom = 100.dp) // Extra spacing to ensure it completely clears the floating nav bar
                     .size(64.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction", modifier = Modifier.size(32.dp))
