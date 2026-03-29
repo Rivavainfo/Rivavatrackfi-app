@@ -85,39 +85,6 @@ fun StockPortfolioDetailScreen(
                     navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
             )
-        },
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                            colors = listOf(
-                                androidx.compose.ui.graphics.Color.Transparent,
-                                MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-                    .padding(24.dp)
-            ) {
-                val uriHandler = LocalUriHandler.current
-                PremiumButton(
-                    text = "View Full Stock Price",
-                    onClick = {
-                        val exchangeSuffix = if (exchange.equals("NSE", ignoreCase = true)) "NSE" else "NYSE"
-                        val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
-                        try {
-                            uriHandler.openUri(url)
-                        } catch (e: Exception) {
-                            // Ignored if browser not found
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = Icons.AutoMirrored.Filled.ShowChart,
-                    colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
-                )
-            }
         }
     ) { paddingValues ->
         Column(
@@ -190,7 +157,26 @@ fun StockPortfolioDetailScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            val uriHandler = LocalUriHandler.current
+            PremiumButton(
+                text = "View Full Stock Price",
+                onClick = {
+                    val exchangeSuffix = if (exchange.equals("NSE", ignoreCase = true)) "NSE" else "NYSE"
+                    val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
+                    try {
+                        uriHandler.openUri(url)
+                    } catch (e: Exception) {
+                        // Ignored if browser not found
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                icon = Icons.AutoMirrored.Filled.ShowChart,
+                colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
     }
