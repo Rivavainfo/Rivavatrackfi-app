@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthEast
 import androidx.compose.foundation.clickable
@@ -182,68 +183,82 @@ fun PortfolioStockCard(
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(badgeBgColor)
-                        .clickable { openUrl() },
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(
-                        text = if (ticker.length > 4) ticker.take(4).uppercase() else ticker.uppercase(),
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                        color = primaryColor
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(badgeBgColor)
+                            .clickable { openUrl() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (ticker.length > 4) ticker.take(4).uppercase() else ticker.uppercase(),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = primaryColor
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = ticker.uppercase(),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                        Text(
+                            text = companyName,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
-                Column {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = ticker.uppercase(),
+                        text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
-                    Text(
-                        text = companyName,
-                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = arrowIcon,
+                            contentDescription = null,
+                            tint = priceColor,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = percentageChange.replace("+", "").replace("-", ""),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = priceColor
+                        )
+                    }
                 }
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = marketPrice,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+            androidx.compose.material3.IconButton(
+                onClick = { openUrl() },
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.OpenInNew,
+                    contentDescription = "Search Ticker",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Icon(
-                        imageVector = arrowIcon,
-                        contentDescription = null,
-                        tint = priceColor,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Text(
-                        text = percentageChange.replace("+", "").replace("-", ""),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = priceColor
-                    )
-                }
             }
         }
     }

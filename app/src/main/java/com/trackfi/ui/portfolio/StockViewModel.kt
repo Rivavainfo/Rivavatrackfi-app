@@ -64,6 +64,7 @@ class StockViewModel @Inject constructor(
 
     fun refresh() {
         if (currentSymbols.isNotEmpty()) {
+            _marketNews.value = emptyList() // Clear old data to trigger loading UI
             viewModelScope.launch {
                 fetchMarketNews()
                 currentSymbols.forEach { symbol ->

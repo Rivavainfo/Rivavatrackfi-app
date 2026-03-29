@@ -162,7 +162,7 @@ fun AddTransactionBottomSheet(
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = ButtonDefaults.buttonColors(containerColor = if (isIncome) Color(0xFF00FF88) else MaterialTheme.colorScheme.error, contentColor = if (isIncome) Color.Black else Color.White)
             ) {
                 Text("Save Transaction", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
