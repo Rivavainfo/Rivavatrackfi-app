@@ -217,7 +217,7 @@ fun PremiumUnlockDialog(
                             Button(
                                 onClick = {
                                     if (paymentReferenceInput.length >= 12) {
-                                        currentStep = UnlockStep.Success
+                                        currentStep = UnlockStep.Verifying
                                     } else {
                                         showPaymentError = true
                                     }
@@ -232,6 +232,25 @@ fun PremiumUnlockDialog(
                             TextButton(onClick = { currentStep = UnlockStep.Main }) {
                                 Text("Go Back", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
+                        }
+                    }
+
+                    UnlockStep.Verifying -> {
+                        LaunchedEffect(Unit) {
+                            delay(3000)
+                            currentStep = UnlockStep.Success
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp),
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            CircularProgressIndicator(color = EmeraldGreen)
+                            Text(
+                                "Verifying transaction...",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
 
@@ -268,5 +287,5 @@ fun PremiumUnlockDialog(
 }
 
 enum class UnlockStep {
-    Main, ConfirmPayment, Success
+    Main, ConfirmPayment, Verifying, Success
 }

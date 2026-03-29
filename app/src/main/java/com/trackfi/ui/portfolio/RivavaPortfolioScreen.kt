@@ -165,41 +165,35 @@ fun RivavaPortfolioScreen(
                 // Market News Hero Carousel
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-                val defaultFallbackNews = listOf(
-                    com.trackfi.domain.api.FinnhubNewsResponse(
-                        datetime = 0L,
-                        headline = "The Tech Bull Run: Semis lead the next global rally",
-                        id = 0,
-                        image = "https://lh3.googleusercontent.com/aida-public/AB6AXuDkis73_T0NNSoeGJQffY8Z3c2_kh8XAYY3-jj_WdL8Q1OymlG8efhS6OaUL-_qw2dU33CJaKgrgmLU-xGZ88qVzkF8RoJJetdnfb8XdufoJUajQMf71dAQtaunyiCL8JpFCUPM9wgdoagj8lbAyNobPjIDMZmsWjKB6J8M7eJtPlFzQdcbVGXM7bD-bQJVbBMO1GfZuWKGfjxIN-FVV2HW6H1KonSt1__l78xI1rftWBlsPi55XYsrj2GTFWvW4IgbnoltaM_v_CAl",
-                        source = "",
-                        summary = "",
-                        url = "https://www.google.com/search?q=tech+bull+run"
-                    )
-                )
-
-                val displayNews = if (marketNews.isNotEmpty()) marketNews.take(5) else defaultFallbackNews
-                val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
-
-                LaunchedEffect(pagerState.currentPage) {
-                    if (displayNews.size > 1) {
-                        delay(4000)
-                        val nextPage = (pagerState.currentPage + 1) % displayNews.size
-                        pagerState.animateScrollToPage(nextPage)
+                if (marketNews.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
-                }
+                } else {
+                    val displayNews = marketNews.take(5)
+                    val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
 
-                androidx.compose.foundation.pager.HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp),
-                    contentPadding = PaddingValues(horizontal = 24.dp),
-                    pageSpacing = 16.dp
-                ) { page ->
+                    LaunchedEffect(pagerState.currentPage) {
+                        if (displayNews.size > 1) {
+                            delay(4000)
+                            val nextPage = (pagerState.currentPage + 1) % displayNews.size
+                            pagerState.animateScrollToPage(nextPage)
+                        }
+                    }
+
+                    androidx.compose.foundation.pager.HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        pageSpacing = 16.dp,
+                        beyondBoundsPageCount = 1
+                    ) { page ->
                     Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
                         val newsItem = displayNews[page]
                         val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
-                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else defaultFallbackNews.first().image
+                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
                         val newsHeadline = newsItem.headline
 
                         Box(
@@ -301,6 +295,7 @@ fun RivavaPortfolioScreen(
                         }
                     }
                     }
+                }
                 }
             }
 
