@@ -146,8 +146,8 @@ fun HomeScreen(
                             painter = painterResource(id = R.drawable.rivava_logo),
                             contentDescription = "Rivava Logo",
                             modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp)),
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp)),
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -344,21 +344,21 @@ fun HomeScreen(
                             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
                             context.startActivity(intent)
                         },
-                        colors = listOf(Color(0xFF004A77), Color(0xFF001D33))
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF004A77))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Schedule a Video Call",
                         onClick = { showVideoCallDialog = true },
                         icon = Icons.Default.VideoCall,
                         modifier = Modifier.bounceClick { showVideoCallDialog = true },
-                        colors = listOf(Color(0xFF003D19), Color(0xFF00210B))
+                        colors = listOf(Color(0xFF00E471), Color(0xFF003D19))
                     )
                     com.trackfi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
                         icon = Icons.Default.Chat,
                         modifier = Modifier.bounceClick { showChatDialog = true },
-                        colors = listOf(Color(0xFF55003F), Color(0xFF3C002B))
+                        colors = listOf(Color(0xFFFFAEDB), Color(0xFF55003F))
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -538,32 +538,39 @@ fun HomeScreen(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text("Name") },
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                         )
                         OutlinedTextField(
                             value = preferredTime,
                             onValueChange = { preferredTime = it },
-                            label = { Text("Preferred Time") },
-                            singleLine = true
+                            label = { Text("Preferred Time (e.g. 2:00 PM)") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                         )
                         OutlinedTextField(
                             value = contactInfo,
                             onValueChange = { contactInfo = it },
-                            label = { Text("Email / Phone") },
-                            singleLine = true
+                            label = { Text("Phone Number") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                         )
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        showVideoCallDialog = false
-                        val message = "Hi, I want to schedule a video call.\nName: $name\nPreferred Time: $preferredTime\nContact: $contactInfo"
-                        val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919044761170?text=$encodedMessage"))
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "WhatsApp not found", Toast.LENGTH_SHORT).show()
+                        if (name.isNotBlank() && preferredTime.isNotBlank() && contactInfo.isNotBlank()) {
+                            showVideoCallDialog = false
+                            val message = "Hi, I want to schedule a video call.\nName: $name\nPreferred Time: $preferredTime\nContact: $contactInfo"
+                            val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919044761170?text=$encodedMessage"))
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "WhatsApp not found", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Please fill all fields correctly", Toast.LENGTH_SHORT).show()
                         }
                     }) {
                         Text("Submit")
