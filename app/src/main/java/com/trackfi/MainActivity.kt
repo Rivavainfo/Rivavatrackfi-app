@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +67,7 @@ import com.trackfi.ui.onboarding.SmsScanningScreen
 import com.trackfi.ui.onboarding.SmsOptInScreen
 import com.trackfi.ui.onboarding.WelcomeScreen
 import com.trackfi.ui.settings.SettingsScreen
+import com.trackfi.ui.portfolio.PremiumUnlockDialog
 import com.trackfi.ui.portfolio.RivavaPortfolioScreen
 import com.trackfi.ui.profile.ProfileScreen
 import com.trackfi.ui.theme.TrackFiTheme
@@ -132,13 +135,25 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val currentRoute = navBackStackEntry?.destination?.route
 
     val isPremiumUser = preferencesRepository?.isPremiumUserFlow?.collectAsState(initial = false)?.value ?: false
-    val bottomNavigationItems = if (isPremiumUser) {
-        listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Profile)
-    } else {
-        BaseBottomNavigationItems
-    }
+
+    // Always include RivavaPortfolio, even if not premium, so we can show the lock icon and trigger the unlock flow
+    val bottomNavigationItems = listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Profile)
 
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
+
+    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
+
+    if (showPremiumUnlockDialog) {
+        val userName = runBlocking { preferencesRepository?.userNameFlow?.first() ?: "" }
+        PremiumUnlockDialog(
+            userName = userName,
+            onDismiss = { showPremiumUnlockDialog = false },
+            onUnlockSuccess = {
+                runBlocking { preferencesRepository?.setPremiumUser(true) }
+                showPremiumUnlockDialog = false
+            }
+        )
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -163,11 +178,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
+                            val isLocked = screen == Screen.RivavaPortfolio && !isPremiumUser
+
                             CustomBottomNavItem(
                                 screen = screen,
                                 isSelected = isSelected,
+                                isLocked = isLocked,
                                 onClick = {
-                                    if (!isSelected) {
+                                    if (isLocked) {
+                                        showPremiumUnlockDialog = true
+                                    } else if (!isSelected) {
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
@@ -331,12 +351,19 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 fun CustomBottomNavItem(
     screen: Screen,
     isSelected: Boolean,
+    isLocked: Boolean = false,
     onClick: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
 
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        targetValue = if (isLocked && !isSelected) {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+        } else if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        },
         animationSpec = tween(300),
         label = "iconColor"
     )
@@ -360,12 +387,26 @@ fun CustomBottomNavItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = screen.icon,
-                contentDescription = screen.title,
-                tint = iconColor,
-                modifier = Modifier.size(26.dp)
-            )
+            Box(contentAlignment = Alignment.TopEnd) {
+                Icon(
+                    imageVector = screen.icon,
+                    contentDescription = screen.title,
+                    tint = iconColor,
+                    modifier = Modifier.size(26.dp)
+                )
+                if (isLocked) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Filled.Lock,
+                        contentDescription = "Locked",
+                        tint = com.trackfi.ui.theme.SecondaryPink,
+                        modifier = Modifier
+                            .size(12.dp)
+                            .offset(x = 6.dp, y = (-2).dp)
+                            .background(MaterialTheme.colorScheme.background, CircleShape)
+                            .padding(1.dp)
+                    )
+                }
+            }
             if (isSelected) {
                 Box(
                     modifier = Modifier
