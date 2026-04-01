@@ -261,6 +261,14 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 val ticker = backStackEntry.arguments?.getString("ticker") ?: ""
                 com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToPdfViewer = {
+                        navController.navigate("pdf_viewer")
+                    }
+                )
+            }
+            composable("pdf_viewer") {
+                com.trackfi.ui.portfolio.PdfViewerScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

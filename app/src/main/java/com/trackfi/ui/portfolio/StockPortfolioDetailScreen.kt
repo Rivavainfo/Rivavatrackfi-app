@@ -26,13 +26,15 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.foundation.shape.CircleShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockPortfolioDetailScreen(
     ticker: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToPdfViewer: (() -> Unit)? = null
 ) {
     // Mock Data based on ticker
     val exchange = if (ticker == "RTX" || ticker == "WMT") "Nasdaq 100" else "NSE"
@@ -346,35 +348,85 @@ fun StockPortfolioDetailScreen(
                 }
             }
 
-            // Wealth Insights Card
+            // Wealth Insights Card / PDF Viewer for IREDA
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(190.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.7f), com.trackfi.ui.theme.DeepBlueVariant)
+                if (ticker == "IREDA") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(com.trackfi.ui.theme.DeepBlueVariant, com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.8f))
+                                )
                             )
-                        )
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Premium Analysis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text("Unlock Rivava AI price predictions for 2024", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
-                        }
-                        Button(
-                            onClick = { },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.LightPink),
-                            shape = RoundedCornerShape(12.dp)
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(24.dp)
                         ) {
-                            Text("UPGRADE NOW", fontWeight = FontWeight.Bold)
+                            Text("Investment Thesis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text("IPO Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("₹32", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Column {
+                                    Text("Selling Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("₹228.84", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Column {
+                                    Text("Listing Gain", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("56.25%", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("715%", color = com.trackfi.ui.theme.EmeraldGreen, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
+                                }
+                                Button(
+                                    onClick = { onNavigateToPdfViewer?.invoke() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(androidx.compose.material.icons.Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("View PDF", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.7f), com.trackfi.ui.theme.DeepBlueVariant)
+                                )
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Premium Analysis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Unlock Rivava AI price predictions for 2024", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                            }
+                            Button(
+                                onClick = { },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.LightPink),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("UPGRADE NOW", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }

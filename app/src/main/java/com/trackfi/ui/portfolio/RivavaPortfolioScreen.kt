@@ -20,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.collectAsState
 
 data class PortfolioItem(
     val exchange: String,
@@ -31,7 +32,7 @@ data class PortfolioItem(
 )
 
 val portfolioItems = listOf(
-    PortfolioItem("NSE", "HAL", "Hindustan Aeronautics Ltd", "₹3,995.00"),
+    PortfolioItem("NSE", "IREDA", "Indian Renewable Energy Development Agency", "Loading..."),
     PortfolioItem("NSE", "TATAMOTORS", "Tata Motors (PV/CV)", "₹335.35"),
     PortfolioItem("Nasdaq 100", "RTX", "RTX Corporation", "$207.00"),
     PortfolioItem("Nasdaq 100", "WMT", "Walmart Inc.", "$125.12")
@@ -39,7 +40,14 @@ val portfolioItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
+fun RivavaPortfolioScreen(
+    onNavigateToDetail: (String) -> Unit,
+    viewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val iredaPrice = viewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = viewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = viewModel.isLoading.collectAsState(initial = true).value
+    val isError = viewModel.isError.collectAsState(initial = false).value
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -105,11 +113,31 @@ fun RivavaPortfolioScreen(onNavigateToDetail: (String) -> Unit) {
             }
 
             items(portfolioItems) { item ->
+                var displayPrice = item.marketPrice
+                var isPositive = true
+                var percentageChange = ""
+
+                if (item.ticker == "IREDA") {
+                    if (isLoading) {
+                        displayPrice = "Loading..."
+                    } else if (isError && iredaPrice == 0.0) {
+                        displayPrice = "Error"
+                    } else {
+                        displayPrice = "₹%.2f".format(iredaPrice)
+                        val change = iredaPrice - iredaPreviousClose
+                        val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
+                        isPositive = change >= 0
+                        percentageChange = "${if (isPositive) "+" else ""}${String.format("%.2f", changePercent)}%"
+                    }
+                }
+
                 PortfolioStockCard(
                     exchange = item.exchange,
                     ticker = item.ticker,
                     companyName = item.companyName,
-                    marketPrice = item.marketPrice,
+                    marketPrice = displayPrice,
+                    isPositive = isPositive,
+                    percentageChange = percentageChange,
                     isPremium = true,
                     modifier = Modifier.clickable { onNavigateToDetail(item.ticker) }
                 )
