@@ -153,7 +153,7 @@ class StockViewModel @Inject constructor(
     }
 
     private fun generateMockData(symbol: String): FinnhubQuoteResponse {
-        val basePrice = if (symbol == "RTX") 205.00 else if (symbol == "WMT") 125.12 else if (symbol == "HAL") 3995.0 else 150.0
+        val basePrice = if (symbol == "RTX") 205.00 else if (symbol == "WMT") 125.12 else if (symbol == "HAL") 3995.0 else if (symbol == "IREDA" || symbol == "IREDA.NS") 228.84 else 150.0
         val fluctuation = (Math.random() - 0.5) * 2.0
         return FinnhubQuoteResponse(
             c = basePrice + fluctuation,
