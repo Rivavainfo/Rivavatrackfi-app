@@ -1,5 +1,6 @@
 package com.trackfi.di
 
+import com.trackfi.data.network.YahooFinanceApi
 import com.trackfi.domain.api.CryptoApiService
 import com.trackfi.domain.api.StockApiService
 import dagger.Module
@@ -7,6 +8,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -20,6 +24,11 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
         return OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -28,6 +37,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideYahooFinanceApi(client: OkHttpClient): YahooFinanceApi {
+        return Retrofit.Builder()
+            .baseUrl("https://query1.finance.yahoo.com/")
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(YahooFinanceApi::class.java)
     @Named("finnhub")
     fun provideFinnhubRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()

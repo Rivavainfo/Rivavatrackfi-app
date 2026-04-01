@@ -15,6 +15,15 @@ import androidx.compose.ui.platform.LocalUriHandler
 import com.trackfi.ui.portfolio.components.CashBalanceSection
 import com.trackfi.ui.portfolio.components.PortfolioMetricsTable
 import kotlinx.coroutines.delay
+import com.trackfi.ui.theme.glassMorphism
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.foundation.shape.CircleShape
 import com.trackfi.ui.theme.PremiumGradientStart
 import com.trackfi.ui.components.PremiumButton
 
@@ -30,6 +39,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun StockPortfolioDetailScreen(
     ticker: String,
+    onBack: () -> Unit,
+    onNavigateToPdfViewer: (() -> Unit)? = null
     initialFocus: String? = null,
     onBack: () -> Unit,
     viewModel: StockViewModel = hiltViewModel()
@@ -176,6 +187,146 @@ fun StockPortfolioDetailScreen(
                 colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
             )
 
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Metric Card 3
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("MARKET OPEN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("$${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("09:30:01 EST", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    // Metric Card 4
+                    Card(
+                        modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("52W CHANGE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("+284.15%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black), color = com.trackfi.ui.theme.EmeraldGreen)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Exponential Trend", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            // Wealth Insights Card / PDF Viewer for IREDA
+            item {
+                if (ticker == "IREDA") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(com.trackfi.ui.theme.DeepBlueVariant, com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.8f))
+                                )
+                            )
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(24.dp)
+                        ) {
+                            Text("Investment Thesis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text("IPO Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("₹32", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Column {
+                                    Text("Selling Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("₹228.84", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Column {
+                                    Text("Listing Gain", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("56.25%", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("715%", color = com.trackfi.ui.theme.EmeraldGreen, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black))
+                                }
+                                Button(
+                                    onClick = { onNavigateToPdfViewer?.invoke() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(androidx.compose.material.icons.Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("View PDF", fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(190.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.7f), com.trackfi.ui.theme.DeepBlueVariant)
+                                )
+                            )
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Premium Analysis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Unlock Rivava AI price predictions for 2024", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                            }
+                            Button(
+                                onClick = { },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.LightPink),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("UPGRADE NOW", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Redirect to External
+            item {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Button(
+                        onClick = {
+                            val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
+                            val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+                            try { uriHandler.openUri(url) } catch (e: Exception) { }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
+                        shape = RoundedCornerShape(16.dp),
+                        contentPadding = PaddingValues(horizontal = 32.dp, vertical = 20.dp)
+                    ) {
+                        Text("VIEW FULL STOCK PRICE", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black))
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Icon(Icons.Default.OpenInNew, contentDescription = null)
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
