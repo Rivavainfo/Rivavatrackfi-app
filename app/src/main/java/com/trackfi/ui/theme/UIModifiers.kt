@@ -58,15 +58,17 @@ fun Modifier.bounceClick(onClick: () -> Unit) = composed {
 
 fun Modifier.glassMorphism(
     cornerRadius: Float = 24f,
-    alpha: Float = 0.4f
+    alpha: Float = 0.03f,
+    strokeAlpha: Float = 0.08f,
+    color: Color = Color.White
 ) = composed {
     this
         .clip(RoundedCornerShape(cornerRadius.dp))
         .background(
             Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = alpha),
-                    Color.White.copy(alpha = alpha * 0.5f)
+                    color.copy(alpha = alpha),
+                    color.copy(alpha = alpha * 0.5f)
                 )
             )
         )
@@ -74,8 +76,8 @@ fun Modifier.glassMorphism(
             width = 1.dp,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = alpha * 1.5f),
-                    Color.White.copy(alpha = 0f)
+                    color.copy(alpha = strokeAlpha),
+                    color.copy(alpha = 0f)
                 )
             ),
             shape = RoundedCornerShape(cornerRadius.dp)

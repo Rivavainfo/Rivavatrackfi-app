@@ -46,6 +46,8 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
+    fun getTransactionById(id: Long) = repository.getTransactionById(id)
+
     fun updateTransaction(transaction: TransactionEntity, createRule: Boolean = true, ruleKeyword: String? = null) {
         viewModelScope.launch {
             // Save transaction changes

@@ -13,6 +13,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -27,10 +28,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.trackfi.R
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackfi.data.local.TransactionEntity
@@ -39,6 +45,7 @@ import com.trackfi.ui.add.AddTransactionBottomSheet
 import com.trackfi.ui.theme.CategoryVisuals
 import com.trackfi.ui.theme.bounceClick
 import com.trackfi.ui.theme.glassMorphism
+import com.trackfi.ui.theme.glowEffect
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Edit
@@ -53,6 +60,8 @@ import androidx.compose.material.icons.filled.Person
 
 import com.trackfi.ui.components.PremiumCard
 import com.trackfi.ui.components.SectionHeader
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 import android.Manifest
 import android.os.Build
@@ -65,14 +74,16 @@ import androidx.core.app.ActivityCompat
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.AutoAwesome
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToTransactionDetail: (Long) -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -81,6 +92,7 @@ fun HomeScreen(
     val showDetails by viewModel.showSmsDetails.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
+    val profileImageUri by viewModel.profileImageUri.collectAsState()
     val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
@@ -88,452 +100,313 @@ fun HomeScreen(
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
+    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val activity = context as? android.app.Activity
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val smsGranted = permissions[Manifest.permission.READ_SMS] == true &&
-                         permissions[Manifest.permission.RECEIVE_SMS] == true
-
-        if (smsGranted) {
-            viewModel.setSmsTrackingEnabled(true)
-            Toast.makeText(context, "SMS Tracking Enabled", Toast.LENGTH_SHORT).show()
-        } else {
-            val shouldShowRationale = activity?.let {
-                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
-            } ?: false
-
-            if (!shouldShowRationale) {
-                showSmsSettingsDialog = true
-            } else {
-                Toast.makeText(context, "SMS tracking remains disabled.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (!isSmsTrackingEnabled) {
-                        showSmsRationaleDialog = true
-                    } else {
-                        showAddSheet = true
-                    }
+                    showAddSheet = true
                 },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier
+                    .padding(bottom = 100.dp) // Extra spacing to ensure it completely clears the floating nav bar
+                    .size(64.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction", modifier = Modifier.size(32.dp))
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        topBar = {
+            // Removed header top bar as requested
+        },
+        containerColor = Color(0xFF0A0A0A) // Deep Black / Amoled Black
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 60.dp, bottom = 120.dp), // One UI large top padding
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 48.dp, bottom = 140.dp), // Provide enough bottom padding for the floating nav bar
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 32.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = onNavigateToProfile,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                    ) {
-                        val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
-                        if (initial.isNotEmpty()) {
-                            Text(
-                                text = initial,
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.primary
+                    Column(modifier = Modifier.weight(1f)) {
+                        Image(
+                            painter = painterResource(id = R.drawable.rivava_logo),
+                            contentDescription = "Rivava Logo",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = if (!userName.isNullOrEmpty()) "Welcome back, $userName" else "Welcome to Rivava+",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = (-0.5).sp
                             )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Smart financial insights and portfolio tracking.",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+
+                    // Profile Icon Top Right
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(2.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f), CircleShape)
+                            .clickable { onNavigateToProfile() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profileImageUri != null) {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                                if (initial.isNotEmpty()) {
+                                    Text(
+                                        text = initial,
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Profile Avatar",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+
+                                AsyncImage(
+                                    model = profileImageUri,
+                                    contentDescription = "Profile Avatar",
+                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                            Image(
+                                painter = painterResource(id = R.drawable.rivava_logo),
+                                contentDescription = "Profile Avatar",
+                                modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }
-                    Text(
-                        text = "RIVAVA+",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    )
-                    IconButton(onClick = { }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                 }
             }
 
             item {
-                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
-                    Text(
-                        text = "PREMIUM WEALTH MANAGEMENT",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
-                        )
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                                    )
+                                ),
+                                shape = RoundedCornerShape(24.dp)
+                            )
+                            .glowEffect(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                radius = 20f,
+                                isSelected = true
+                            )
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Welcome to Rivava+",
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Your exclusive gateway to institutional-grade wealth strategies and personalized financial growth.",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                }
-            }
 
-            item {
-                // Bento Grid
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // About Rivava Card
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFF161616),
+                                        Color(0xFF121212)
+                                    )
+                                )
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.05f),
+                                shape = RoundedCornerShape(24.dp)
+                            ),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(24.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "About",
-                                    tint = MaterialTheme.colorScheme.primary,
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = Color(0xFF98CBFF),
                                     modifier = Modifier.size(24.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "About Rivava",
                                     style = MaterialTheme.typography.titleLarge.copy(
+                                        color = Color(0xFF98CBFF),
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
+                                        letterSpacing = (-0.5).sp
                                     )
                                 )
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Empowering your wealth journey through sophisticated analytics and bespoke investment curation. At Rivava.in, we blend technology with human expertise to redefine financial liberation.",
+                                text = "Rivava is your high-fidelity financial ecosystem designed for the modern investor. We blend institutional-grade security with a curator's eye for detail, giving you the clarity needed to scale your wealth through intelligent automation and real-time portfolio analytics.",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 24.sp
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 15.sp
                                 )
                             )
                             Spacer(modifier = Modifier.height(24.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                                        .padding(16.dp)
-                                ) {
-                                    Text("01", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary))
-                                    Text("CURATION", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                                        .padding(16.dp)
-                                ) {
-                                    Text("02", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = com.trackfi.ui.theme.EmeraldGreen))
-                                    Text("GROWTH", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                                }
-                            }
-                        }
-                    }
-
-                    // Wealth Card
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp)),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                        colors = listOf(com.trackfi.ui.theme.LightPink.copy(alpha = 0.3f), com.trackfi.ui.theme.DeepBlueVariant.copy(alpha = 0.6f))
-                                    )
+                            Text(
+                                text = "PRECISION MEET PERFORMANCE",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color(0xFFFFAEDB),
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.5.sp
                                 )
-                                .padding(24.dp)
-                        ) {
-                            Column {
-                                Text(
-                                    text = "PORTFOLIO VALUE",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = Color.White.copy(alpha = 0.8f),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "₹1,24,50,000",
-                                    style = MaterialTheme.typography.headlineLarge.copy(
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.Star, contentDescription = "Trending", tint = Color.White, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("+12.4% this year", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                                }
-                                Spacer(modifier = Modifier.height(32.dp))
-                                Button(
-                                    onClick = { },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Text("Manage Wealth", fontWeight = FontWeight.Bold)
-                                }
-                            }
+                            )
                         }
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(24.dp))
-                Text(
-                    text = "Support Concierge",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Talk to Rivava",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(1.dp)
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+                }
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
-                                context.startActivity(intent)
-                            }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Call, contentDescription = "Call", tint = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("Schedule a Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text("+91-9044761170", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { showVideoCallDialog = true }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.1f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.VideoCall, contentDescription = "Video Call", tint = com.trackfi.ui.theme.EmeraldGreen)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("Video Call", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text("Expert Consultation", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { showChatDialog = true }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .background(com.trackfi.ui.theme.LightPink.copy(alpha = 0.1f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Chat, contentDescription = "Chat", tint = com.trackfi.ui.theme.LightPink)
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("Live Chat", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                            Text("Instant Assistance", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Schedule a Call",
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                            context.startActivity(intent)
+                        },
+                        icon = Icons.Default.Call,
+                        modifier = Modifier.bounceClick {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                            context.startActivity(intent)
+                        },
+                        colors = listOf(Color(0xFF00A3FF), Color(0xFF004A77))
+                    )
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Schedule a Video Call",
+                        onClick = { showVideoCallDialog = true },
+                        icon = Icons.Default.VideoCall,
+                        modifier = Modifier.bounceClick { showVideoCallDialog = true },
+                        colors = listOf(Color(0xFF00E471), Color(0xFF003D19))
+                    )
+                    com.trackfi.ui.components.PremiumButton(
+                        text = "Chat with Rivava",
+                        onClick = { showChatDialog = true },
+                        icon = Icons.Default.Chat,
+                        modifier = Modifier.bounceClick { showChatDialog = true },
+                        colors = listOf(Color(0xFFFFAEDB), Color(0xFF55003F))
+                    )
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .glassMorphism(cornerRadius = 24f, alpha = 0.1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Latest Insights", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Curated market analysis for your investment profile.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Insight 1
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Star, contentDescription = "Insight", tint = MaterialTheme.colorScheme.primary)
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("MARKET ANALYSIS", style = MaterialTheme.typography.labelSmall.copy(color = com.trackfi.ui.theme.EmeraldGreen, fontWeight = FontWeight.Bold))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("The Shift in Emerging Tech Hubs for 2024", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Understanding the fiscal dynamics...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Insight 2
-                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .background(com.trackfi.ui.theme.LightPink.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Star, contentDescription = "Insight", tint = com.trackfi.ui.theme.LightPink)
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("WEALTH STRATEGY", style = MaterialTheme.typography.labelSmall.copy(color = com.trackfi.ui.theme.LightPink, fontWeight = FontWeight.Bold))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Tax Harvesting Strategies for High Net-Worth Individuals", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Optimizing your post-tax returns...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
             if (!isPremiumUser) {
                 item {
                     PremiumCard(
-                        modifier = Modifier.bounceClick {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            showPasswordDialog = true
-                        }
+                        modifier = Modifier
+                            .heightIn(min = 120.dp)
+                            .bounceClick {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showPremiumUnlockDialog = true
+                            }
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
                                 Text(
                                     text = "Rivava Premium Portfolio",
-                                    style = MaterialTheme.typography.titleMedium.copy(
+                                    style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Unlock Premium Features",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = { showPremiumUnlockDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), contentColor = MaterialTheme.colorScheme.primary),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(36.dp)
+                                ) {
+                                    Text(
+                                        text = "Unlock Premium",
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
                             }
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = "Locked Premium Feature",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
@@ -541,7 +414,39 @@ fun HomeScreen(
             }
 
             item {
-                SectionHeader(title = "Dashboard Overview")
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dashboard Overview",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.5).sp
+                        )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .bounceClick {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showAddSheet = true
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                DashboardOverviewBento(summary = summary)
             }
 
             when (layoutPreset) {
@@ -619,77 +524,11 @@ fun HomeScreen(
                     ) {
                         TransactionItem(transaction, showDetails = showDetails, onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            selectedTransaction = transaction
+                            onNavigateToTransactionDetail(transaction.id)
                         })
                     }
                 }
             }
-        }
-
-        selectedTransaction?.let { transaction ->
-            TransactionDetailsBottomSheet(
-                transaction = transaction,
-                onDismiss = { selectedTransaction = null }
-            )
-        }
-
-        if (showSmsRationaleDialog) {
-            AlertDialog(
-                onDismissRequest = { showSmsRationaleDialog = false },
-                title = { Text("Enable Automatic Tracking?") },
-                text = { Text("This feature can read transaction SMS to help track financial activity. This is optional.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSmsRationaleDialog = false
-                        val perms = mutableListOf(
-                            Manifest.permission.READ_SMS,
-                            Manifest.permission.RECEIVE_SMS,
-                            Manifest.permission.READ_CONTACTS
-                        )
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        permissionLauncher.launch(perms.toTypedArray())
-                    }) {
-                        Text("Enable")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        showSmsRationaleDialog = false
-                        showAddSheet = true
-                    }) {
-                        Text("Skip")
-                    }
-                }
-            )
-        }
-
-        if (showSmsSettingsDialog) {
-            AlertDialog(
-                onDismissRequest = { showSmsSettingsDialog = false },
-                title = { Text("Permission Denied") },
-                text = { Text("You have permanently denied SMS permissions. Please enable them manually in the app settings if you wish to use automatic tracking.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSmsSettingsDialog = false
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        }
-                        context.startActivity(intent)
-                    }) {
-                        Text("Open Settings")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        showSmsSettingsDialog = false
-                        showAddSheet = true
-                    }) {
-                        Text("Continue Manually")
-                    }
-                }
-            )
         }
 
         if (showVideoCallDialog) {
@@ -702,31 +541,45 @@ fun HomeScreen(
                 title = { Text("Schedule a Video Call") },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Fill out the details below to book a consultation.")
+                        Text("Fill out the details below to book a consultation via WhatsApp.")
                         OutlinedTextField(
                             value = name,
                             onValueChange = { name = it },
                             label = { Text("Name") },
-                            singleLine = true
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                         )
                         OutlinedTextField(
                             value = preferredTime,
                             onValueChange = { preferredTime = it },
-                            label = { Text("Preferred Time") },
-                            singleLine = true
+                            label = { Text("Preferred Time (e.g. 2:00 PM)") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                         )
                         OutlinedTextField(
                             value = contactInfo,
                             onValueChange = { contactInfo = it },
-                            label = { Text("Email / Phone") },
-                            singleLine = true
+                            label = { Text("Phone Number") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                         )
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        showVideoCallDialog = false
-                        Toast.makeText(context, "Consultation requested!", Toast.LENGTH_SHORT).show()
+                        if (name.isNotBlank() && preferredTime.isNotBlank() && contactInfo.isNotBlank()) {
+                            showVideoCallDialog = false
+                            val message = "Hi, I want to schedule a video call.\nName: $name\nPreferred Time: $preferredTime\nContact: $contactInfo"
+                            val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919044761170?text=$encodedMessage"))
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "WhatsApp not found", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(context, "Please fill all fields correctly", Toast.LENGTH_SHORT).show()
+                        }
                     }) {
                         Text("Submit")
                     }
@@ -735,6 +588,17 @@ fun HomeScreen(
                     TextButton(onClick = { showVideoCallDialog = false }) {
                         Text("Cancel")
                     }
+                }
+            )
+        }
+
+        if (showPremiumUnlockDialog) {
+            com.trackfi.ui.portfolio.PremiumUnlockDialog(
+                userName = userName ?: "",
+                onDismiss = { showPremiumUnlockDialog = false },
+                onUnlockSuccess = {
+                    viewModel.setPremiumUser(true)
+                    showPremiumUnlockDialog = false
                 }
             )
         }
@@ -837,14 +701,11 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
 
     transactions.forEach {
         if (it.type == "EXPENSE" || it.type == "BILL_PENDING") {
-            if (it.date >= todayStart.toLong()) todaySpending += it.amount
             if (it.date >= weekStart.toLong()) weeklySpending += it.amount
             if (it.date >= monthStart.toLong()) monthlySpending += it.amount
         }
     }
 
-    SpendingCard("Today Spending", todaySpending, Modifier.fillMaxWidth())
-    Spacer(modifier = Modifier.height(16.dp))
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -1029,6 +890,141 @@ fun EmptyState() {
             modifier = Modifier.padding(horizontal = 32.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun DashboardOverviewBento(summary: FinancialSummaryState) {
+    val netWorth = summary.totalIncome + summary.netSavings
+    val savings = summary.netSavings
+    val investments = summary.totalIncome
+
+    val netWorthChange = if (netWorth > 0) "+4.2%" else "0.0%"
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Net Worth Card (full width)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .glassMorphism(cornerRadius = 24f, alpha = 0.15f),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                Text(
+                    text = "NET WORTH",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", netWorth)}",
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    Text(
+                        text = netWorthChange,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                }
+            }
+        }
+
+        // Row for Savings & Investments
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Savings Card (half width)
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color(0xFF161616)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalanceWallet,
+                        contentDescription = "Savings",
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Savings",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", savings)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+
+            // Investments Card (half width)
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color(0xFF161616)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Insights,
+                        contentDescription = "Investments",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Investments",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "₹${String.format(java.util.Locale.getDefault(), "%.0f", investments)}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 

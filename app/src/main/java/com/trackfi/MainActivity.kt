@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
@@ -45,6 +48,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.core.view.WindowCompat
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.asPaddingValues
@@ -57,12 +67,15 @@ import com.trackfi.ui.onboarding.SmsScanningScreen
 import com.trackfi.ui.onboarding.SmsOptInScreen
 import com.trackfi.ui.onboarding.WelcomeScreen
 import com.trackfi.ui.settings.SettingsScreen
+import com.trackfi.ui.portfolio.PremiumUnlockDialog
 import com.trackfi.ui.portfolio.RivavaPortfolioScreen
 import com.trackfi.ui.profile.ProfileScreen
 import com.trackfi.ui.theme.TrackFiTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import androidx.compose.foundation.layout.fillMaxSize
 import javax.inject.Inject
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -74,16 +87,18 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
     object Analytics : Screen("analytics", "Insights", Icons.Outlined.Analytics)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
-    object Settings : Screen("settings", "Profile", Icons.Outlined.Settings)
+    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
+    object Profile : Screen("profile", "Profile", Icons.Outlined.Person)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
+    object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
 }
 
 val BaseBottomNavigationItems = listOf(
     Screen.Home,
     Screen.Transactions,
     Screen.Analytics,
-    Screen.Settings
+    Screen.Profile
 )
 
 @AndroidEntryPoint
@@ -97,14 +112,18 @@ class MainActivity : ComponentActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        val hasCompletedOnboarding = runBlocking {
-            preferencesRepository.hasCompletedOnboardingFlow.first()
-        }
-
         setContent {
             val isPremiumUser = preferencesRepository.isPremiumUserFlow.collectAsState(initial = false).value
+            val hasCompletedOnboardingState = preferencesRepository.hasCompletedOnboardingFlow.collectAsState(initial = null)
+            val hasCompletedOnboarding = hasCompletedOnboardingState.value
+
             TrackFiTheme(isPremium = isPremiumUser) {
-                TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
+                if (hasCompletedOnboarding != null) {
+                    TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
+                } else {
+                    // Show a minimal loading state or nothing while reading preferences
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }
@@ -117,39 +136,62 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val currentRoute = navBackStackEntry?.destination?.route
 
     val isPremiumUser = preferencesRepository?.isPremiumUserFlow?.collectAsState(initial = false)?.value ?: false
-    val bottomNavigationItems = if (isPremiumUser) {
-        listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Settings)
-    } else {
-        BaseBottomNavigationItems
-    }
+
+    // Always include RivavaPortfolio, even if not premium, so we can show the lock icon and trigger the unlock flow
+    val bottomNavigationItems = listOf(Screen.Home, Screen.Transactions, Screen.RivavaPortfolio, Screen.Analytics, Screen.Profile)
 
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
+    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
+
+    if (showPremiumUnlockDialog) {
+        PremiumUnlockDialog(
+            userName = userName ?: "",
+            onDismiss = { showPremiumUnlockDialog = false },
+            onUnlockSuccess = {
+                coroutineScope.launch {
+                    preferencesRepository?.setPremiumUserForCurrent(true)
+                }
+                showPremiumUnlockDialog = false
+            }
+        )
+    }
+
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (isBottomBarVisible) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding())
                         .background(androidx.compose.ui.graphics.Color.Transparent)
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.2f)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .fillMaxWidth(0.9f)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(androidx.compose.ui.graphics.Color(0xFF161616).copy(alpha = 0.85f))
+                            .glassMorphism(cornerRadius = 999f, alpha = 0.05f, strokeAlpha = 0.05f)
+                            .padding(horizontal = 24.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
+                            val isLocked = screen == Screen.RivavaPortfolio && !isPremiumUser
+
                             CustomBottomNavItem(
                                 screen = screen,
                                 isSelected = isSelected,
+                                isLocked = isLocked,
                                 onClick = {
-                                    if (!isSelected) {
+                                    if (isLocked) {
+                                        showPremiumUnlockDialog = true
+                                    } else if (!isSelected) {
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
@@ -165,35 +207,39 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
     ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.fillMaxSize(),
             enterTransition = {
-                androidx.compose.animation.slideInHorizontally(
-                    initialOffsetX = { it },
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleIn(
+                    initialScale = 0.95f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             exitTransition = {
-                androidx.compose.animation.slideOutHorizontally(
-                    targetOffsetX = { -it / 3 },
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleOut(
+                    targetScale = 1.05f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             popEnterTransition = {
-                androidx.compose.animation.slideInHorizontally(
-                    initialOffsetX = { -it / 3 },
+                androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleIn(
+                    initialScale = 1.05f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             },
             popExitTransition = {
-                androidx.compose.animation.slideOutHorizontally(
-                    targetOffsetX = { it },
+                androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300)) +
+                androidx.compose.animation.scaleOut(
+                    targetScale = 0.95f,
                     animationSpec = androidx.compose.animation.core.tween(300)
-                ) + androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(300))
+                )
             }
         ) {
             composable(Screen.Welcome.route) {
@@ -207,6 +253,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 GreetingScreen(onNavigateNext = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Greeting.route) { inclusive = true }
+                        launchSingleTop = true
                     }
                 })
             }
@@ -232,10 +279,34 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.Home.route) {
-                HomeScreen()
+                HomeScreen(
+                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                    onNavigateToTransactionDetail = { transactionId ->
+                        navController.navigate("${Screen.TransactionDetail.route}/$transactionId")
+                    }
+                )
+            }
+            composable(Screen.Profile.route) {
+                com.trackfi.ui.profile.ProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                )
             }
             composable(Screen.Transactions.route) {
+                // Not passing onNavigateToDetail to TransactionsScreen as it wasn't explicitly defined there.
+                // We will navigate via view model effects or let the screen remain as a list.
+                // If it was already defined, we would pass it. But compilation failed due to "Cannot find a parameter with this name: onNavigateToDetail".
                 TransactionsScreen()
+            }
+            composable(
+                route = "${Screen.TransactionDetail.route}/{transactionId}",
+                arguments = listOf(navArgument("transactionId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val transactionId = backStackEntry.arguments?.getLong("transactionId") ?: 0L
+                com.trackfi.ui.history.TransactionDetailScreen(
+                    transactionId = transactionId,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.AiReview.route) {
                 com.trackfi.ui.aireview.AiReviewScreen()
@@ -253,12 +324,23 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.RivavaPortfolio.route) {
-                RivavaPortfolioScreen(onNavigateToDetail = { ticker ->
-                    navController.navigate("${Screen.StockDetail.route}/$ticker")
+                RivavaPortfolioScreen(onNavigateToDetail = { ticker, focus ->
+                    val focusParam = focus ?: "none"
+                    navController.navigate("${Screen.StockDetail.route}/$ticker?focus=$focusParam")
                 })
             }
-            composable("${Screen.StockDetail.route}/{ticker}") { backStackEntry ->
+            composable(
+                route = "${Screen.StockDetail.route}/{ticker}?focus={focus}",
+                arguments = listOf(
+                    navArgument("ticker") { type = NavType.StringType },
+                    navArgument("focus") {
+                        type = NavType.StringType
+                        defaultValue = "none"
+                    }
+                )
+            ) { backStackEntry ->
                 val ticker = backStackEntry.arguments?.getString("ticker") ?: ""
+                val focus = backStackEntry.arguments?.getString("focus")?.takeIf { it != "none" }
                 com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
                     onBack = { navController.popBackStack() },
@@ -269,6 +351,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable("pdf_viewer") {
                 com.trackfi.ui.portfolio.PdfViewerScreen(
+                    initialFocus = focus,
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -280,49 +363,69 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 fun CustomBottomNavItem(
     screen: Screen,
     isSelected: Boolean,
+    isLocked: Boolean = false,
     onClick: () -> Unit
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1f,
-        animationSpec = tween(300),
-        label = "iconScale"
-    )
+    val haptic = LocalHapticFeedback.current
 
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (isLocked && !isSelected) {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+        } else if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        },
         animationSpec = tween(300),
         label = "iconColor"
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
-            .bounceClick { onClick() }
-            .padding(8.dp)
+            .size(48.dp)
+            .clip(CircleShape)
+            .selectable(
+                selected = isSelected,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true, radius = 24.dp)
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = screen.icon,
-            contentDescription = screen.title,
-            tint = iconColor,
-            modifier = Modifier
-                .size(26.dp)
-                .scale(scale)
-        )
-        AnimatedVisibility(visible = isSelected) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = screen.title,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(contentAlignment = Alignment.TopEnd) {
+                Icon(
+                    imageVector = screen.icon,
+                    contentDescription = screen.title,
+                    tint = iconColor,
+                    modifier = Modifier.size(26.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                if (isLocked) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Filled.Lock,
+                        contentDescription = "Locked",
+                        tint = com.trackfi.ui.theme.SecondaryPink,
+                        modifier = Modifier
+                            .size(12.dp)
+                            .offset(x = 6.dp, y = (-2).dp)
+                            .background(MaterialTheme.colorScheme.background, CircleShape)
+                            .padding(1.dp)
+                    )
+                }
+            }
+            if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .size(4.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(top = 4.dp)
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             }
         }

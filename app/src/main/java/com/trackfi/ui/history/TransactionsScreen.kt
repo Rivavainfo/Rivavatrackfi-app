@@ -27,13 +27,23 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.ui.draw.blur
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.border
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.trackfi.data.local.TransactionEntity
 import com.trackfi.ui.theme.bounceClick
-import com.trackfi.ui.theme.glassMorphism
 import com.trackfi.ui.home.TransactionDetailsBottomSheet
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Stars
+import androidx.compose.material.icons.filled.Security
+import com.trackfi.ui.theme.glassMorphism
+import com.trackfi.ui.theme.glowEffect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -48,146 +58,131 @@ fun TransactionsScreen(
     val sortOrder by viewModel.sortOrder.collectAsState()
     var sortMenuExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(top = 24.dp)
-    ) {
-        // Top Navigation Anchor
-        Row(
+    Scaffold(
+        topBar = {
+        },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                }
-                Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Header with Logo
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "RIVAVA+",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 2.sp,
-                        color = MaterialTheme.colorScheme.onBackground
+                    text = "Transactions",
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp
                     )
                 )
-            }
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "History",
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.trackfi.R.drawable.rivava_logo),
+                    contentDescription = "Rivava Logo",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Search with embedded Sort icon
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChanged(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                placeholder = { Text("Search merchants, categories, amounts...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
+                trailingIcon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear Search")
+                            }
+                        }
+                        Box {
+                            IconButton(onClick = { sortMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Sort,
+                                    contentDescription = "Sort",
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = sortMenuExpanded,
+                                onDismissRequest = { sortMenuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Date (Newest)") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.DATE_DESC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Date (Oldest)") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.DATE_ASC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Amount (High)") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.AMOUNT_DESC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Amount (Low)") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.AMOUNT_ASC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Merchant") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.MERCHANT_ASC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Category") },
+                                    onClick = {
+                                        viewModel.onSortOrderChanged(SortOrder.CATEGORY_ASC)
+                                        sortMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(24.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary
+                ),
+                singleLine = true
             )
 
-            Box {
-                IconButton(onClick = { sortMenuExpanded = true }) {
-                    Icon(
-                        imageVector = Icons.Default.Sort,
-                        contentDescription = "Sort",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                DropdownMenu(
-                    expanded = sortMenuExpanded,
-                    onDismissRequest = { sortMenuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Date (Newest)" + if (sortOrder == SortOrder.DATE_DESC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.DATE_DESC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Date (Oldest)" + if (sortOrder == SortOrder.DATE_ASC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.DATE_ASC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Amount (High)" + if (sortOrder == SortOrder.AMOUNT_DESC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.AMOUNT_DESC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Amount (Low)" + if (sortOrder == SortOrder.AMOUNT_ASC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.AMOUNT_ASC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Merchant" + if (sortOrder == SortOrder.MERCHANT_ASC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.MERCHANT_ASC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Category" + if (sortOrder == SortOrder.CATEGORY_ASC) " ✓" else "") },
-                        onClick = {
-                            viewModel.onSortOrderChanged(SortOrder.CATEGORY_ASC)
-                            sortMenuExpanded = false
-                        }
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { viewModel.onSearchQueryChanged(it) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            placeholder = { Text("Search merchants, categories, amounts...", color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon", tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.onSearchQueryChanged("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear Search", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            },
-            shape = RoundedCornerShape(24.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = Color.Transparent,
-            ),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
         when (val state = uiState) {
             is TransactionsUiState.Loading -> {
@@ -196,12 +191,10 @@ fun TransactionsScreen(
                 }
             }
             is TransactionsUiState.Empty -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No transactions found.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                TransactionsEmptyState()
             }
             is TransactionsUiState.Success -> {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Box(modifier = Modifier.weight(1f).padding(horizontal = 20.dp)) {
                     TransactionList(transactions = state.transactions, viewModel = viewModel)
                 }
             }
@@ -211,6 +204,7 @@ fun TransactionsScreen(
                 }
             }
         }
+    }
     }
 }
 
@@ -227,7 +221,7 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 120.dp)
+        contentPadding = PaddingValues(bottom = 140.dp) // Provide enough bottom padding for the floating nav bar
     ) {
         items(transactions, key = { it.id }) { transaction ->
             val swipeableState = rememberSwipeToDismissBoxState(
@@ -342,6 +336,149 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
     }
 }
 
+@Composable
+fun TransactionsEmptyState() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Visual Anchor: Asymmetric Glass Card with Neon Accents
+        Box(
+            modifier = Modifier
+                .size(256.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // Background decorative elements
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
+                    .blur(60.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(128.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.1f), CircleShape)
+                    .blur(40.dp)
+            )
+
+            // Central Iconography
+            Box(
+                modifier = Modifier
+                    .size(192.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.3f))
+                    .rotate(3f)
+                    .glassMorphism(cornerRadius = 24f, alpha = 0.1f, strokeAlpha = 0.08f)
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // Floating wallet icon top left
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .offset(x = (-24).dp, y = (-24).dp)
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .rotate(-12f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalanceWallet,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(width = 32.dp, height = 4.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape))
+                        Box(modifier = Modifier.size(width = 48.dp, height = 4.dp).background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f), CircleShape))
+                        Box(modifier = Modifier.size(width = 24.dp, height = 4.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), CircleShape))
+                    }
+                }
+
+                // "No Data" floating badge bottom right
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = 8.dp, y = 24.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), RoundedCornerShape(percent = 50))
+                        .rotate(6f)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "NO DATA",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Typography Cluster
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                text = "No Transactions Found",
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "You haven't logged any transactions yet. Your spending story starts with your first swipe. Use the '+' button to begin tracking.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.weight(1f))
+
+    }
+}
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit, onLongClick: () -> Unit) {
@@ -357,16 +494,14 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
     androidx.compose.material3.Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp)
             .clip(RoundedCornerShape(24.dp))
-            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
-            .bounceClick { onClick() }
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier

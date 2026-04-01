@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.trackfi.ui.theme.glassMorphism
+import com.trackfi.ui.theme.glowEffect
 import androidx.compose.ui.graphics.Brush
 import com.trackfi.ui.theme.EmeraldGreen
 import com.trackfi.ui.theme.PremiumGradientStart
@@ -20,7 +21,18 @@ import com.trackfi.ui.theme.PremiumGradientEnd
 import com.trackfi.ui.theme.VibrantRed
 import com.trackfi.ui.theme.bounceClick
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.NorthEast
+import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.foundation.clickable
+import com.trackfi.domain.api.FinnhubNewsResponse
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun PremiumCard(
@@ -72,7 +84,8 @@ fun PremiumButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: ImageVector? = null
+    icon: ImageVector? = null,
+    colors: List<Color> = listOf(Color(0xFF1E293B), Color(0xFF0F172A)) // Dark blue-grey gradient default
 ) {
     Button(
         onClick = onClick,
@@ -81,28 +94,46 @@ fun PremiumButton(
             .height(56.dp)
             .background(
                 brush = Brush.linearGradient(
-                    colors = listOf(PremiumGradientStart, EmeraldGreen)
+                    colors = colors
                 ),
-                shape = RoundedCornerShape(28.dp)
+                shape = RoundedCornerShape(16.dp)
             ),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(16.dp),
         contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
+                tint = Color.White.copy(alpha = 0.9f),
+                modifier = Modifier.size(22.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
         }
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color.White
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = Color.White.copy(alpha = 0.9f),
+            letterSpacing = androidx.compose.ui.unit.TextUnit(0.5f, androidx.compose.ui.unit.TextUnitType.Sp)
         )
+    }
+}
+
+fun getRelativeTimeString(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    // Finnhub timestamps are in seconds
+    val timeMillis = timestamp * 1000
+    val diff = now - timeMillis
+
+    val hours = TimeUnit.MILLISECONDS.toHours(diff)
+    val days = TimeUnit.MILLISECONDS.toDays(diff)
+
+    return when {
+        hours < 1 -> "Just now"
+        hours < 24 -> "$hours hours ago"
+        days == 1L -> "Yesterday"
+        else -> "$days days ago"
     }
 }
 
@@ -115,97 +146,119 @@ fun PortfolioStockCard(
     isPremium: Boolean = true,
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
-    percentageChange: String = "+2.4%"
+    percentageChange: String = "+2.4%",
+    latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
+    onValueClick: ((String) -> Unit)? = null
 ) {
+    val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+    val primaryColor = if (isNyse) com.trackfi.ui.theme.NyseGold else com.trackfi.ui.theme.PrimaryContainerSky
+    val badgeBgColor = primaryColor.copy(alpha = 0.1f)
+
     val priceColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isPositive) EmeraldGreen else VibrantRed,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500)
+        targetValue = if (isPositive) com.trackfi.ui.theme.TertiaryEmerald else com.trackfi.ui.theme.VibrantRed,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 500),
+        label = "priceColor"
     )
+
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
-        val exchangePrefix = if (exchange == "NSE") "NSE" else "NYSE"
-        val url = "https://www.google.com/finance/quote/$ticker:$exchangePrefix"
+        val exchangeSuffix = if (isNyse) "NYSE" else "NSE"
+        val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
         try {
             uriHandler.openUri(url)
         } catch (e: Exception) {}
     }
 
-    Card(
+    val arrowIcon = if (isPositive) Icons.Default.NorthEast else Icons.Default.SouthEast
+
+    androidx.compose.material3.Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .glassMorphism(cornerRadius = 20f, alpha = if (isPremium) 0.2f else 0.1f),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isPremium) 4.dp else 0.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .glassMorphism(cornerRadius = 24f, alpha = 0.6f, strokeAlpha = 0.0f, color = Color(0xFF1B1B1B))
+            .clickable {
+                onValueClick?.invoke("market_price")
+            },
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = exchange,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .background(
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(6.dp)
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(badgeBgColor)
+                            .clickable { openUrl() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (ticker.length > 4) ticker.take(4).uppercase() else ticker.uppercase(),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = primaryColor
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = ticker,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = companyName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+                    }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(
+                            text = ticker.uppercase(),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                        Text(
+                            text = companyName,
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = marketPrice,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Details",
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(14.dp)
-                            .bounceClick { openUrl() }
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = arrowIcon,
+                            contentDescription = null,
+                            tint = priceColor,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = percentageChange.replace("+", "").replace("-", ""),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = priceColor
+                        )
+                    }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = percentageChange,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = priceColor
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Details",
-                        tint = priceColor.copy(alpha = 0.7f),
-                        modifier = Modifier
-                            .size(12.dp)
-                            .bounceClick { openUrl() }
-                    )
-                }
+            }
+
+            androidx.compose.material3.IconButton(
+                onClick = { openUrl() },
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.OpenInNew,
+                    contentDescription = "Search Ticker",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }

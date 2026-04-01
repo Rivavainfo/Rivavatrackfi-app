@@ -29,16 +29,40 @@ class UserPreferencesRepository @Inject constructor(
         val DAILY_BUDGET_KEY = stringPreferencesKey("daily_budget")
         val HOME_LAYOUT_PRESET_KEY = stringPreferencesKey("home_layout_preset")
         val SHOW_SMS_DETAILS_KEY = booleanPreferencesKey("show_sms_details")
-        val IS_PREMIUM_USER_KEY = booleanPreferencesKey("is_premium_user")
+        val UNLOCKED_PREMIUM_USERS_KEY = stringPreferencesKey("unlocked_premium_users")
+        val PROFILE_IMAGE_URI_KEY = stringPreferencesKey("profile_image_uri")
+    }
+
+    val profileImageUriFlow: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[PROFILE_IMAGE_URI_KEY]
+    }
+
+    suspend fun setProfileImageUri(uri: String) {
+        dataStore.edit { preferences ->
+            preferences[PROFILE_IMAGE_URI_KEY] = uri
+        }
     }
 
     val isPremiumUserFlow: Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[IS_PREMIUM_USER_KEY] ?: false
+        val currentUser = preferences[USER_NAME_KEY] ?: return@map false
+        val unlockedUsersStr = preferences[UNLOCKED_PREMIUM_USERS_KEY] ?: ""
+        val unlockedUsers = unlockedUsersStr.split(",").filter { it.isNotBlank() }.toSet()
+        unlockedUsers.contains(currentUser.lowercase().trim())
     }
 
-    suspend fun setPremiumUser(isPremium: Boolean) {
+    suspend fun setPremiumUserForCurrent(isPremium: Boolean) {
         dataStore.edit { preferences ->
-            preferences[IS_PREMIUM_USER_KEY] = isPremium
+            val currentUser = preferences[USER_NAME_KEY]?.lowercase()?.trim() ?: return@edit
+            val unlockedUsersStr = preferences[UNLOCKED_PREMIUM_USERS_KEY] ?: ""
+            val unlockedUsers = unlockedUsersStr.split(",").filter { it.isNotBlank() }.toMutableSet()
+
+            if (isPremium) {
+                unlockedUsers.add(currentUser)
+            } else {
+                unlockedUsers.remove(currentUser)
+            }
+
+            preferences[UNLOCKED_PREMIUM_USERS_KEY] = unlockedUsers.joinToString(",")
         }
     }
 

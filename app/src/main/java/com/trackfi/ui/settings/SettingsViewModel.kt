@@ -87,12 +87,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clearAllData() {
+    fun logout() {
         viewModelScope.launch {
-            preferencesRepository.clearAllData()
-            // In a production app you'd typically clear the Room DB here via a dedicated use case
-            // or simply ask the user to clear app data from system settings.
-            // For now, resetting preferences triggers a re-onboarding.
+            preferencesRepository.setOnboardingCompleted(false)
+            preferencesRepository.saveUserName("")
+        }
+    }
+
+    fun clearTransactionHistory() {
+        viewModelScope.launch {
+            transactionRepository.deleteAllTransactions()
         }
     }
 
