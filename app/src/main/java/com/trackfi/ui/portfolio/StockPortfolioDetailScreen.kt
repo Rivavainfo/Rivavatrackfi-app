@@ -146,6 +146,10 @@ fun StockPortfolioDetailScreen(
                 totalCash = "8.90"
             )
 
+            if (ticker == "IREDA" || ticker == "IREDA.NS") {
+                com.trackfi.ui.portfolio.components.IredaInsightsCard()
+            }
+
             if (newsList.isNotEmpty()) {
                 com.trackfi.ui.components.SectionHeader(title = "Company News")
                 androidx.compose.foundation.lazy.LazyRow(
