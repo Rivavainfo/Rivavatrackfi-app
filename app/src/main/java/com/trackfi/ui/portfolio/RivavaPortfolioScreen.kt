@@ -27,6 +27,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.runtime.collectAsState
 import androidx.compose.material.icons.filled.Refresh
 import coil.compose.AsyncImage
 import com.trackfi.ui.theme.glassMorphism
@@ -60,6 +63,13 @@ val portfolioItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
+    onNavigateToDetail: (String) -> Unit,
+    viewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val iredaPrice = viewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = viewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = viewModel.isLoading.collectAsState(initial = true).value
+    val isError = viewModel.isError.collectAsState(initial = false).value
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel()
@@ -433,6 +443,34 @@ fun RivavaPortfolioScreen(
     }
 }
 
+            items(portfolioItems) { item ->
+                var displayPrice = item.marketPrice
+                var isPositive = true
+                var percentageChange = ""
+
+                if (item.ticker == "IREDA") {
+                    if (isLoading) {
+                        displayPrice = "Loading..."
+                    } else if (isError && iredaPrice == 0.0) {
+                        displayPrice = "Error"
+                    } else {
+                        displayPrice = "₹%.2f".format(iredaPrice)
+                        val change = iredaPrice - iredaPreviousClose
+                        val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
+                        isPositive = change >= 0
+                        percentageChange = "${if (isPositive) "+" else ""}${String.format("%.2f", changePercent)}%"
+                    }
+                }
+
+                PortfolioStockCard(
+                    exchange = item.exchange,
+                    ticker = item.ticker,
+                    companyName = item.companyName,
+                    marketPrice = displayPrice,
+                    isPositive = isPositive,
+                    percentageChange = percentageChange,
+                    isPremium = true,
+                    modifier = Modifier.clickable { onNavigateToDetail(item.ticker) }
 @Composable
 fun NewsCard(news: com.trackfi.domain.api.FinnhubNewsResponse) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
