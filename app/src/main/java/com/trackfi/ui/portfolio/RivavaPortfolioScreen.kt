@@ -54,7 +54,6 @@ data class PortfolioItem(
 
 val portfolioItems = listOf(
     PortfolioItem("NSE", "IREDA", "Indian Renewable Energy Development Agency", "₹228.84"),
-    PortfolioItem("NSE", "TATAMOTORS", "Tata Motors (PV/CV)", "₹335.35"),
     PortfolioItem("NYSE", "RTX", "RTX Corporation", "$207.00"),
     PortfolioItem("NYSE", "WMT", "Walmart Inc.", "$125.12")
 )
