@@ -1,5 +1,5 @@
 # Keep BroadcastReceiver classes to prevent minification issues
--keep class com.trackfi.data.receiver.SmsReceiver { *; }
+-keep class com.rivavafi.data.receiver.SmsReceiver { *; }
 -keep public class * extends android.content.BroadcastReceiver
 
 # Keep Hilt / Dagger generated classes

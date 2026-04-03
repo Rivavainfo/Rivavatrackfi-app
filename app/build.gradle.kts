@@ -9,7 +9,7 @@ plugins {
 import java.util.Properties
 
 android {
-    namespace = "com.trackfi"
+    namespace = "com.rivavafi"
     compileSdk = 34
 
     val localProperties = Properties()
@@ -35,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.trackfi.universal"
+        applicationId = "com.rivavafi.universal"
         minSdk = 24
         targetSdk = 34
         versionCode = 3
