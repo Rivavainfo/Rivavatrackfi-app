@@ -79,6 +79,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import javax.inject.Inject
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
+    object Auth : Screen("auth", "Auth", Icons.Outlined.Home)
     object Welcome : Screen("welcome", "Welcome", Icons.Outlined.Home)
     object Greeting : Screen("greeting", "Greeting", Icons.Outlined.Home)
     object SmsOptIn : Screen("sms_opt_in", "SmsOptIn", Icons.Outlined.Home)
@@ -211,7 +212,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route,
+            startDestination = Screen.Auth.route,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
@@ -242,6 +243,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 )
             }
         ) {
+            composable(Screen.Auth.route) {
+                com.rivavafi.ui.auth.AuthScreen(
+                    onAuthSuccess = {
+                        val route = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route
+                        navController.navigate(route) {
+                            popUpTo(Screen.Auth.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable(Screen.Welcome.route) {
                 WelcomeScreen(onNavigateNext = {
                     navController.navigate(Screen.Greeting.route) {

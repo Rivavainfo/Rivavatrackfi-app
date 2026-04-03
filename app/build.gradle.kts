@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("com.google.gms.google-services")
 }
 
 import java.util.Properties
@@ -97,6 +98,11 @@ android {
 }
 
 dependencies {
+    // Firebase and Google Auth
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
     val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
     implementation(composeBom)
     implementation("androidx.core:core-ktx:1.12.0")
