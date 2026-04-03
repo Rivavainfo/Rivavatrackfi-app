@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.trackfi.ui.home.HomeViewModel
 import java.io.File
@@ -166,7 +165,7 @@ fun ProfileScreen(
                                     )
                                 }
 
-                                AsyncImage(
+                                coil.compose.AsyncImage(
                                     model = profileImageUri,
                                     contentDescription = "Avatar",
                                     modifier = Modifier.fillMaxSize().clip(CircleShape),

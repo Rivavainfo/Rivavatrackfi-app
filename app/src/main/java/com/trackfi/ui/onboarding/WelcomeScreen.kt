@@ -38,14 +38,7 @@ import com.trackfi.ui.theme.WelcomeSurfaceContainerHighest
 import com.trackfi.ui.theme.WelcomeSurfaceContainerLow
 import com.trackfi.ui.theme.glassMorphism
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import com.trackfi.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -165,6 +158,10 @@ fun WelcomeScreen(
             ),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
             text = "PRIVATE • OFFLINE • SECURE",
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
@@ -462,4 +459,5 @@ fun WelcomeScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
     }
+}
 }

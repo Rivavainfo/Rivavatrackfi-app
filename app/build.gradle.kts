@@ -119,6 +119,9 @@ dependencies {
     ksp("com.google.dagger:hilt-android-compiler:2.51")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
+    // Coil
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
     // WorkManager
     val workVersion = "2.9.0"
     implementation("androidx.work:work-runtime-ktx:$workVersion")

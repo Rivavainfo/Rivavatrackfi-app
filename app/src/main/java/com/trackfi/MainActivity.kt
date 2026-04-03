@@ -351,7 +351,6 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable("pdf_viewer") {
                 com.trackfi.ui.portfolio.PdfViewerScreen(
-                    initialFocus = focus,
                     onBack = { navController.popBackStack() }
                 )
             }

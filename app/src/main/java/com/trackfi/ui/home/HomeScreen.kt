@@ -60,7 +60,6 @@ import androidx.compose.material.icons.filled.Person
 
 import com.trackfi.ui.components.PremiumCard
 import com.trackfi.ui.components.SectionHeader
-import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
 import android.Manifest
@@ -198,7 +197,7 @@ fun HomeScreen(
                                     )
                                 }
 
-                                AsyncImage(
+                                coil.compose.AsyncImage(
                                     model = profileImageUri,
                                     contentDescription = "Profile Avatar",
                                     modifier = Modifier.fillMaxSize().clip(CircleShape),

@@ -34,15 +34,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.blur
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockPortfolioDetailScreen(
     ticker: String,
-    onBack: () -> Unit,
-    onNavigateToPdfViewer: (() -> Unit)? = null
     initialFocus: String? = null,
     onBack: () -> Unit,
+    onNavigateToPdfViewer: (() -> Unit)? = null,
     viewModel: StockViewModel = hiltViewModel()
 ) {
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
@@ -54,6 +58,8 @@ fun StockPortfolioDetailScreen(
     }
 
     val stockData = stockStates[ticker]?.data
+
+    val uriHandler = LocalUriHandler.current
 
     val lastPrice = stockData?.c ?: (if (ticker == "RTX") 205.00 else 150.00)
     val changeValue = stockData?.d ?: (if (ticker == "RTX") 1.96 else -1.20)
@@ -98,14 +104,14 @@ fun StockPortfolioDetailScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(scrollState)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
             if (profile != null) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     if (!profile.logo.isNullOrBlank()) {
@@ -190,6 +196,7 @@ fun StockPortfolioDetailScreen(
                 icon = Icons.AutoMirrored.Filled.ShowChart,
                 colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer)
             )
+            }
 
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -271,7 +278,7 @@ fun StockPortfolioDetailScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Icon(androidx.compose.material.icons.Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("View PDF", fontWeight = FontWeight.Bold)
                                 }
@@ -331,8 +338,10 @@ fun StockPortfolioDetailScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(40.dp))
+            item {
+                Spacer(modifier = Modifier.height(40.dp))
+            }
         }
     }
-    }
+}
 }
