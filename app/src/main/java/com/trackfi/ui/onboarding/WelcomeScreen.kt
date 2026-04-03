@@ -161,6 +161,7 @@ fun WelcomeScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = "PRIVATE • OFFLINE • SECURE",
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),

@@ -344,13 +344,18 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 com.trackfi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
                     onBack = { navController.popBackStack() },
-                    onNavigateToPdfViewer = {
-                        navController.navigate("pdf_viewer")
+                    onNavigateToPdfViewer = { assetName ->
+                        navController.navigate("pdf_viewer/$assetName")
                     }
                 )
             }
-            composable("pdf_viewer") {
+            composable(
+                "pdf_viewer/{assetName}",
+                arguments = listOf(navArgument("assetName") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val assetName = backStackEntry.arguments?.getString("assetName") ?: "portfolio_ireda.pdf"
                 com.trackfi.ui.portfolio.PdfViewerScreen(
+                    assetName = assetName,
                     onBack = { navController.popBackStack() }
                 )
             }
