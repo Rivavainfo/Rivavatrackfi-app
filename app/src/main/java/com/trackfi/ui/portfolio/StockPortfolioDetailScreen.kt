@@ -46,7 +46,7 @@ fun StockPortfolioDetailScreen(
     ticker: String,
     initialFocus: String? = null,
     onBack: () -> Unit,
-    onNavigateToPdfViewer: (() -> Unit)? = null,
+    onNavigateToPdfViewer: ((String) -> Unit)? = null,
     viewModel: StockViewModel = hiltViewModel()
 ) {
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
@@ -235,9 +235,9 @@ fun StockPortfolioDetailScreen(
                 }
             }
 
-            // Wealth Insights Card / PDF Viewer for IREDA
+            // Wealth Insights Card / PDF Viewer for IREDA and RTX
             item {
-                if (ticker == "IREDA") {
+                if (ticker == "IREDA" || ticker == "RTX") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -245,7 +245,10 @@ fun StockPortfolioDetailScreen(
                             .clip(RoundedCornerShape(24.dp))
                             .background(
                                 Brush.linearGradient(
-                                    colors = listOf(com.trackfi.ui.theme.DeepBlueVariant, com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.8f))
+                                    colors = listOf(
+                                        if (ticker == "IREDA") com.trackfi.ui.theme.DeepBlueVariant else com.trackfi.ui.theme.AmoledBlack,
+                                        if (ticker == "IREDA") com.trackfi.ui.theme.EmeraldGreen.copy(alpha = 0.8f) else com.trackfi.ui.theme.PrimarySky.copy(alpha = 0.8f)
+                                    )
                                 )
                             )
                     ) {
@@ -255,20 +258,30 @@ fun StockPortfolioDetailScreen(
                         ) {
                             Text("Investment Thesis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
                             Spacer(modifier = Modifier.height(12.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text(if (ticker == "IREDA") "IPO Price" else "Buy Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text(if (ticker == "IREDA") "₹32" else "$74.00", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
+                                Column {
+                                    Text("Selling Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text(if (ticker == "IREDA") "₹228.84" else "$120.50", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text("715%", color = com.trackfi.ui.theme.EmeraldGreen, style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black))
+                                    Text(if (ticker == "IREDA") "715%" else "62.8%", color = if (ticker == "IREDA") com.trackfi.ui.theme.EmeraldGreen else com.trackfi.ui.theme.PrimarySky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
-                                Button(
-                                    onClick = { onNavigateToPdfViewer?.invoke() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("View PDF", fontWeight = FontWeight.Bold)
-                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { onNavigateToPdfViewer?.invoke(if (ticker == "IREDA") "portfolio_ireda.pdf" else "portfolio_rtx.pdf") },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.trackfi.ui.theme.DeepBlueVariant),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("View PDF", fontWeight = FontWeight.Bold)
                             }
                         }
                     }

@@ -54,8 +54,7 @@ data class PortfolioItem(
 
 val portfolioItems = listOf(
     PortfolioItem("NSE", "IREDA", "Indian Renewable Energy Development Agency", "₹228.84"),
-    PortfolioItem("NYSE", "RTX", "RTX Corporation", "$207.00"),
-    PortfolioItem("NYSE", "WMT", "Walmart Inc.", "$125.12")
+    PortfolioItem("NYSE", "RTX", "RTX Corporation", "$207.00")
 )
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
