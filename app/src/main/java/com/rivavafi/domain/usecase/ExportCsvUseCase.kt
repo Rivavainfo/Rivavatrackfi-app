@@ -13,7 +13,7 @@ import javax.inject.Inject
 class ExportCsvUseCase @Inject constructor(
     private val repository: TransactionRepository
 ) {
-    suspend operator fun invoke(context: Context): Result<String> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(@Suppress("UNUSED_PARAMETER") context: Context): Result<String> = withContext(Dispatchers.IO) {
         try {
             val transactions = repository.getAllTransactionsSync()
             if (transactions.isEmpty()) {

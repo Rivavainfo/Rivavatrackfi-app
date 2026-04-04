@@ -1,6 +1,10 @@
 package com.rivavafi.ui.theme
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+
+
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.Color
@@ -13,21 +17,21 @@ data class CategoryVisual(
 )
 
 object CategoryVisuals {
-    val EXPENSE = CategoryVisual("Expense", Color(0xFFE53935), Icons.Outlined.TrendingDown)
-    val INCOME = CategoryVisual("Income", Color(0xFF4CAF50), Icons.Outlined.TrendingUp)
+    val EXPENSE = CategoryVisual("Expense", Color(0xFFE53935), Icons.AutoMirrored.Outlined.TrendingDown)
+    val INCOME = CategoryVisual("Income", Color(0xFF4CAF50), Icons.AutoMirrored.Outlined.TrendingUp)
     val BILL = CategoryVisual("Bill", Color(0xFF9C27B0), Icons.Outlined.Receipt)
     val INVESTMENT = CategoryVisual("Investment", Color(0xFF00897B), Icons.Outlined.Savings)
     val SUBSCRIPTION = CategoryVisual("Subscription", Color(0xFF3949AB), Icons.Outlined.Autorenew)
     val REWARD = CategoryVisual("Reward", Color(0xFFFBC02D), Icons.Outlined.CardGiftcard)
     val SELF_TRANSFER = CategoryVisual("Transfer", Color(0xFF757575), Icons.Outlined.SyncAlt)
     val IGNORE = CategoryVisual("Ignore", Color(0xFF9E9E9E), Icons.Outlined.Block)
-    val DEFAULT = CategoryVisual("Other", Color(0xFF546E7A), Icons.Outlined.HelpOutline)
+    val DEFAULT = CategoryVisual("Other", Color(0xFF546E7A), Icons.AutoMirrored.Outlined.HelpOutline)
 
     val subcategories = mapOf(
         "Food" to CategoryVisual("Food", Color(0xFFFF9800), Icons.Outlined.Restaurant),
         "Groceries" to CategoryVisual("Groceries", Color(0xFF4CAF50), Icons.Outlined.LocalGroceryStore),
         "Transport" to CategoryVisual("Transport", Color(0xFF2196F3), Icons.Outlined.DirectionsCar),
-        "Bills" to CategoryVisual("Bills", Color(0xFF9C27B0), Icons.Outlined.ReceiptLong),
+        "Bills" to CategoryVisual("Bills", Color(0xFF9C27B0), Icons.AutoMirrored.Outlined.ReceiptLong),
         "Shopping" to CategoryVisual("Shopping", Color(0xFFE91E63), Icons.Outlined.ShoppingBag),
         "Recharge" to CategoryVisual("Recharge", Color(0xFF00BCD4), Icons.Outlined.PhoneAndroid),
         "Entertainment" to CategoryVisual("Entertainment", Color(0xFFF44336), Icons.Outlined.Movie),

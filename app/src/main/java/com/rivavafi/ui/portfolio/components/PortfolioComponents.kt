@@ -16,7 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
+
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AddChart
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -29,7 +32,7 @@ import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Sell
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
+
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.rivavafi.ui.theme.bounceClick

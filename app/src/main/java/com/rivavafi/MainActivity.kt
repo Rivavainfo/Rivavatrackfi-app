@@ -7,9 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.outlined.ListAlt
+
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Lock
@@ -209,7 +211,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
         },
         containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
-    ) { paddingValues ->
+    ) { _ ->
         NavHost(
             navController = navController,
             startDestination = Screen.Auth.route,
@@ -351,7 +353,6 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 )
             ) { backStackEntry ->
                 val ticker = backStackEntry.arguments?.getString("ticker") ?: ""
-                val focus = backStackEntry.arguments?.getString("focus")?.takeIf { it != "none" }
                 com.rivavafi.ui.portfolio.StockPortfolioDetailScreen(
                     ticker = ticker,
                     onBack = { navController.popBackStack() },
