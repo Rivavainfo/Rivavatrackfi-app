@@ -80,8 +80,9 @@ class AuthViewModel @Inject constructor(
                 Log.d(TAG, "Firebase credential sign-in success for uid=${firebaseUser?.uid}")
                 finalizeAuth(firebaseUser?.uid.orEmpty())
             } catch (e: Exception) {
-                Log.e(TAG, "Google sign-in with Firebase failed", e)
-                _errorMessage.value = e.message ?: "Google authentication failed."
+                Log.e(TAG, "Firebase authentication failure after Google sign-in.", e)
+                _errorMessage.value = e.message
+                    ?: "Firebase authentication failed after Google account selection. Please try again."
                 _authState.value = AuthState.CHOICE
             }
         }
