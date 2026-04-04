@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "725146507646",
+    "project_id": "rivava-b11da",
+    "storage_bucket": "rivava-b11da.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725146507646:android:1680aad88d5343f2bfbb2f",
+        "android_client_info": {
+          "package_name": "com.rivavafi.universal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_Dwea6KLGdTyY_CNgCRLOianX102yE_s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
