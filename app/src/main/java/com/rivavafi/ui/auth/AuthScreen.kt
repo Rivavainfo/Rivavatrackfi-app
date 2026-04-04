@@ -1,6 +1,7 @@
 package com.rivavafi.ui.auth
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,6 +44,18 @@ fun AuthScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     val context = LocalContext.current as Activity
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(authState) {
+        if (authState == AuthState.SUCCESS) {
+            onAuthSuccess()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -96,15 +109,8 @@ fun AuthScreen(
                             Icon(Icons.Outlined.Lock, contentDescription = null, tint = TertiaryEmerald, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("Verification Successful!", style = MaterialTheme.typography.titleLarge, color = Color.White)
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = onAuthSuccess,
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.fillMaxWidth().height(56.dp)
-                            ) {
-                                Text("Continue to App", fontWeight = FontWeight.Bold)
-                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Redirecting...", color = Color.Gray)
                         }
                     }
                     else -> {}
@@ -152,7 +158,21 @@ fun ChoiceSection(viewModel: AuthViewModel) {
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
-    val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
+    val webClientIdFromFirebase = runCatching {
+        context.getString(R.string.default_web_client_id)
+    }.getOrNull().orEmpty().trim()
+    val webClientId = if (webClientIdFromFirebase.isNotBlank()) {
+        webClientIdFromFirebase
+    } else {
+        BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
+    }
+    val googleSignInClient = remember(webClientId) {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -194,18 +214,13 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     )
                     return@Button
                 }
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(webClientId)
-                    .requestEmail()
-                    .build()
-                val googleSignInClient = GoogleSignIn.getClient(context, gso)
                 launcher.launch(googleSignInClient.signInIntent)
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Text("Launch Google Sign-In", fontWeight = FontWeight.Bold)
+            Text("Sign in with Google", fontWeight = FontWeight.Bold)
         }
     }
 }
