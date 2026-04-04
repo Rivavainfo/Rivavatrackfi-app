@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.AutoGraph
-
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -35,7 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.AutoGraph
-
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -583,7 +583,7 @@ fun CategoryBreakdown(transactions: List<TransactionEntity>) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = category,
+                                text = category ?: "Other",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )

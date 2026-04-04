@@ -4,10 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-
-
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
@@ -74,7 +70,7 @@ fun IredaInsightsCard() {
                             modifier = Modifier.size(40.dp).background(TertiaryEmerald.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = TertiaryEmerald)
+                            Icon(Icons.Default.TrendingUp, contentDescription = null, tint = TertiaryEmerald)
                         }
                         Column {
                             Text("Total Returns", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -101,7 +97,7 @@ fun IredaInsightsCard() {
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         ) {
-            Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.Article, contentDescription = null, tint = Color.White)
+            Icon(androidx.compose.material.icons.Icons.Default.Article, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(12.dp))
             Text("View Investment Thesis", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
         }
