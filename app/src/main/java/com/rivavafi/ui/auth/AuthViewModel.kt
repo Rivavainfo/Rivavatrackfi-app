@@ -76,6 +76,11 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onGoogleSignInError(message: String) {
+        _errorMessage.value = message
+        _authState.value = AuthState.GOOGLE_SIGN_IN
+    }
+
     fun startPhoneNumberVerification(phone: String, activity: Activity) {
         phoneNumber = phone
         _authState.value = AuthState.LOADING
