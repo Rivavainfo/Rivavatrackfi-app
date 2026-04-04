@@ -66,9 +66,10 @@ class AuthViewModel @Inject constructor(
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 val result = repository.auth.signInWithCredential(credential).await()
-                googleName = name
-                googleEmail = email
-                finalizeAuth(result.user?.uid ?: "")
+                val firebaseUser = result.user
+                googleName = firebaseUser?.displayName ?: name
+                googleEmail = firebaseUser?.email ?: email
+                finalizeAuth(firebaseUser?.uid.orEmpty())
             } catch (e: Exception) {
                 _errorMessage.value = e.message
                 _authState.value = AuthState.CHOICE
@@ -133,14 +134,27 @@ class AuthViewModel @Inject constructor(
     private fun finalizeAuth(uid: String) {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
-            // Post data to Apps Script
-            repository.saveUserDataToSheet(
-                name = googleName,
-                email = googleEmail,
-                phone = phoneNumber,
-                uid = uid
-            )
-            _authState.value = AuthState.SUCCESS
+            try {
+                if (uid.isBlank()) {
+                    throw IllegalStateException("Unable to identify user account.")
+                }
+                repository.saveUserToFirestore(
+                    uid = uid,
+                    name = googleName,
+                    email = googleEmail
+                )
+                // Keep existing Apps Script sync to avoid breaking existing flow.
+                repository.saveUserDataToSheet(
+                    name = googleName,
+                    email = googleEmail,
+                    phone = phoneNumber,
+                    uid = uid
+                )
+                _authState.value = AuthState.SUCCESS
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Authentication failed."
+                _authState.value = AuthState.CHOICE
+            }
         }
     }
 }
