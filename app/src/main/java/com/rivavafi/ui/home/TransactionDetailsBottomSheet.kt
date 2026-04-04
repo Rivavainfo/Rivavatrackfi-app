@@ -17,8 +17,6 @@ import java.util.Date
 import java.util.Locale
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.Alignment

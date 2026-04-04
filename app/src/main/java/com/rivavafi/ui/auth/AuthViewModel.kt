@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 enum class AuthState {
+    CHOICE,
     GOOGLE_SIGN_IN,
     PHONE_INPUT,
     OTP_VERIFICATION,
@@ -33,7 +34,7 @@ class AuthViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow(AuthState.GOOGLE_SIGN_IN)
+    private val _authState = MutableStateFlow(AuthState.CHOICE)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -46,18 +47,31 @@ class AuthViewModel @Inject constructor(
     var googleEmail: String = ""
     var phoneNumber: String = ""
 
+    fun selectGoogleFlow() {
+        _authState.value = AuthState.GOOGLE_SIGN_IN
+    }
+
+    fun selectPhoneFlow() {
+        _authState.value = AuthState.PHONE_INPUT
+    }
+
+    fun resetToChoice() {
+        _authState.value = AuthState.CHOICE
+        _errorMessage.value = null
+    }
+
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
-                repository.auth.signInWithCredential(credential).await()
+                val result = repository.auth.signInWithCredential(credential).await()
                 googleName = name
                 googleEmail = email
-                _authState.value = AuthState.PHONE_INPUT
+                finalizeAuth(result.user?.uid ?: "")
             } catch (e: Exception) {
                 _errorMessage.value = e.message
-                _authState.value = AuthState.GOOGLE_SIGN_IN
+                _authState.value = AuthState.CHOICE
             }
         }
     }
@@ -102,15 +116,8 @@ class AuthViewModel @Inject constructor(
     private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
         viewModelScope.launch {
             try {
-                // Link or sign in. If a user is currently signed in via Google, link the credential.
-                val currentUser = repository.auth.currentUser
-                if (currentUser != null) {
-                    currentUser.linkWithCredential(credential).await()
-                    finalizeAuth(currentUser.uid)
-                } else {
-                    val result = repository.auth.signInWithCredential(credential).await()
-                    finalizeAuth(result.user?.uid ?: "")
-                }
+                val result = repository.auth.signInWithCredential(credential).await()
+                finalizeAuth(result.user?.uid ?: "")
             } catch (e: Exception) {
                 _errorMessage.value = e.message
                 _authState.value = AuthState.OTP_VERIFICATION

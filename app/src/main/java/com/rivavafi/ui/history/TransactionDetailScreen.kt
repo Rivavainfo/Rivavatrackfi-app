@@ -6,10 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.material.icons.filled.*
-
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -61,7 +58,7 @@ fun TransactionDetailScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        transaction?.let { tx ->
+        if (transaction != null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -70,10 +67,10 @@ fun TransactionDetailScreen(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                TransactionInfoCard(tx)
+                TransactionInfoCard(transaction!!)
 
-                if (!tx.rawMessage.isNullOrBlank()) {
-                    RawMessageCard(tx.rawMessage)
+                if (!transaction!!.rawMessage.isNullOrBlank()) {
+                    RawMessageCard(transaction!!.rawMessage!!)
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -94,7 +91,7 @@ fun TransactionDetailScreen(
 
                     Button(
                         onClick = {
-                            viewModel.deleteTransaction(tx)
+                            viewModel.deleteTransaction(transaction!!)
                             onBack()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -110,7 +107,7 @@ fun TransactionDetailScreen(
 
             if (showEditDialog) {
                 com.rivavafi.ui.history.TransactionCategoryBottomSheet(
-                    transaction = tx,
+                    transaction = transaction!!,
                     customCategories = categories,
                     onDismiss = { showEditDialog = false },
                     onSave = { updatedTx, createRule, ruleKw ->
@@ -122,7 +119,7 @@ fun TransactionDetailScreen(
                     }
                 )
             }
-        } ?: run {
+        } else {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Transaction not found")
             }

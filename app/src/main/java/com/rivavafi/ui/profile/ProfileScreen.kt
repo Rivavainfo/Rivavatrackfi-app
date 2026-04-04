@@ -12,11 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.automirrored.outlined.*
-import androidx.compose.material.icons.filled.*
-
-
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
@@ -379,7 +376,7 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                imageVector = Icons.Default.TrendingUp,
                                 contentDescription = "Trending Up",
                                 tint = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(16.dp)
@@ -482,7 +479,7 @@ fun ProfileScreen(
                     onClick = { android.widget.Toast.makeText(context, "Notification Settings", android.widget.Toast.LENGTH_SHORT).show() }
                 )
                 QuickActionItem(
-                    icon = Icons.AutoMirrored.Filled.HelpOutline,
+                    icon = Icons.Default.HelpOutline,
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary,
                     onClick = {
@@ -495,7 +492,7 @@ fun ProfileScreen(
                     }
                 )
                 QuickActionItem(
-                    icon = Icons.AutoMirrored.Filled.Logout,
+                    icon = Icons.Default.Logout,
                     title = "Logout",
                     tint = MaterialTheme.colorScheme.error,
                     onClick = { viewModel.logout() }
