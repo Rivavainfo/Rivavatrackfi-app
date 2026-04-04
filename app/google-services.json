@@ -12,7 +12,20 @@
           "package_name": "com.rivavafi.universal"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "725146507646-3imsuke52q7jnigodgs5rfni34sfqakr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rivavafi.universal",
+            "certificate_hash": "74c8e7e06cfb82fa1c48fc155823a291e34ad83d"
+          }
+        },
+        {
+          "client_id": "725146507646-r2m7rmeaco18vq707je2gsgcsbr8f9go.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD_Dwea6KLGdTyY_CNgCRLOianX102yE_s"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "725146507646-r2m7rmeaco18vq707je2gsgcsbr8f9go.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
