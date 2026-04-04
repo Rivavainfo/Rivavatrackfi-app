@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.AccountCircle
+import com.rivavafi.BuildConfig
 
 @Composable
 fun AuthScreen(
@@ -151,6 +152,7 @@ fun ChoiceSection(viewModel: AuthViewModel) {
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
+    val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -165,13 +167,12 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                         name = account.displayName ?: "User",
                         email = account.email ?: ""
                     )
-                }
+                } ?: viewModel.onGoogleSignInError(
+                    "Google Sign-In failed: ID token missing. Check Web client ID and Firebase OAuth setup."
+                )
             } catch (e: ApiException) {
-                // In production, emit error to ViewModel. We fall back to simulated token if API throws due to lack of real google-services.json on dummy setups.
-                viewModel.onGoogleSignInSuccess(
-                    idToken = "dummy_token_if_actual_fails",
-                    name = "Dummy Fallback User",
-                    email = "fallback@dummy.com"
+                viewModel.onGoogleSignInError(
+                    "Google Sign-In error (${e.statusCode}): ${e.localizedMessage ?: "Unknown error"}"
                 )
             }
         }
@@ -187,8 +188,14 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
+                if (webClientId.isBlank()) {
+                    viewModel.onGoogleSignInError(
+                        "Missing GOOGLE_WEB_CLIENT_ID. Add google.web.client.id in local.properties or GOOGLE_WEB_CLIENT_ID env var."
+                    )
+                    return@Button
+                }
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("725146507646-3imsuke52q7jnigodgs5rfni34sfqakr.apps.googleusercontent.com")
+                    .requestIdToken(webClientId)
                     .requestEmail()
                     .build()
                 val googleSignInClient = GoogleSignIn.getClient(context, gso)
