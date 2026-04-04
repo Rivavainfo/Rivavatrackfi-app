@@ -187,9 +187,8 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
-                // NOTE: Replace default_web_client_id string in values.xml with the actual Web Client ID from Firebase Console to use in production.
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("314159265358-dummy.apps.googleusercontent.com") // Replace string resource when actual json is provided: context.getString(R.string.default_web_client_id)
+                    .requestIdToken("725146507646-3imsuke52q7jnigodgs5rfni34sfqakr.apps.googleusercontent.com")
                     .requestEmail()
                     .build()
                 val googleSignInClient = GoogleSignIn.getClient(context, gso)
