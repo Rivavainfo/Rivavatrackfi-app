@@ -36,6 +36,8 @@ import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.AccountCircle
 import com.rivavafi.BuildConfig
 
+private const val AUTH_SCREEN_TAG = "AuthScreen"
+
 @Composable
 fun AuthScreen(
     onAuthSuccess: () -> Unit,
@@ -159,7 +161,12 @@ fun ChoiceSection(viewModel: AuthViewModel) {
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
-    val webClientIdFromFirebase = context.getString(R.string.default_web_client_id).trim()
+    val webClientIdFromFirebase = runCatching {
+        context.getString(R.string.default_web_client_id).trim()
+    }.getOrElse {
+        Log.e(AUTH_SCREEN_TAG, "default_web_client_id is unavailable from resources.", it)
+        ""
+    }
     val webClientId = if (webClientIdFromFirebase.isNotBlank()) {
         webClientIdFromFirebase
     } else {
@@ -170,33 +177,65 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             .requestIdToken(webClientId)
             .requestEmail()
             .build()
+        Log.d(
+            AUTH_SCREEN_TAG,
+            "GoogleSignInClient initialized. idTokenRequested=true, emailRequested=true, clientIdAvailable=${webClientId.isNotBlank()}"
+        )
         GoogleSignIn.getClient(context, gso)
     }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { idToken ->
-                    Log.d("AuthScreen", "Google account selected. Authenticating with Firebase.")
-                    viewModel.onGoogleSignInSuccess(
-                        idToken = idToken,
-                        name = account.displayName ?: "User",
-                        email = account.email ?: ""
-                    )
-                } ?: viewModel.onGoogleSignInError(
-                    "Google Sign-In failed: ID token missing. Check Web client ID and Firebase OAuth setup."
-                )
-            } catch (e: ApiException) {
-                viewModel.onGoogleSignInError(
-                    "Google Sign-In error (${e.statusCode}): ${e.localizedMessage ?: "Unknown error"}"
-                )
+        Log.d(
+            AUTH_SCREEN_TAG,
+            "Google sign-in activity returned with resultCode=${result.resultCode}, hasIntent=${result.data != null}"
+        )
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            if (account == null) {
+                Log.e(AUTH_SCREEN_TAG, "Google sign-in failed: account is null.")
+                viewModel.onGoogleSignInError("Google Sign-In failed: no account was returned.")
+                return@rememberLauncherForActivityResult
             }
-        } else {
-            viewModel.onGoogleSignInError("Google Sign-In was cancelled.")
+
+            val idToken = account.idToken
+            if (idToken.isNullOrBlank()) {
+                Log.e(
+                    AUTH_SCREEN_TAG,
+                    "Google sign-in failed: missing ID token for account=${account.email.orEmpty()}."
+                )
+                viewModel.onGoogleSignInError(
+                    "Google Sign-In failed: missing ID token. Verify default_web_client_id and Firebase OAuth config."
+                )
+                return@rememberLauncherForActivityResult
+            }
+
+            Log.d(
+                AUTH_SCREEN_TAG,
+                "Google sign-in success. account=${account.email.orEmpty()}, tokenLength=${idToken.length}"
+            )
+            viewModel.onGoogleSignInSuccess(
+                idToken = idToken,
+                name = account.displayName ?: "User",
+                email = account.email ?: ""
+            )
+        } catch (e: ApiException) {
+            Log.e(
+                AUTH_SCREEN_TAG,
+                "Google sign-in failure. statusCode=${e.statusCode}, message=${e.localizedMessage}",
+                e
+            )
+            val failureMessage = if (e.statusCode == 12501 || result.resultCode == Activity.RESULT_CANCELED) {
+                "Google Sign-In was canceled before completion. Please choose an account and try again."
+            } else {
+                "Google Sign-In failed (code ${e.statusCode}). ${e.localizedMessage ?: "Please try again."}"
+            }
+            viewModel.onGoogleSignInError(failureMessage)
+        } catch (e: Exception) {
+            Log.e(AUTH_SCREEN_TAG, "Unexpected Google sign-in error.", e)
+            viewModel.onGoogleSignInError("Unexpected Google Sign-In error. Please try again.")
         }
     }
 
@@ -216,7 +255,10 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     )
                     return@Button
                 }
-                googleSignInClient.signOut()
+                Log.d(
+                    AUTH_SCREEN_TAG,
+                    "Launching Google sign-in intent with googleSignInClient.signInIntent"
+                )
                 launcher.launch(googleSignInClient.signInIntent)
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
