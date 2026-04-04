@@ -27,6 +27,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.collectAsState
@@ -34,8 +37,8 @@ import androidx.compose.material.icons.filled.Refresh
 import com.rivavafi.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
+
+
 import com.rivavafi.ui.theme.AmoledBlack
 import com.rivavafi.ui.theme.TertiaryEmerald
 import com.rivavafi.ui.theme.SecondaryPink

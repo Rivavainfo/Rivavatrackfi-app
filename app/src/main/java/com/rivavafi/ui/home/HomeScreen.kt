@@ -21,6 +21,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+
+
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -92,19 +96,14 @@ fun HomeScreen(
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val profileImageUri by viewModel.profileImageUri.collectAsState()
-    val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
-    var showSmsRationaleDialog by remember { mutableStateOf(false) }
-    var showSmsSettingsDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
     var showPremiumUnlockDialog by remember { mutableStateOf(false) }
-    var selectedTransaction by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    val activity = context as? android.app.Activity
 
     Scaffold(
         floatingActionButton = {
@@ -356,7 +355,7 @@ fun HomeScreen(
                     com.rivavafi.ui.components.PremiumButton(
                         text = "Chat with Rivava",
                         onClick = { showChatDialog = true },
-                        icon = Icons.Default.Chat,
+                        icon = Icons.AutoMirrored.Filled.Chat,
                         modifier = Modifier.bounceClick { showChatDialog = true },
                         colors = listOf(Color(0xFFFFAEDB), Color(0xFF55003F))
                     )
@@ -670,14 +669,6 @@ fun HomeScreen(
 
 @Composable
 fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
-    val now = System.currentTimeMillis()
-    val todayStart = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
     val weekStart = Calendar.getInstance().apply {
         set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
         set(Calendar.HOUR_OF_DAY, 0)
@@ -694,7 +685,6 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    var todaySpending = 0.0
     var weeklySpending = 0.0
     var monthlySpending = 0.0
 
@@ -1088,7 +1078,6 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
     val isCredit = transaction.type == "INCOME"
     val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
 
-    val interactionSource = remember { MutableInteractionSource() }
     val categoryVisual = CategoryVisuals.getCategoryVisual(transaction.category)
     val subCategoryVisual = transaction.subcategory?.let { CategoryVisuals.getSubcategoryVisual(it) }
 

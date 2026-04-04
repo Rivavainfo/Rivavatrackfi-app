@@ -22,7 +22,9 @@ import com.rivavafi.ui.theme.VibrantRed
 import com.rivavafi.ui.theme.bounceClick
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.NorthEast
@@ -143,11 +145,11 @@ fun PortfolioStockCard(
     ticker: String,
     companyName: String,
     marketPrice: String,
-    isPremium: Boolean = true,
+    @Suppress("UNUSED_PARAMETER") isPremium: Boolean = true,
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
     percentageChange: String = "+2.4%",
-    latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
+    @Suppress("UNUSED_PARAMETER") latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
     onValueClick: ((String) -> Unit)? = null
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
@@ -254,7 +256,7 @@ fun PortfolioStockCard(
                 modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.OpenInNew,
+                    imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
                     contentDescription = "Search Ticker",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                     modifier = Modifier.size(16.dp)

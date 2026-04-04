@@ -7,6 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Fingerprint
@@ -38,7 +40,7 @@ import com.rivavafi.ui.theme.WelcomeSurfaceContainerHighest
 import com.rivavafi.ui.theme.WelcomeSurfaceContainerLow
 import com.rivavafi.ui.theme.glassMorphism
 import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -307,7 +309,7 @@ fun WelcomeScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                imageVector = Icons.Outlined.ArrowForward,
+                                imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                                 contentDescription = null,
                                 tint = Color.Black
                             )

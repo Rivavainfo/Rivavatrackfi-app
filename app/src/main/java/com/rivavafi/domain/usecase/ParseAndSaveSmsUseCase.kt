@@ -161,7 +161,7 @@ class ParseAndSaveSmsUseCase @Inject constructor(
         val referenceId = extractReferenceId(messageBody)
 
         var category = autoCategorize(merchant, messageBody)
-        var subcategory: String? = null
+        var subcategory: String?
 
         // Layer 3: User Corrections (Highest Priority over AI/Rules)
         if (matchedCorrection != null) {

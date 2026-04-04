@@ -12,6 +12,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.VpnKey
@@ -141,9 +143,9 @@ fun PremiumUnlockDialog(
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Divider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
+                                HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
                                 Text(" OR ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Divider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
+                                HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
                             }
 
                             Button(

@@ -4,9 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.filled.*
+
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.automirrored.filled.ShowChart
+
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -70,8 +73,6 @@ fun StockPortfolioDetailScreen(
 
     val isPositive = changeValue >= 0
     val pnl = changeValue * 2.99 // Simulated position P&L
-
-    val scrollState = rememberScrollState()
 
     val companyProfiles by viewModel.companyProfiles.collectAsState()
     val companyNews by viewModel.companyNews.collectAsState()
@@ -180,7 +181,6 @@ fun StockPortfolioDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            val uriHandler = LocalUriHandler.current
             PremiumButton(
                 text = "View Full Stock Price",
                 onClick = {
@@ -208,7 +208,7 @@ fun StockPortfolioDetailScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("MARKET OPEN", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("$${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
@@ -224,7 +224,7 @@ fun StockPortfolioDetailScreen(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("52W CHANGE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Icon(Icons.Default.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("+284.15%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black), color = com.rivavafi.ui.theme.EmeraldGreen)
@@ -334,7 +334,7 @@ fun StockPortfolioDetailScreen(
                     ) {
                         Text("VIEW FULL STOCK PRICE", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black))
                         Spacer(modifier = Modifier.width(16.dp))
-                        Icon(Icons.Default.OpenInNew, contentDescription = null)
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null)
                     }
                 }
             }
