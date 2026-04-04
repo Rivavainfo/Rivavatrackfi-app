@@ -1,6 +1,7 @@
 package com.rivavafi.ui.auth
 
 import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -158,9 +159,7 @@ fun ChoiceSection(viewModel: AuthViewModel) {
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
-    val webClientIdFromFirebase = runCatching {
-        context.getString(R.string.default_web_client_id)
-    }.getOrNull().orEmpty().trim()
+    val webClientIdFromFirebase = context.getString(R.string.default_web_client_id).trim()
     val webClientId = if (webClientIdFromFirebase.isNotBlank()) {
         webClientIdFromFirebase
     } else {
@@ -182,6 +181,7 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             try {
                 val account = task.getResult(ApiException::class.java)
                 account?.idToken?.let { idToken ->
+                    Log.d("AuthScreen", "Google account selected. Authenticating with Firebase.")
                     viewModel.onGoogleSignInSuccess(
                         idToken = idToken,
                         name = account.displayName ?: "User",
@@ -195,6 +195,8 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     "Google Sign-In error (${e.statusCode}): ${e.localizedMessage ?: "Unknown error"}"
                 )
             }
+        } else {
+            viewModel.onGoogleSignInError("Google Sign-In was cancelled.")
         }
     }
 
@@ -214,6 +216,7 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     )
                     return@Button
                 }
+                googleSignInClient.signOut()
                 launcher.launch(googleSignInClient.signInIntent)
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
