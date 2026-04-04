@@ -1,6 +1,7 @@
 package com.rivavafi.ui.auth
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseException
@@ -33,6 +34,9 @@ enum class AuthState {
 class AuthViewModel @Inject constructor(
     private val repository: AuthRepository
 ) : ViewModel() {
+    companion object {
+        private const val TAG = "AuthViewModel"
+    }
 
     private val _authState = MutableStateFlow(AuthState.CHOICE)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -45,6 +49,7 @@ class AuthViewModel @Inject constructor(
 
     var googleName: String = ""
     var googleEmail: String = ""
+    var photoUrl: String = ""
     var phoneNumber: String = ""
 
     fun selectGoogleFlow() {
@@ -61,6 +66,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
+        Log.d(TAG, "Received Google ID token. Starting Firebase credential sign-in.")
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
@@ -69,22 +75,34 @@ class AuthViewModel @Inject constructor(
                 val firebaseUser = result.user
                 googleName = firebaseUser?.displayName ?: name
                 googleEmail = firebaseUser?.email ?: email
+                phoneNumber = firebaseUser?.phoneNumber.orEmpty()
+                photoUrl = firebaseUser?.photoUrl?.toString().orEmpty()
+                Log.d(TAG, "Firebase credential sign-in success for uid=${firebaseUser?.uid}")
                 finalizeAuth(firebaseUser?.uid.orEmpty())
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                Log.e(TAG, "Google sign-in with Firebase failed", e)
+                _errorMessage.value = e.message ?: "Google authentication failed."
                 _authState.value = AuthState.CHOICE
             }
         }
     }
 
     fun onGoogleSignInError(message: String) {
+        Log.e(TAG, "Google Sign-In error: $message")
         _errorMessage.value = message
         _authState.value = AuthState.GOOGLE_SIGN_IN
     }
 
     fun startPhoneNumberVerification(phone: String, activity: Activity) {
+        if (phone.isBlank()) {
+            _errorMessage.value = "Please enter a valid phone number."
+            _authState.value = AuthState.PHONE_INPUT
+            return
+        }
+
         phoneNumber = phone
         _authState.value = AuthState.LOADING
+        Log.d(TAG, "Starting OTP flow for phone=$phone")
 
         val options = PhoneAuthOptions.newBuilder(repository.auth)
             .setPhoneNumber(phone)
@@ -92,11 +110,13 @@ class AuthViewModel @Inject constructor(
             .setActivity(activity)
             .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    Log.d(TAG, "Phone verification auto-completed.")
                     signInWithPhoneAuthCredential(credential)
                 }
 
                 override fun onVerificationFailed(e: FirebaseException) {
-                    _errorMessage.value = e.message
+                    Log.e(TAG, "Phone verification failed", e)
+                    _errorMessage.value = e.message ?: "Phone verification failed."
                     _authState.value = AuthState.PHONE_INPUT
                 }
 
@@ -106,6 +126,7 @@ class AuthViewModel @Inject constructor(
                 ) {
                     storedVerificationId = verificationId
                     resendToken = token
+                    Log.d(TAG, "OTP sent successfully.")
                     _authState.value = AuthState.OTP_VERIFICATION
                 }
             })
@@ -114,7 +135,18 @@ class AuthViewModel @Inject constructor(
     }
 
     fun verifyOtp(code: String) {
+        if (storedVerificationId.isBlank()) {
+            _errorMessage.value = "Verification session expired. Please request OTP again."
+            _authState.value = AuthState.PHONE_INPUT
+            return
+        }
+        if (code.length < 6) {
+            _errorMessage.value = "Please enter the 6-digit OTP."
+            _authState.value = AuthState.OTP_VERIFICATION
+            return
+        }
         _authState.value = AuthState.LOADING
+        Log.d(TAG, "Verifying OTP.")
         val credential = PhoneAuthProvider.getCredential(storedVerificationId, code)
         signInWithPhoneAuthCredential(credential)
     }
@@ -123,9 +155,16 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = repository.auth.signInWithCredential(credential).await()
+                val firebaseUser = result.user
+                googleName = firebaseUser?.displayName ?: googleName
+                googleEmail = firebaseUser?.email.orEmpty()
+                phoneNumber = firebaseUser?.phoneNumber ?: phoneNumber
+                photoUrl = firebaseUser?.photoUrl?.toString().orEmpty()
+                Log.d(TAG, "Phone credential sign-in success for uid=${firebaseUser?.uid}")
                 finalizeAuth(result.user?.uid ?: "")
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                Log.e(TAG, "Phone credential sign-in failed", e)
+                _errorMessage.value = e.message ?: "OTP verification failed."
                 _authState.value = AuthState.OTP_VERIFICATION
             }
         }
@@ -141,7 +180,10 @@ class AuthViewModel @Inject constructor(
                 repository.saveUserToFirestore(
                     uid = uid,
                     name = googleName,
-                    email = googleEmail
+                    email = googleEmail,
+                    phone = phoneNumber,
+                    photoUrl = photoUrl,
+                    loginMethod = if (phoneNumber.isNotBlank() && googleEmail.isBlank()) "phone" else "google"
                 )
                 // Keep existing Apps Script sync to avoid breaking existing flow.
                 repository.saveUserDataToSheet(
@@ -152,6 +194,7 @@ class AuthViewModel @Inject constructor(
                 )
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to finalize authentication", e)
                 _errorMessage.value = e.message ?: "Authentication failed."
                 _authState.value = AuthState.CHOICE
             }
