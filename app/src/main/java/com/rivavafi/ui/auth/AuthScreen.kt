@@ -30,9 +30,7 @@ import com.rivavafi.ui.theme.PrimarySky
 import com.rivavafi.ui.theme.TertiaryEmerald
 import com.rivavafi.ui.theme.glassMorphism
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.AccountCircle
 import com.rivavafi.BuildConfig
 
@@ -102,58 +100,34 @@ fun AuthScreen(
                 contentAlignment = Alignment.Center
             ) {
                 when (authState) {
-                    AuthState.CHOICE -> ChoiceSection(viewModel)
-                    AuthState.GOOGLE_SIGN_IN -> GoogleSignInSection(viewModel)
-                    AuthState.PHONE_INPUT -> PhoneInputSection(viewModel, context)
-                    AuthState.OTP_VERIFICATION -> OtpVerificationSection(viewModel)
+                    AuthState.IDLE -> GoogleSignInSection(viewModel)
                     AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
                     AuthState.SUCCESS -> {
+                        LaunchedEffect(Unit) {
+                            onAuthSuccess()
+                        }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Outlined.Lock, contentDescription = null, tint = TertiaryEmerald, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("Verification Successful!", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        }
+                    }
+                    AuthState.ERROR -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Login Failed", color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.resetState() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack)
+                            ) {
+                                Text("Try Again")
+                            }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("Redirecting...", color = Color.Gray)
                         }
                     }
-                    else -> {}
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ChoiceSection(viewModel: AuthViewModel) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Choose Login Method", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(
-            onClick = { viewModel.selectGoogleFlow() },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Continue with Google", fontWeight = FontWeight.Bold)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HorizontalDivider(Modifier.weight(1f), color = Color.DarkGray)
-            Text(" OR ", color = Color.Gray, modifier = Modifier.padding(horizontal = 8.dp))
-            HorizontalDivider(Modifier.weight(1f), color = Color.DarkGray)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { viewModel.selectPhoneFlow() },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainerSky.copy(alpha = 0.2f), contentColor = PrimarySky),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Icon(Icons.Outlined.Smartphone, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Continue with Phone", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -240,12 +214,7 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.resetToChoice() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Google Sign-In", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
+        Text("Continue to Rivava+", style = MaterialTheme.typography.titleMedium, color = Color.White)
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
@@ -265,6 +234,9 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
+            Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Sign in with Google", fontWeight = FontWeight.Bold)
             Text("Sign in with Google", fontWeight = FontWeight.Bold)
         }
     }

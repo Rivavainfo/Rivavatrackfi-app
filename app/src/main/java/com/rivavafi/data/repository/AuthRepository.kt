@@ -1,6 +1,7 @@
 package com.rivavafi.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rivavafi.data.network.GoogleAppsScriptApi
@@ -9,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 import android.util.Log
 import javax.inject.Inject
 
+class AuthRepository @Inject constructor() {
 class AuthRepository @Inject constructor(
     private val api: GoogleAppsScriptApi
 ) {
@@ -19,18 +21,19 @@ class AuthRepository @Inject constructor(
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    suspend fun saveUserDataToSheet(name: String, email: String, phone: String, uid: String) {
-        val data = UserAuthData(
-            name = name,
-            email = email,
-            phone = phone,
-            uid = uid,
-            verifiedStatus = "true",
-            timestamp = System.currentTimeMillis().toString()
+    suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
+        val userData = hashMapOf(
+            "uid" to uid,
+            "name" to name,
+            "email" to email,
+            "timestamp" to System.currentTimeMillis().toString()
         )
+
         try {
-            api.saveUserData(data)
+            firestore.collection("users").document(uid).set(userData).await()
         } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
             Log.e(TAG, "Failed to sync auth data to Apps Script", e)
         }
     }
