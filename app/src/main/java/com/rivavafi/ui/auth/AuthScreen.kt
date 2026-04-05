@@ -28,9 +28,7 @@ import com.rivavafi.ui.theme.PrimarySky
 import com.rivavafi.ui.theme.TertiaryEmerald
 import com.rivavafi.ui.theme.glassMorphism
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.AccountCircle
 
 @Composable
@@ -85,65 +83,32 @@ fun AuthScreen(
                 contentAlignment = Alignment.Center
             ) {
                 when (authState) {
-                    AuthState.CHOICE -> ChoiceSection(viewModel)
-                    AuthState.GOOGLE_SIGN_IN -> GoogleSignInSection(viewModel)
-                    AuthState.PHONE_INPUT -> PhoneInputSection(viewModel, context)
-                    AuthState.OTP_VERIFICATION -> OtpVerificationSection(viewModel)
+                    AuthState.IDLE -> GoogleSignInSection(viewModel)
                     AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
                     AuthState.SUCCESS -> {
+                        LaunchedEffect(Unit) {
+                            onAuthSuccess()
+                        }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Outlined.Lock, contentDescription = null, tint = TertiaryEmerald, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("Verification Successful!", style = MaterialTheme.typography.titleLarge, color = Color.White)
-                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                    }
+                    AuthState.ERROR -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Login Failed", color = MaterialTheme.colorScheme.error)
+                            Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = onAuthSuccess,
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.fillMaxWidth().height(56.dp)
+                                onClick = { viewModel.resetState() },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack)
                             ) {
-                                Text("Continue to App", fontWeight = FontWeight.Bold)
+                                Text("Try Again")
                             }
                         }
                     }
-                    else -> {}
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ChoiceSection(viewModel: AuthViewModel) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Choose Login Method", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(
-            onClick = { viewModel.selectGoogleFlow() },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Continue with Google", fontWeight = FontWeight.Bold)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HorizontalDivider(Modifier.weight(1f), color = Color.DarkGray)
-            Text(" OR ", color = Color.Gray, modifier = Modifier.padding(horizontal = 8.dp))
-            HorizontalDivider(Modifier.weight(1f), color = Color.DarkGray)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { viewModel.selectPhoneFlow() },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryContainerSky.copy(alpha = 0.2f), contentColor = PrimarySky),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Icon(Icons.Outlined.Smartphone, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Continue with Phone", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -178,12 +143,7 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
     }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.resetToChoice() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Google Sign-In", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
+        Text("Continue to Rivava+", style = MaterialTheme.typography.titleMedium, color = Color.White)
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
@@ -199,87 +159,9 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
-            Text("Launch Google Sign-In", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun PhoneInputSection(viewModel: AuthViewModel, activity: Activity) {
-    var phone by remember { mutableStateOf("+1") }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.resetToChoice() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Phone Login", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            placeholder = { Text("Phone Number (e.g. +1...)", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = AmoledBlack,
-                unfocusedContainerColor = AmoledBlack,
-                focusedBorderColor = PrimarySky,
-                unfocusedBorderColor = Color.DarkGray,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { viewModel.startPhoneNumberVerification(phone, activity) },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Send OTP", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun OtpVerificationSection(viewModel: AuthViewModel) {
-    var code by remember { mutableStateOf("") }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.selectPhoneFlow() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Verify OTP", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        OutlinedTextField(
-            value = code,
-            onValueChange = { code = it },
-            placeholder = { Text("6-digit Code", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = AmoledBlack,
-                unfocusedContainerColor = AmoledBlack,
-                focusedBorderColor = PrimarySky,
-                unfocusedBorderColor = Color.DarkGray,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { viewModel.verifyOtp(code) },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Verify", fontWeight = FontWeight.Bold)
+            Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Sign in with Google", fontWeight = FontWeight.Bold)
         }
     }
 }
