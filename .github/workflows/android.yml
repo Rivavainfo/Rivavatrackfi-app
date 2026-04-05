@@ -33,7 +33,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build with Gradle Debug
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --stacktrace --info
 
     - name: Build with Gradle Release
       env:
@@ -42,8 +42,8 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'release' }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'password' }}
       run: |
-        ./gradlew assembleRelease
-        ./gradlew bundleRelease
+        ./gradlew assembleRelease --stacktrace --info
+        ./gradlew bundleRelease --stacktrace --info
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
