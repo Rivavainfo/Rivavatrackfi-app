@@ -1,35 +1,40 @@
 package com.rivavafi.universal.ui.auth
 
 import android.app.Activity
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.rivavafi.universal.R
-import com.rivavafi.universal.ui.theme.AmoledBlack
-import com.rivavafi.universal.ui.theme.PrimaryContainerSky
-import com.rivavafi.universal.ui.theme.PrimarySky
-import com.rivavafi.universal.ui.theme.TertiaryEmerald
-import com.rivavafi.universal.ui.theme.glassMorphism
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.AccountCircle
 
 @Composable
 fun AuthScreen(
@@ -39,11 +44,9 @@ fun AuthScreen(
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
-    val context = LocalContext.current as Activity
-
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = AmoledBlack
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -54,58 +57,41 @@ fun AuthScreen(
         ) {
             Text(
                 text = "Rivava+",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Black,
-                color = PrimarySky
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Secure Authentication",
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            if (errorMessage != null) {
+            errorMessage?.let {
                 Text(
-                    text = errorMessage!!,
+                    text = it,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassMorphism(cornerRadius = 24f, alpha = 0.05f)
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                when (authState) {
-                    AuthState.IDLE -> GoogleSignInSection(viewModel)
-                    AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
-                    AuthState.SUCCESS -> {
-                        LaunchedEffect(Unit) {
-                            onAuthSuccess()
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Outlined.Lock, contentDescription = null, tint = TertiaryEmerald, modifier = Modifier.size(48.dp))
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("Verification Successful!", style = MaterialTheme.typography.titleLarge, color = Color.White)
-                        }
+            when (authState) {
+                AuthState.IDLE -> GoogleSignInSection(viewModel)
+                AuthState.LOADING -> CircularProgressIndicator()
+                AuthState.SUCCESS -> {
+                    LaunchedEffect(Unit) {
+                        onAuthSuccess()
                     }
-                    AuthState.ERROR -> {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Login Failed", color = MaterialTheme.colorScheme.error)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.resetState() },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack)
-                            ) {
-                                Text("Try Again")
-                            }
-                        }
+                    Text(
+                        text = "Verification Successful!",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                AuthState.ERROR -> {
+                    Button(onClick = { viewModel.resetState() }) {
+                        Text("Try Again")
                     }
                 }
             }
@@ -132,30 +118,27 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     )
                 }
             } catch (e: ApiException) {
-                // Production error handling
+                // Intentionally ignored; UI remains in IDLE state.
             }
         }
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Continue to Rivava+", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = {
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id))
-                    .requestEmail()
-                    .build()
-                val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                launcher.launch(googleSignInClient.signInIntent)
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text("Sign in with Google", fontWeight = FontWeight.Bold)
-        }
+    Button(
+        onClick = {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            launcher.launch(googleSignInClient.signInIntent)
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+    ) {
+        Icon(Icons.Outlined.AccountCircle, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Sign in with Google", fontWeight = FontWeight.SemiBold)
     }
 }
