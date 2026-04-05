@@ -9,7 +9,7 @@ plugins {
 import java.util.Properties
 
 android {
-    namespace = "com.rivavafi"
+    namespace = "com.rivavafi.universal"
     compileSdk = 34
 
     val localProperties = Properties()
@@ -128,6 +128,7 @@ dependencies {
 
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil:2.6.0")
 
     // WorkManager
     val workVersion = "2.9.0"
