@@ -1,8 +1,6 @@
 package com.rivavafi.ui.auth
 
 import android.app.Activity
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,9 +30,6 @@ import com.rivavafi.ui.theme.glassMorphism
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.AccountCircle
-import com.rivavafi.BuildConfig
-
-private const val AUTH_SCREEN_TAG = "AuthScreen"
 
 @Composable
 fun AuthScreen(
@@ -45,18 +40,6 @@ fun AuthScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     val context = LocalContext.current as Activity
-
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        }
-    }
-
-    LaunchedEffect(authState) {
-        if (authState == AuthState.SUCCESS) {
-            onAuthSuccess()
-        }
-    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -122,8 +105,6 @@ fun AuthScreen(
                             ) {
                                 Text("Try Again")
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Redirecting...", color = Color.Gray)
                         }
                     }
                 }
@@ -135,81 +116,24 @@ fun AuthScreen(
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
-    val webClientIdFromFirebase = runCatching {
-        context.getString(R.string.default_web_client_id).trim()
-    }.getOrElse {
-        Log.e(AUTH_SCREEN_TAG, "default_web_client_id is unavailable from resources.", it)
-        ""
-    }
-    val webClientId = if (webClientIdFromFirebase.isNotBlank()) {
-        webClientIdFromFirebase
-    } else {
-        BuildConfig.GOOGLE_WEB_CLIENT_ID.trim()
-    }
-    val googleSignInClient = remember(webClientId) {
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-        Log.d(
-            AUTH_SCREEN_TAG,
-            "GoogleSignInClient initialized. idTokenRequested=true, emailRequested=true, clientIdAvailable=${webClientId.isNotBlank()}"
-        )
-        GoogleSignIn.getClient(context, gso)
-    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        Log.d(
-            AUTH_SCREEN_TAG,
-            "Google sign-in activity returned with resultCode=${result.resultCode}, hasIntent=${result.data != null}"
-        )
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            if (account == null) {
-                Log.e(AUTH_SCREEN_TAG, "Google sign-in failed: account is null.")
-                viewModel.onGoogleSignInError("Google Sign-In failed: no account was returned.")
-                return@rememberLauncherForActivityResult
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account?.idToken?.let { idToken ->
+                    viewModel.onGoogleSignInSuccess(
+                        idToken = idToken,
+                        name = account.displayName ?: "User",
+                        email = account.email ?: ""
+                    )
+                }
+            } catch (e: ApiException) {
+                // Production error handling
             }
-
-            val idToken = account.idToken
-            if (idToken.isNullOrBlank()) {
-                Log.e(
-                    AUTH_SCREEN_TAG,
-                    "Google sign-in failed: missing ID token for account=${account.email.orEmpty()}."
-                )
-                viewModel.onGoogleSignInError(
-                    "Google Sign-In failed: missing ID token. Verify default_web_client_id and Firebase OAuth config."
-                )
-                return@rememberLauncherForActivityResult
-            }
-
-            Log.d(
-                AUTH_SCREEN_TAG,
-                "Google sign-in success. account=${account.email.orEmpty()}, tokenLength=${idToken.length}"
-            )
-            viewModel.onGoogleSignInSuccess(
-                idToken = idToken,
-                name = account.displayName ?: "User",
-                email = account.email ?: ""
-            )
-        } catch (e: ApiException) {
-            Log.e(
-                AUTH_SCREEN_TAG,
-                "Google sign-in failure. statusCode=${e.statusCode}, message=${e.localizedMessage}",
-                e
-            )
-            val failureMessage = if (e.statusCode == 12501 || result.resultCode == Activity.RESULT_CANCELED) {
-                "Google Sign-In was canceled before completion. Please choose an account and try again."
-            } else {
-                "Google Sign-In failed (code ${e.statusCode}). ${e.localizedMessage ?: "Please try again."}"
-            }
-            viewModel.onGoogleSignInError(failureMessage)
-        } catch (e: Exception) {
-            Log.e(AUTH_SCREEN_TAG, "Unexpected Google sign-in error.", e)
-            viewModel.onGoogleSignInError("Unexpected Google Sign-In error. Please try again.")
         }
     }
 
@@ -218,16 +142,11 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
-                if (webClientId.isBlank()) {
-                    viewModel.onGoogleSignInError(
-                        "Missing GOOGLE_WEB_CLIENT_ID. Add google.web.client.id in local.properties or GOOGLE_WEB_CLIENT_ID env var."
-                    )
-                    return@Button
-                }
-                Log.d(
-                    AUTH_SCREEN_TAG,
-                    "Launching Google sign-in intent with googleSignInClient.signInIntent"
-                )
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build()
+                val googleSignInClient = GoogleSignIn.getClient(context, gso)
                 launcher.launch(googleSignInClient.signInIntent)
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
@@ -237,87 +156,6 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             Icon(Icons.Outlined.AccountCircle, contentDescription = null, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.width(12.dp))
             Text("Sign in with Google", fontWeight = FontWeight.Bold)
-            Text("Sign in with Google", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun PhoneInputSection(viewModel: AuthViewModel, activity: Activity) {
-    var phone by remember { mutableStateOf("+1") }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.resetToChoice() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Phone Login", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        OutlinedTextField(
-            value = phone,
-            onValueChange = { phone = it },
-            placeholder = { Text("Phone Number (e.g. +1...)", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = AmoledBlack,
-                unfocusedContainerColor = AmoledBlack,
-                focusedBorderColor = PrimarySky,
-                unfocusedBorderColor = Color.DarkGray,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { viewModel.startPhoneNumberVerification(phone, activity) },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Send OTP", fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun OtpVerificationSection(viewModel: AuthViewModel) {
-    var code by remember { mutableStateOf("") }
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { viewModel.selectPhoneFlow() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text("Verify OTP", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        OutlinedTextField(
-            value = code,
-            onValueChange = { code = it },
-            placeholder = { Text("6-digit Code", color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = AmoledBlack,
-                unfocusedContainerColor = AmoledBlack,
-                focusedBorderColor = PrimarySky,
-                unfocusedBorderColor = Color.DarkGray,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            )
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { viewModel.verifyOtp(code) },
-            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Verify", fontWeight = FontWeight.Bold)
         }
     }
 }
