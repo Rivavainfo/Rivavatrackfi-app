@@ -30,6 +30,12 @@ class AuthViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    init {
+        if (repository.auth.currentUser != null) {
+            _authState.value = AuthState.SUCCESS
+        }
+    }
+
     fun resetState() {
         _authState.value = AuthState.IDLE
         _errorMessage.value = null
