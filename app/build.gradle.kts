@@ -42,6 +42,7 @@ android {
         versionName = "1.0.2"
 
         buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: ""}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${System.getenv("GOOGLE_WEB_CLIENT_ID") ?: localProperties.getProperty("google.web.client.id") ?: "725146507646-3imsuke52q7jnigodgs5rfni34sfqakr.apps.googleusercontent.com"}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
