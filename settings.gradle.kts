@@ -1,3 +1,5 @@
+val enableAndroid = gradle.startParameter.projectProperties["enableAndroid"]?.toBoolean() ?: false
+
 pluginManagement {
     repositories {
         google {
@@ -5,24 +7,22 @@ pluginManagement {
                 includeGroupByRegex("com\\.android.*")
                 includeGroupByRegex("com\\.google.*")
                 includeGroupByRegex("androidx.*")
+                includeGroupByRegex("org\\.jetbrains.*")
             }
         }
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
         gradlePluginPortal()
     }
-    resolutionStrategy {
-        eachPlugin {
-            when (requested.id.id) {
-                "com.android.application" -> useModule("com.android.tools.build:gradle:${requested.version}")
-                "org.jetbrains.kotlin.android" -> useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${requested.version}")
-                "com.google.dagger.hilt.android" -> useModule("com.google.dagger:hilt-android-gradle-plugin:${requested.version}")
-                "com.google.devtools.ksp" -> useModule("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${requested.version}")
-                "com.google.gms.google-services" -> useModule("com.google.gms:google-services:${requested.version}")
-            }
-        }
+    plugins {
+        id("com.android.application") version "8.3.0"
+        id("org.jetbrains.kotlin.android") version "1.9.22"
+        id("com.google.dagger.hilt.android") version "2.51"
+        id("com.google.devtools.ksp") version "1.9.22-1.0.17"
+        id("com.google.gms.google-services") version "4.4.2"
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
@@ -33,4 +33,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "TrackFi"
-include(":app")
+
+if (enableAndroid) {
+    include(":app")
+} else {
+    logger.lifecycle("Android module is disabled. Run with -PenableAndroid=true to include :app.")
+}
