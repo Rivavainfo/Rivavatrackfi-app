@@ -19,6 +19,11 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Configure Gradle to use workflow JDK
+      run: |
+        mkdir -p ~/.gradle
+        echo "org.gradle.java.home=$JAVA_HOME" >> ~/.gradle/gradle.properties
+
     - name: Handle Keystore
       env:
         ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
