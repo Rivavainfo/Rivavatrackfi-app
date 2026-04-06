@@ -1,4 +1,4 @@
-val enableAndroid = gradle.startParameter.projectProperties["enableAndroid"]?.toBoolean() ?: false
+val enableAndroid = gradle.startParameter.projectProperties["enableAndroid"]?.toBoolean() ?: true
 
 pluginManagement {
     repositories {
