@@ -56,16 +56,34 @@ fun AuthScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(PrimarySky.copy(alpha = 0.1f), RoundedCornerShape(20.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Lock,
+                    contentDescription = null,
+                    tint = PrimarySky,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = "Rivava+",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Black,
-                color = PrimarySky
+                style = MaterialTheme.typography.displayLarge.copy(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color.White, PrimarySky)
+                    )
+                ),
+                fontWeight = FontWeight.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Secure Authentication",
-                style = MaterialTheme.typography.bodyLarge,
+                text = "Private. Offline. Secure.",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 color = Color.Gray
             )
             Spacer(modifier = Modifier.height(48.dp))
