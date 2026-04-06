@@ -70,15 +70,6 @@ fun AuthScreen(
             )
             Spacer(modifier = Modifier.height(48.dp))
 
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -87,7 +78,7 @@ fun AuthScreen(
                 contentAlignment = Alignment.Center
             ) {
                 when (authState) {
-                    AuthState.CHOICE -> ChoiceSection(viewModel)
+                    AuthState.CHOICE, AuthState.ERROR -> ChoiceSection(viewModel)
                     AuthState.GOOGLE_LOGIN -> GoogleSignInSection(viewModel)
                     AuthState.EMAIL_LOGIN -> EmailLoginSection(viewModel)
                     AuthState.EMAIL_REGISTER -> EmailRegisterSection(viewModel)
@@ -104,20 +95,24 @@ fun AuthScreen(
                             Text("Verification Successful!", style = MaterialTheme.typography.titleLarge, color = Color.White)
                         }
                     }
-                    AuthState.ERROR -> {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Login Failed", color = MaterialTheme.colorScheme.error)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.resetState() },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack)
-                            ) {
-                                Text("Try Again")
-                            }
-                        }
-                    }
                 }
             }
+        }
+
+        if (errorMessage != null) {
+            AlertDialog(
+                onDismissRequest = { viewModel.resetState() },
+                title = { Text("Authentication Error", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) },
+                text = { Text(errorMessage!!) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.resetState() }) {
+                        Text("Dismiss")
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                titleContentColor = MaterialTheme.colorScheme.error,
+                textContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
