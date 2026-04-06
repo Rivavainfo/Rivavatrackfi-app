@@ -52,15 +52,9 @@ fun SettingsScreen(
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
 
     val csvImportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
+        contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            }
             viewModel.importCsv(context, uri) { result ->
                 result.onSuccess { count ->
                     Toast.makeText(context, "Successfully imported $count transactions", Toast.LENGTH_LONG).show()
@@ -182,7 +176,7 @@ fun SettingsScreen(
                         supportingContent = { Text("Restore transactions from a backup file") },
                         leadingContent = { Icon(Icons.Default.Upload, contentDescription = null) },
                         modifier = Modifier.clickable {
-                            csvImportLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/vnd.ms-excel", "*/*"))
+                            csvImportLauncher.launch("text/comma-separated-values")
                         }
                     )
 

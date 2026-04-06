@@ -9,12 +9,20 @@ class AuthRepository @Inject constructor() {
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
+    suspend fun saveUserToFirestore(
+        uid: String,
+        name: String,
+        email: String,
+        phone: String,
+        provider: String
+    ) {
         val userData = hashMapOf(
             "uid" to uid,
             "name" to name,
             "email" to email,
-            "timestamp" to System.currentTimeMillis().toString()
+            "phone" to phone,
+            "provider" to provider,
+            "created_at" to System.currentTimeMillis().toString()
         )
 
         try {
@@ -23,5 +31,9 @@ class AuthRepository @Inject constructor() {
             e.printStackTrace()
             throw e
         }
+    }
+
+    fun logout() {
+        auth.signOut()
     }
 }

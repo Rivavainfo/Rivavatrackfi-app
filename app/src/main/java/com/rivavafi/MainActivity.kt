@@ -41,6 +41,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.ui.theme.bounceClick
 import com.rivavafi.ui.theme.glassMorphism
 import androidx.navigation.compose.NavHost
@@ -210,9 +211,16 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         },
         containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
     ) { _ ->
+        val auth = FirebaseAuth.getInstance()
+        val startDest = if (auth.currentUser != null) {
+            if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route
+        } else {
+            Screen.Auth.route
+        }
+
         NavHost(
             navController = navController,
-            startDestination = Screen.Auth.route,
+            startDestination = startDest,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
