@@ -2,22 +2,26 @@ package com.rivavafi.universal
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import coil.load
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firestore: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_home)
+
         firebaseAuth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
 
         val user = firebaseAuth.currentUser
         if (user == null) {
@@ -25,48 +29,44 @@ class HomeActivity : AppCompatActivity() {
             return
         }
 
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(48, 64, 48, 64)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
+        val profileImage = findViewById<ImageView>(R.id.profile_image)
+        val nameText = findViewById<TextView>(R.id.name_text)
+        val emailText = findViewById<TextView>(R.id.email_text)
+        val phoneText = findViewById<TextView>(R.id.phone_text)
+        val uidText = findViewById<TextView>(R.id.uid_text)
+        val logoutButton = findViewById<Button>(R.id.logout_button)
+
+        uidText.text = "UID: ${user.uid}"
+
+        if (user.photoUrl != null) {
+            profileImage.load(user.photoUrl)
+        } else {
+            profileImage.setImageResource(android.R.drawable.ic_menu_camera)
         }
 
-        val profileImage = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(240, 240)
-        }
-
-        val nameText = TextView(this).apply {
-            text = "Name: ${user.displayName ?: "Unknown"}"
-            textSize = 18f
-            gravity = Gravity.CENTER_HORIZONTAL
-        }
-
-        val emailText = TextView(this).apply {
-            text = "Email: ${user.email ?: "Not available"}"
-            textSize = 16f
-            gravity = Gravity.CENTER_HORIZONTAL
-        }
-
-        val logoutButton = Button(this).apply {
-            text = "Logout"
-            setOnClickListener {
-                firebaseAuth.signOut()
-                navigateToLogin()
+        firestore.collection("users").document(user.uid).get()
+            .addOnSuccessListener { document ->
+                if (document != null && document.exists()) {
+                    nameText.text = "Name: ${document.getString("name") ?: "Not available"}"
+                    emailText.text = "Email: ${document.getString("email") ?: "Not available"}"
+                    phoneText.text = "Phone: ${document.getString("phone") ?: "Not available"}"
+                } else {
+                    nameText.text = "Name: ${user.displayName ?: "Not available"}"
+                    emailText.text = "Email: ${user.email ?: "Not available"}"
+                    phoneText.text = "Phone: ${user.phoneNumber ?: "Not available"}"
+                }
             }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load user data", Toast.LENGTH_SHORT).show()
+                nameText.text = "Name: ${user.displayName ?: "Not available"}"
+                emailText.text = "Email: ${user.email ?: "Not available"}"
+                phoneText.text = "Phone: ${user.phoneNumber ?: "Not available"}"
+            }
+
+        logoutButton.setOnClickListener {
+            firebaseAuth.signOut()
+            navigateToLogin()
         }
-
-        profileImage.load(user.photoUrl)
-
-        root.addView(profileImage)
-        root.addView(nameText)
-        root.addView(emailText)
-        root.addView(logoutButton)
-
-        setContentView(root)
     }
 
     private fun navigateToLogin() {
