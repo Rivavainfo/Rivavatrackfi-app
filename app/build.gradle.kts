@@ -13,6 +13,13 @@ if (file("google-services.json").exists()) {
 }
 
 
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.warn("google-services.json not found in app/. Firebase Google Services plugin was not applied for this build.")
+}
+
+
 android {
     namespace = "com.rivavafi.universal"
     compileSdk = 34
