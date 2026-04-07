@@ -56,6 +56,16 @@ class LoginActivity : AppCompatActivity() {
         progressBar.visibility = View.GONE
     }
 
+    fun showErrorDialog(title: String, message: String) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
     fun startGoogleLogin() {
         showProgress()
         startActivityForResult(googleSignInClient.signInIntent, RC_SIGN_IN)
@@ -82,7 +92,8 @@ class LoginActivity : AppCompatActivity() {
         } catch (e: ApiException) {
             hideProgress()
             Log.e(TAG, "Google Sign-In failed (resultCode=$resultCode)", e)
-            Toast.makeText(this, "Google Sign-In failed", Toast.LENGTH_SHORT).show()
+            val errorMessage = e.message ?: "Unknown error occurred"
+            showErrorDialog("Google Sign-In Failed", "Status code: ${e.statusCode}\n$errorMessage")
         }
     }
 
@@ -106,14 +117,14 @@ class LoginActivity : AppCompatActivity() {
                                 navigateToHome()
                             } catch (e: Exception) {
                                 hideProgress()
-                                Toast.makeText(this@LoginActivity, "Failed to save user data", Toast.LENGTH_SHORT).show()
+                                showErrorDialog("Data Save Error", e.message ?: "Failed to save user data")
                             }
                         }
                     }
                 } else {
                     hideProgress()
                     Log.e(TAG, "Firebase auth with Google failed", task.exception)
-                    Toast.makeText(this, "Authentication failed", Toast.LENGTH_SHORT).show()
+                    showErrorDialog("Authentication Failed", task.exception?.message ?: "Unknown error occurred")
                 }
             }
     }

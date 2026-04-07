@@ -52,7 +52,10 @@ class EmailLoginFragment : Fragment() {
                         startActivity(Intent(activity, HomeActivity::class.java))
                         activity?.finish()
                     } else {
-                        Toast.makeText(context, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        (activity as? LoginActivity)?.showErrorDialog(
+                            "Login Failed",
+                            task.exception?.message ?: "Unknown error occurred"
+                        )
                     }
                 }
         }

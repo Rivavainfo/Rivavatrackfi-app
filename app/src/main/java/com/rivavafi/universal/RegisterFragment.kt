@@ -71,13 +71,19 @@ class RegisterFragment : Fragment() {
                                     activity?.finish()
                                 } catch (e: Exception) {
                                     (activity as? LoginActivity)?.hideProgress()
-                                    Toast.makeText(context, "Failed to save user data", Toast.LENGTH_SHORT).show()
+                                    (activity as? LoginActivity)?.showErrorDialog(
+                                        "Data Save Error",
+                                        e.message ?: "Failed to save user data"
+                                    )
                                 }
                             }
                         }
                     } else {
                         (activity as? LoginActivity)?.hideProgress()
-                        Toast.makeText(context, "Registration failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        (activity as? LoginActivity)?.showErrorDialog(
+                            "Registration Failed",
+                            task.exception?.message ?: "Unknown error occurred"
+                        )
                     }
                 }
         }
