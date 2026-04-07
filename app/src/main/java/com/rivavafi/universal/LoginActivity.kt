@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -60,6 +62,23 @@ class LoginActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, EmailLoginFragment())
                 .commit()
+        }
+
+        findViewById<ImageView>(R.id.secret_icon).setOnClickListener {
+            val input = EditText(this)
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Secret Access")
+                .setView(input)
+                .setPositiveButton("Enter") { _, _ ->
+                    if (input.text.toString().trim() == "aditya") {
+                        startActivity(Intent(this, MainActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Invalid key", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
     }
 

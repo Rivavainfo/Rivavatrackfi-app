@@ -36,6 +36,7 @@ class HomeActivity : AppCompatActivity() {
         val emailText = findViewById<TextView>(R.id.email_text)
         val phoneText = findViewById<TextView>(R.id.phone_text)
         val uidText = findViewById<TextView>(R.id.uid_text)
+        val continueButton = findViewById<Button>(R.id.continue_button)
         val logoutButton = findViewById<Button>(R.id.logout_button)
 
         uidText.text = "UID: ${user.uid}"
@@ -64,6 +65,11 @@ class HomeActivity : AppCompatActivity() {
                 emailText.text = "Email: ${user.email ?: "Not available"}"
                 phoneText.text = "Phone: ${user.phoneNumber ?: "Not available"}"
             }
+
+        continueButton.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
 
         logoutButton.setOnClickListener {
             firebaseAuth.signOut()
