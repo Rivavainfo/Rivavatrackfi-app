@@ -1,17 +1,25 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services") apply false
 }
 
-import java.util.Properties
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.warn("google-services.json not found in app/. Firebase Google Services plugin was not applied for this build.")
+}
+
 
 android {
     namespace = "com.rivavafi.universal"
     compileSdk = 34
 
+    // Use imported Properties() to avoid Kotlin DSL receiver clash with `java` accessor.
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
@@ -104,6 +112,9 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     val composeBom = platform("androidx.compose:compose-bom:2024.02.02")
     implementation(composeBom)
