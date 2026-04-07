@@ -24,6 +24,21 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (SecurityUtil.isDeviceRooted()) {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Security Alert")
+                .setMessage("This app cannot run on a rooted device for security reasons.")
+                .setCancelable(false)
+                .setPositiveButton("Exit") { _, _ ->
+                    finish()
+                }
+                .show()
+            return
+        }
+
+        // Prevent screenshots and screen recording for security
+        window.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_login)
 
         firebaseAuth = FirebaseAuth.getInstance()
