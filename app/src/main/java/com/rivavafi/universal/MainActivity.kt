@@ -210,9 +210,10 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         },
         containerColor = androidx.compose.ui.graphics.Color(0xFF0A0A0A)
     ) { _ ->
+        val initialRoute = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route
         NavHost(
             navController = navController,
-            startDestination = Screen.Auth.route,
+            startDestination = initialRoute,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
