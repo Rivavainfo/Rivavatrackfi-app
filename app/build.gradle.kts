@@ -3,16 +3,21 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
-    id("com.google.gms.google-services")
+    id("com.google.gms.google-services") apply false
 }
 
-import java.util.Properties
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.warn("google-services.json not found in app/. Firebase Google Services plugin was not applied for this build.")
+}
+
 
 android {
     namespace = "com.rivavafi.universal"
     compileSdk = 34
 
-    val localProperties = Properties()
+    val localProperties = java.util.Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         localProperties.load(localPropertiesFile.inputStream())
