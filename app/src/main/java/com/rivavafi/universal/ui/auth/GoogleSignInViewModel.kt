@@ -59,7 +59,7 @@ class GoogleSignInViewModel @Inject constructor(
      * Runs Google sign-in on backend-safe coroutine context, validates Google ID token,
      * manages credentials, and signs in Firebase using auth credentials.
      */
-    suspend fun runGoogleSignInOnBackend(): Boolean {
+    suspend fun runGoogleSignInOnBackend(activityContext: Context): Boolean {
         _isSigningIn.value = true
         return try {
             val googleIdOption = GetGoogleIdOption.Builder()
@@ -73,7 +73,7 @@ class GoogleSignInViewModel @Inject constructor(
                 .build()
 
             val result = credentialManager.getCredential(
-                context = context,
+                context = activityContext,
                 request = request
             )
 
