@@ -1,13 +1,8 @@
 package com.rivavafi.universal.ui.auth
 
-import android.content.Context
 import android.util.Log
-import androidx.credentials.CustomCredential
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.rivavafi.universal.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,59 +47,23 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
     }
 
-    fun onGoogleSignIn(context: Context, webClientId: String) {
+    fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                Log.d("AuthViewModel", "Starting CredentialManager request for Web Client ID")
-                val credentialManager = repository.getCredentialManager(context)
-                val request = repository.getGoogleCredentialRequest(webClientId)
-                val result = credentialManager.getCredential(context, request)
+                Log.d("AuthViewModel", "Successfully extracted ID Token, exchanging with Firebase...")
+                val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+                val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
+                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val credential = result.credential
-                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                    try {
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        val idToken = googleIdTokenCredential.idToken
+                Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
+                repository.saveUserToFirestore(
+                    uid = uid,
+                    name = name,
+                    email = email
+                )
 
-                        Log.d("AuthViewModel", "Successfully extracted ID Token, exchanging with Firebase...")
-                        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-                        val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
-                        val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
-
-                        Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                        repository.saveUserToFirestore(
-                            uid = uid,
-                            name = googleIdTokenCredential.displayName ?: "User",
-                            email = googleIdTokenCredential.id ?: ""
-                        )
-
-                        _authState.value = AuthState.SUCCESS
-
-                    } catch (e: GoogleIdTokenParsingException) {
-                        Log.e("AuthViewModel", "Failed to parse Google ID Token", e)
-                        _errorMessage.value = "Failed to parse Google ID Token: ${e.message}"
-                        _authState.value = AuthState.IDLE
-                    }
-                } else {
-                    Log.e("AuthViewModel", "Unexpected credential type returned")
-                    _errorMessage.value = "Unexpected credential type. Please try again."
-                    _authState.value = AuthState.IDLE
-                }
-
-            } catch (e: androidx.credentials.exceptions.NoCredentialException) {
-                Log.w("AuthViewModel", "No credentials available on device", e)
-                _errorMessage.value = "No Google accounts found on this device."
-                _authState.value = AuthState.IDLE
-            } catch (e: GetCredentialException) {
-                if (e is androidx.credentials.exceptions.GetCredentialCancellationException) {
-                     Log.d("AuthViewModel", "User cancelled Google Sign In")
-                     _authState.value = AuthState.IDLE
-                } else {
-                    Log.e("AuthViewModel", "GetCredentialException during Google Sign In", e)
-                    _errorMessage.value = "Sign-in error: ${e.message}"
-                    _authState.value = AuthState.IDLE
-                }
+                _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Generic Exception during Google Sign In", e)
                 _errorMessage.value = e.message ?: "Authentication failed"

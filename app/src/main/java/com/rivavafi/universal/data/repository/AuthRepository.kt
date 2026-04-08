@@ -1,10 +1,6 @@
 package com.rivavafi.universal.data.repository
 
-import android.content.Context
 import android.util.Log
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -38,22 +34,6 @@ class AuthRepository @Inject constructor() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(GoogleAppsScriptApi::class.java)
-    }
-
-    suspend fun getGoogleCredentialRequest(webClientId: String): GetCredentialRequest {
-        val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(webClientId)
-            .setAutoSelectEnabled(false)
-            .build()
-
-        return GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-    }
-
-    suspend fun getCredentialManager(context: Context): CredentialManager {
-        return CredentialManager.create(context)
     }
 
     suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
