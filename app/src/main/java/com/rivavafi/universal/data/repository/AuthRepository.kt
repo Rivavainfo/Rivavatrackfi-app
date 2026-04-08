@@ -43,7 +43,7 @@ class AuthRepository @Inject constructor() {
             "email" to email
         )
 
-        try {
+        runCatching {
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
 
@@ -53,34 +53,32 @@ class AuthRepository @Inject constructor() {
             } else {
                 docRef.set(userData, SetOptions.merge()).await()
             }
+        }.onFailure { firestoreError ->
+            Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
+        }
 
-            // Sync with Google Sheets
-            try {
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                val currentTimestamp = dateFormat.format(Date())
+        // Sync with Google Sheets
+        try {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val currentTimestamp = dateFormat.format(Date())
 
-                val sheetData = UserAuthData(
-                    name = name,
-                    email = email,
-                    phone = "",
-                    uid = uid,
-                    verifiedStatus = "verified",
-                    timestamp = currentTimestamp
-                )
+            val sheetData = UserAuthData(
+                name = name,
+                email = email,
+                phone = "",
+                uid = uid,
+                verifiedStatus = "verified",
+                timestamp = currentTimestamp
+            )
 
-                val response = googleAppsScriptApi.saveUserData(sheetData)
-                if (response.isSuccessful) {
-                    Log.d("AuthRepository", "Successfully appended user to Google Sheet")
-                } else {
-                    Log.e("AuthRepository", "Failed to append to Google Sheet: ${response.code()}")
-                }
-            } catch (sheetError: Exception) {
-                Log.e("AuthRepository", "Error saving to Google Sheets", sheetError)
+            val response = googleAppsScriptApi.saveUserData(sheetData)
+            if (response.isSuccessful) {
+                Log.d("AuthRepository", "Successfully appended user to Google Sheet")
+            } else {
+                Log.e("AuthRepository", "Failed to append to Google Sheet: ${response.code()}")
             }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
+        } catch (sheetError: Exception) {
+            Log.e("AuthRepository", "Error saving to Google Sheets", sheetError)
         }
     }
 }
