@@ -217,10 +217,37 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
 
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
+            if (account != null && account.idToken != null) {
+                viewModel.onGoogleSignInSuccess(
+                    idToken = account.idToken!!,
+                    name = account.displayName ?: "User",
+                    email = account.email ?: ""
+                )
+            } else {
+                viewModel.setErrorMessage("Sign-in failed: ID Token is null")
+            }
+        } catch (e: com.google.android.gms.common.api.ApiException) {
+            viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
+        }
+    }
+
     Button(
         onClick = {
-            val webClientId = context.getString(R.string.default_web_client_id)
-            viewModel.onGoogleSignIn(context, webClientId)
+            val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build()
+            val googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)
+            // Force sign out to clear stuck cache and show account picker
+            googleSignInClient.signOut().addOnCompleteListener {
+                launcher.launch(googleSignInClient.signInIntent)
+            }
         },
         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
         modifier = Modifier
