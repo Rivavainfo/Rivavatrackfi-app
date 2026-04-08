@@ -1,7 +1,5 @@
 package com.rivavafi.universal.ui.auth
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -35,9 +33,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.rivavafi.universal.R
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.OutlinedTextField
@@ -222,12 +217,12 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
-            val account = task.getResult(ApiException::class.java)
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
             if (account != null && account.idToken != null) {
                 viewModel.onGoogleSignInSuccess(
                     idToken = account.idToken!!,
@@ -237,18 +232,18 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
             } else {
                 viewModel.setErrorMessage("Sign-in failed: ID Token is null")
             }
-        } catch (e: ApiException) {
+        } catch (e: com.google.android.gms.common.api.ApiException) {
             viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
         }
     }
 
     Button(
         onClick = {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(context.getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build()
-            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            val googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)
             // Force sign out to clear stuck cache and show account picker
             googleSignInClient.signOut().addOnCompleteListener {
                 launcher.launch(googleSignInClient.signInIntent)
