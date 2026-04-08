@@ -13,6 +13,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: set up JDK 17
+      id: setup_java
       uses: actions/setup-java@v4
       with:
         java-version: '17'
@@ -22,7 +23,7 @@ jobs:
     - name: Configure Gradle to use workflow JDK
       run: |
         mkdir -p ~/.gradle
-        echo "org.gradle.java.home=$JAVA_HOME" >> ~/.gradle/gradle.properties
+        echo "org.gradle.java.home=${{ steps.setup_java.outputs.path }}" >> ~/.gradle/gradle.properties
 
     - name: Handle Keystore
       env:

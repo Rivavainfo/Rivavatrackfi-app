@@ -1,5 +1,8 @@
 // Keep the root build script dependency-free so `./gradlew build` succeeds in offline/restricted environments.
 // Android module is included by default; disable with: `./gradlew -PenableAndroid=false build`
+plugins {
+  // Root project intentionally has no applied plugins.
+}
 
 tasks.register("build") {
     group = "build"
