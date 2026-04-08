@@ -1,41 +1,41 @@
 {
   "project_info": {
-    "project_number": "5943406620",
-    "project_id": "rivava-signin",
-    "storage_bucket": "rivava-signin.firebasestorage.app"
+    "project_number": "725146507646",
+    "project_id": "rivava-b11da",
+    "storage_bucket": "rivava-b11da.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:5943406620:android:5b72af140cb9ecedf5afd9",
+        "mobilesdk_app_id": "1:725146507646:android:1680aad88d5343f2bfbb2f",
         "android_client_info": {
           "package_name": "com.rivavafi.universal"
         }
       },
       "oauth_client": [
         {
-          "client_id": "5943406620-s7593kjiak2eqbe8lnpgg3ur7ib252jd.apps.googleusercontent.com",
+          "client_id": "725146507646-m2jkstov1kudioc8iseoarfb39jilj10.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.rivavafi.universal",
-            "certificate_hash": "2bfde16476aade29d5d831c91ed9c99a35b249c0"
+            "certificate_hash": "ef06504bca97446667768798f1743dec36cbc70f"
           }
         },
         {
-          "client_id": "5943406620-n7sq6cgia95q06r2ji4av6iibq95bi5o.apps.googleusercontent.com",
+          "client_id": "725146507646-r2m7rmeaco18vq707je2gsgcsbr8f9go.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD1xtcvHp24222s02FQUXmiivVik3Apv9o"
+          "current_key": "AIzaSyD_Dwea6KLGdTyY_CNgCRLOianX102yE_s"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "5943406620-n7sq6cgia95q06r2ji4av6iibq95bi5o.apps.googleusercontent.com",
+              "client_id": "725146507646-r2m7rmeaco18vq707je2gsgcsbr8f9go.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
