@@ -41,6 +41,11 @@ class AuthViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
+    fun setErrorMessage(message: String) {
+        _errorMessage.value = message
+        _authState.value = AuthState.ERROR
+    }
+
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING

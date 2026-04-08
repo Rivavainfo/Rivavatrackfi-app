@@ -2,6 +2,7 @@ package com.rivavafi.universal.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -10,15 +11,22 @@ class AuthRepository @Inject constructor() {
     private val firestore = FirebaseFirestore.getInstance()
 
     suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
-        val userData = hashMapOf(
+        val userData = hashMapOf<String, Any>(
             "uid" to uid,
             "name" to name,
-            "email" to email,
-            "timestamp" to System.currentTimeMillis().toString()
+            "email" to email
         )
 
         try {
-            firestore.collection("users").document(uid).set(userData).await()
+            val docRef = firestore.collection("users").document(uid)
+            val docSnap = docRef.get().await()
+
+            if (!docSnap.exists()) {
+                userData["timestamp"] = System.currentTimeMillis().toString()
+                docRef.set(userData).await()
+            } else {
+                docRef.set(userData, SetOptions.merge()).await()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             throw e
