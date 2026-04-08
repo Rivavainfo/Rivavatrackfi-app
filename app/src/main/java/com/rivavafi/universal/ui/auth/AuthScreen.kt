@@ -1,8 +1,5 @@
 package com.rivavafi.universal.ui.auth
 
-import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,9 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.rivavafi.universal.R
 
 @Composable
@@ -161,37 +155,10 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            if (account != null && account.idToken != null) {
-                viewModel.onGoogleSignInSuccess(
-                    idToken = account.idToken!!,
-                    name = account.displayName ?: "User",
-                    email = account.email ?: ""
-                )
-            } else {
-                viewModel.setErrorMessage("Sign-in failed: ID Token is null")
-            }
-        } catch (e: ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
-        }
-    }
-
     Button(
         onClick = {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
-            val googleSignInClient = GoogleSignIn.getClient(context, gso)
-            // Force sign out to clear stuck cache and show account picker
-            googleSignInClient.signOut().addOnCompleteListener {
-                launcher.launch(googleSignInClient.signInIntent)
-            }
+            val webClientId = context.getString(R.string.default_web_client_id)
+            viewModel.onGoogleSignIn(context, webClientId)
         },
         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
         modifier = Modifier
