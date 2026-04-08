@@ -230,10 +230,15 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                     email = account.email ?: ""
                 )
             } else {
-                viewModel.setErrorMessage("Sign-in failed: ID Token is null")
+                viewModel.setErrorMessage("Google sign-in failed. Please select an account and try again.")
             }
         } catch (e: com.google.android.gms.common.api.ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
+            val message = if (e.statusCode == com.google.android.gms.common.api.CommonStatusCodes.CANCELED) {
+                "Google sign-in was cancelled."
+            } else {
+                "Google sign-in failed. Please try again."
+            }
+            viewModel.setErrorMessage(message)
         }
     }
 

@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.rivavafi.universal.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,7 +68,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Generic Exception during Google Sign In", e)
-                _errorMessage.value = e.message ?: "Authentication failed"
+                _errorMessage.value = mapAuthError(e, fallback = "Google sign-in failed. Please try again.")
                 _authState.value = AuthState.IDLE
             }
         }
@@ -88,7 +90,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email login failed", e)
-                _errorMessage.value = e.message ?: "Login failed"
+                _errorMessage.value = mapAuthError(e, fallback = "Login failed. Please check your credentials.")
                 _authState.value = AuthState.IDLE
             }
         }
@@ -124,9 +126,17 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email registration failed", e)
-                _errorMessage.value = e.message ?: "Registration failed"
+                _errorMessage.value = mapAuthError(e, fallback = "Registration failed. Please try again.")
                 _authState.value = AuthState.IDLE
             }
+        }
+    }
+
+    private fun mapAuthError(throwable: Throwable, fallback: String): String {
+        return when (throwable) {
+            is FirebaseAuthInvalidCredentialsException -> "Invalid credentials. Please try again."
+            is FirebaseAuthInvalidUserException -> "Account not found. Please register first."
+            else -> fallback
         }
     }
 }
