@@ -43,7 +43,7 @@ class AuthViewModel @Inject constructor(
 
     fun setErrorMessage(message: String) {
         _errorMessage.value = message
-        _authState.value = AuthState.ERROR
+        _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
     }
 
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
@@ -63,7 +63,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Authentication failed"
-                _authState.value = AuthState.ERROR
+                _authState.value = AuthState.IDLE
             }
         }
     }
@@ -71,7 +71,7 @@ class AuthViewModel @Inject constructor(
     fun onEmailLogin(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _errorMessage.value = "Email and Password cannot be empty."
-            _authState.value = AuthState.ERROR
+            _authState.value = AuthState.IDLE
             return
         }
         viewModelScope.launch {
@@ -81,7 +81,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Login failed"
-                _authState.value = AuthState.ERROR
+                _authState.value = AuthState.IDLE
             }
         }
     }
@@ -89,12 +89,12 @@ class AuthViewModel @Inject constructor(
     fun onEmailRegister(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _errorMessage.value = "Email and Password cannot be empty."
-            _authState.value = AuthState.ERROR
+            _authState.value = AuthState.IDLE
             return
         }
         if (pass.length < 6) {
             _errorMessage.value = "Password must be at least 6 characters."
-            _authState.value = AuthState.ERROR
+            _authState.value = AuthState.IDLE
             return
         }
         viewModelScope.launch {
@@ -112,7 +112,7 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Registration failed"
-                _authState.value = AuthState.ERROR
+                _authState.value = AuthState.IDLE
             }
         }
     }
