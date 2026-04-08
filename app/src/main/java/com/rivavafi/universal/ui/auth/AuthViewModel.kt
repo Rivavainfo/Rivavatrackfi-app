@@ -62,4 +62,53 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun onEmailLogin(email: String, pass: String) {
+        if (email.isBlank() || pass.isBlank()) {
+            _errorMessage.value = "Email and Password cannot be empty."
+            _authState.value = AuthState.ERROR
+            return
+        }
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.signInWithEmailAndPassword(email, pass).await()
+                _authState.value = AuthState.SUCCESS
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Login failed"
+                _authState.value = AuthState.ERROR
+            }
+        }
+    }
+
+    fun onEmailRegister(email: String, pass: String) {
+        if (email.isBlank() || pass.isBlank()) {
+            _errorMessage.value = "Email and Password cannot be empty."
+            _authState.value = AuthState.ERROR
+            return
+        }
+        if (pass.length < 6) {
+            _errorMessage.value = "Password must be at least 6 characters."
+            _authState.value = AuthState.ERROR
+            return
+        }
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                val result = repository.auth.createUserWithEmailAndPassword(email, pass).await()
+                val uid = result.user?.uid ?: throw Exception("Failed to retrieve UID")
+
+                repository.saveUserToFirestore(
+                    uid = uid,
+                    name = "Email User",
+                    email = email
+                )
+
+                _authState.value = AuthState.SUCCESS
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Registration failed"
+                _authState.value = AuthState.ERROR
+            }
+        }
+    }
 }

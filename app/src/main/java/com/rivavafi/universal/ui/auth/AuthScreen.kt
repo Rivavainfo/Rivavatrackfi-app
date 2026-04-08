@@ -13,22 +13,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -78,7 +85,7 @@ fun AuthScreen(
             }
 
             when (authState) {
-                AuthState.IDLE -> GoogleSignInSection(viewModel)
+                AuthState.IDLE -> AuthMethodsSection(viewModel)
                 AuthState.LOADING -> CircularProgressIndicator()
                 AuthState.SUCCESS -> {
                     LaunchedEffect(Unit) {
@@ -96,6 +103,57 @@ fun AuthScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun AuthMethodsSection(viewModel: AuthViewModel) {
+    var isLoginMode by remember { mutableStateOf(true) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Password") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                if (isLoginMode) {
+                    viewModel.onEmailLogin(email, password)
+                } else {
+                    viewModel.onEmailRegister(email, password)
+                }
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Icon(Icons.Outlined.Email, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (isLoginMode) "Sign in with Email" else "Register with Email", fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(onClick = { isLoginMode = !isLoginMode }) {
+            Text(if (isLoginMode) "Don't have an account? Register" else "Already have an account? Login")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("OR")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        GoogleSignInSection(viewModel)
     }
 }
 
