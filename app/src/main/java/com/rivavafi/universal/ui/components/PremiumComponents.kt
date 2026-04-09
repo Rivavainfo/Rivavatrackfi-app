@@ -163,8 +163,12 @@ fun PortfolioStockCard(
 
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val openUrl: () -> Unit = {
-        val exchangeSuffix = if (isNyse) "NYSE" else "NSE"
-        val url = "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
+        val url = if (ticker.equals("IREDA", ignoreCase = true)) {
+            "https://www.google.com/search?q=IREDA+share+price"
+        } else {
+            val exchangeSuffix = if (isNyse) "NYSE" else "NSE"
+            "https://www.google.com/search?q=$ticker+stock+price+$exchangeSuffix"
+        }
         try {
             uriHandler.openUri(url)
         } catch (e: Exception) {}
