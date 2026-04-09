@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -24,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,7 +31,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rivavafi.universal.R
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
@@ -113,7 +110,7 @@ fun AuthScreen(
                     }
 
                     when (authState) {
-                        AuthState.IDLE, AuthState.ERROR -> AuthMethodsSection(viewModel)
+                        AuthState.IDLE -> AuthMethodsSection(viewModel)
                         AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
                         AuthState.SUCCESS -> {
                             LaunchedEffect(Unit) {
@@ -204,63 +201,5 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
         }) {
             Text(if (isLoginMode) "Don't have an account? Register" else "Already have an account? Login", color = PrimarySky)
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("OR", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        GoogleSignInSection(viewModel)
-    }
-}
-
-@Composable
-fun GoogleSignInSection(viewModel: AuthViewModel) {
-    val context = LocalContext.current
-
-    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
-            if (account != null && account.idToken != null) {
-                viewModel.onGoogleSignInSuccess(
-                    idToken = account.idToken!!,
-                    name = account.displayName ?: "User",
-                    email = account.email ?: ""
-                )
-            } else {
-                viewModel.setErrorMessage("Google sign-in failed. Please select an account and try again.")
-            }
-        } catch (e: com.google.android.gms.common.api.ApiException) {
-            val message = if (e.statusCode == com.google.android.gms.common.api.CommonStatusCodes.CANCELED) {
-                "Google sign-in was cancelled."
-            } else {
-                "Google sign-in failed. Please try again."
-            }
-            viewModel.setErrorMessage(message)
-        }
-    }
-
-    Button(
-        onClick = {
-            val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
-            val googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)
-            // Force sign out to clear stuck cache and show account picker
-            googleSignInClient.signOut().addOnCompleteListener {
-                launcher.launch(googleSignInClient.signInIntent)
-            }
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-    ) {
-        Icon(Icons.Outlined.AccountCircle, contentDescription = null)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Sign in with Google", fontWeight = FontWeight.SemiBold)
     }
 }
