@@ -3,7 +3,6 @@ package com.rivavafi.universal.ui.auth
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.rivavafi.universal.data.repository.AuthRepository
@@ -47,31 +46,6 @@ class AuthViewModel @Inject constructor(
     fun setErrorMessage(message: String) {
         _errorMessage.value = message
         _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
-    }
-
-    fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
-        viewModelScope.launch {
-            _authState.value = AuthState.LOADING
-            try {
-                Log.d("AuthViewModel", "Successfully extracted ID Token, exchanging with Firebase...")
-                val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-                val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
-                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
-
-                Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                repository.saveUserToFirestore(
-                    uid = uid,
-                    name = name,
-                    email = email
-                )
-
-                _authState.value = AuthState.SUCCESS
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Generic Exception during Google Sign In", e)
-                _errorMessage.value = mapAuthError(e, fallback = "Google sign-in failed. Please try again.")
-                _authState.value = AuthState.IDLE
-            }
-        }
     }
 
     fun onEmailLogin(email: String, pass: String) {
