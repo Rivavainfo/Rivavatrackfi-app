@@ -42,6 +42,11 @@ class AuthViewModel @Inject constructor(
         _errorMessage.value = null
     }
 
+    fun setErrorMessage(message: String) {
+        _errorMessage.value = message
+        _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
+    }
+
     fun onEmailLogin(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             Log.w("AuthViewModel", "Email login rejected: Email or password was blank")
