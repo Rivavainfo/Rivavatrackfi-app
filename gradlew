@@ -140,6 +140,21 @@ location of your Java installation."
     fi
 fi
 
+# Gradle 8.7 + AGP/Kotlin in this project is not compatible with Java 25 runtime.
+# If a Java 25 runtime is active and a local Java 17 install from mise exists,
+# auto-fallback so builds run without extra manual setup.
+JAVA_VERSION_OUTPUT=$("$JAVACMD" -version 2>&1 | sed -n '1p')
+case "$JAVA_VERSION_OUTPUT" in
+  *\"25.*\"*)
+    MISE_JAVA_17="/root/.local/share/mise/installs/java/17.0.2"
+    if [ -x "$MISE_JAVA_17/bin/java" ]; then
+        JAVA_HOME="$MISE_JAVA_17"
+        JAVACMD="$JAVA_HOME/bin/java"
+        warn "Detected Java 25; using Java 17 from $JAVA_HOME for Gradle compatibility."
+    fi
+    ;;
+esac
+
 # Increase the maximum file descriptors if we can.
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     case $MAX_FD in #(
