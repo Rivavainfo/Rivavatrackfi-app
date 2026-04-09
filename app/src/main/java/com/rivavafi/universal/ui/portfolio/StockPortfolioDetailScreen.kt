@@ -241,23 +241,23 @@ fun StockPortfolioDetailScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(190.dp)
                             .clip(RoundedCornerShape(24.dp))
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        if (ticker == "IREDA") com.rivavafi.universal.ui.theme.DeepBlueVariant else com.rivavafi.universal.ui.theme.AmoledBlack,
-                                        if (ticker == "IREDA") com.rivavafi.universal.ui.theme.EmeraldGreen.copy(alpha = 0.8f) else com.rivavafi.universal.ui.theme.PrimarySky.copy(alpha = 0.8f)
+                                        Color(0xFF161616),
+                                        if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald.copy(alpha = 0.15f) else com.rivavafi.universal.ui.theme.PrimaryContainerSky.copy(alpha = 0.15f)
                                     )
                                 )
                             )
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxSize().padding(24.dp),
+                            modifier = Modifier.fillMaxWidth().padding(24.dp),
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text("Investment Thesis", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Black, color = Color.White))
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column {
                                     Text(if (ticker == "IREDA") "IPO Price" else "Buy Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
@@ -269,19 +269,19 @@ fun StockPortfolioDetailScreen(
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "715%" else "62.8%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.EmeraldGreen else com.rivavafi.universal.ui.theme.PrimarySky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(if (ticker == "IREDA") "715%" else "62.8%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
                             Button(
                                 onClick = { onNavigateToPdfViewer?.invoke(if (ticker == "IREDA") "portfolio_ireda.pdf" else "portfolio_rtx.pdf") },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = com.rivavafi.universal.ui.theme.DeepBlueVariant),
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("View PDF", fontWeight = FontWeight.Bold)
+                                Text("Read Detailed PDF", fontWeight = FontWeight.Bold, color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
                             }
                         }
                     }
