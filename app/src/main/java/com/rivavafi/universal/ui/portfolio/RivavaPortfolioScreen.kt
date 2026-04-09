@@ -53,8 +53,8 @@ data class PortfolioItem(
 )
 
 val portfolioItems = listOf(
-    PortfolioItem("NSE", "IREDA", "Indian Renewable Energy Development Agency", "₹228.84"),
-    PortfolioItem("NYSE", "RTX", "RTX Corporation", "$207.00")
+    PortfolioItem("NSE", "IREDA", "Buy Rate: ₹32.00  •  Returns: 715%", "₹228.84"),
+    PortfolioItem("NYSE", "RTX", "Buy Rate: $74.00  •  Returns: 62.8%", "$207.00")
 )
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
