@@ -109,7 +109,7 @@ fun AuthScreen(
                     }
 
                     when (authState) {
-                        AuthState.IDLE, AuthState.ERROR -> AuthMethodsSection(viewModel)
+                        AuthState.IDLE -> AuthMethodsSection(viewModel)
                         AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
                         AuthState.SUCCESS -> {
                             LaunchedEffect(Unit) {

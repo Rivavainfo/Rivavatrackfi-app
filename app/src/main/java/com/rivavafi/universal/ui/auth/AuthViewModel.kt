@@ -17,8 +17,7 @@ import javax.inject.Inject
 enum class AuthState {
     IDLE,
     LOADING,
-    SUCCESS,
-    ERROR
+    SUCCESS
 }
 
 @HiltViewModel
