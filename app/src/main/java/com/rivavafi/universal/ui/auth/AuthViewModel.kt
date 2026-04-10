@@ -71,6 +71,14 @@ class AuthViewModel @Inject constructor(
                 }
 
                 _authState.value = AuthState.SUCCESS
+            } catch (e: com.google.firebase.auth.FirebaseAuthException) {
+                Log.e("AuthViewModel", "FirebaseAuthException during Google Sign In: ${e.errorCode}", e)
+                _errorMessage.value = "Firebase Auth Error: ${e.message}"
+                _authState.value = AuthState.IDLE
+            } catch (e: com.google.android.gms.common.api.ApiException) {
+                Log.e("AuthViewModel", "ApiException during Google Sign In. Code: ${e.statusCode}", e)
+                _errorMessage.value = "Google API Error: ${e.message} (Code: ${e.statusCode})"
+                _authState.value = AuthState.IDLE
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Generic Exception during Google Sign In", e)
                 _errorMessage.value = e.message ?: "Authentication failed"
