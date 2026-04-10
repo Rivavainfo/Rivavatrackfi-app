@@ -1,7 +1,5 @@
 package com.rivavafi.universal.ui.auth
 
-import android.app.Activity
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +39,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,10 +50,6 @@ import com.rivavafi.universal.ui.theme.PrimaryContainerSky
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
 
 @Composable
 fun AuthScreen(
@@ -65,7 +58,6 @@ fun AuthScreen(
 ) {
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val signedInUser by viewModel.signedInUser.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -127,26 +119,11 @@ fun AuthScreen(
                             LaunchedEffect(Unit) {
                                 onAuthSuccess()
                             }
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "Verification Successful!",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = PrimarySky
-                                )
-                                signedInUser?.let { user ->
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = user.name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = user.email,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
+                            Text(
+                                text = "Verification Successful!",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PrimarySky
+                            )
                         }
                     }
                 }
@@ -239,61 +216,43 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
 @Composable
 fun GoogleSignInSection(viewModel: AuthViewModel) {
     val context = LocalContext.current
-    val webClientId = stringResource(R.string.default_web_client_id).trim()
-    val gso = remember(webClientId) {
-        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
-    }
-    val googleSignInClient = remember(context, gso) {
-        GoogleSignIn.getClient(context, gso)
-    }
-
-    if (!webClientId.contains(".apps.googleusercontent.com")) {
-        LaunchedEffect(webClientId) {
-            Log.e(
-                "AuthScreen",
-                "default_web_client_id is not a valid OAuth web client id. Value=$webClientId"
-            )
-        }
-    }
 
     val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
-            Log.w("AuthScreen", "Google Sign-In cancelled or failed before account selection.")
-            viewModel.setErrorMessage("Google Sign-In was cancelled.")
-            return@rememberLauncherForActivityResult
-        }
-
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        val task = com.google.android.gms.auth.api.signin.GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
-            val account = task.getResult(ApiException::class.java)
+            val account = task.getResult(com.google.android.gms.common.api.ApiException::class.java)
             if (account != null && account.idToken != null) {
                 viewModel.onGoogleSignInSuccess(
                     idToken = account.idToken!!,
-                    fallbackName = account.displayName ?: "User",
-                    fallbackEmail = account.email ?: "",
-                    fallbackPhotoUrl = account.photoUrl?.toString() ?: ""
+                    name = account.displayName ?: "User",
+                    email = account.email ?: "",
+                    photoUrl = account.photoUrl?.toString() ?: ""
                 )
             } else {
-                Log.e("AuthScreen", "Google Sign-In returned null ID token.")
                 viewModel.setErrorMessage("Sign-in failed: ID Token is null")
             }
-        } catch (e: ApiException) {
-            Log.e(
-                "AuthScreen",
-                "Google Sign-In failed with status=${e.statusCode} (${CommonStatusCodes.getStatusCodeString(e.statusCode)})",
-                e
-            )
+        } catch (e: com.google.android.gms.common.api.ApiException) {
             viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
         }
     }
 
     Button(
         onClick = {
+            val clientIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            val webClientId = if (clientIdRes != 0) {
+                context.getString(clientIdRes)
+            } else {
+                "MISSING_WEB_CLIENT_ID"
+            }
+
+            val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(webClientId)
+                .requestEmail()
+                .build()
+            val googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)
+            // Force sign out to clear stuck cache and show account picker
             googleSignInClient.signOut().addOnCompleteListener {
                 launcher.launch(googleSignInClient.signInIntent)
             }
