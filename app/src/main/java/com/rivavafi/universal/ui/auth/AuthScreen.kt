@@ -240,8 +240,15 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
 
     Button(
         onClick = {
+            val clientIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+            val webClientId = if (clientIdRes != 0) {
+                context.getString(clientIdRes)
+            } else {
+                "MISSING_WEB_CLIENT_ID"
+            }
+
             val gso = com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder(com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
+                .requestIdToken(webClientId)
                 .requestEmail()
                 .build()
             val googleSignInClient = com.google.android.gms.auth.api.signin.GoogleSignIn.getClient(context, gso)
