@@ -227,7 +227,8 @@ fun GoogleSignInSection(viewModel: AuthViewModel) {
                 viewModel.onGoogleSignInSuccess(
                     idToken = account.idToken!!,
                     name = account.displayName ?: "User",
-                    email = account.email ?: ""
+                    email = account.email ?: "",
+                    photoUrl = account.photoUrl?.toString() ?: ""
                 )
             } else {
                 viewModel.setErrorMessage("Sign-in failed: ID Token is null")

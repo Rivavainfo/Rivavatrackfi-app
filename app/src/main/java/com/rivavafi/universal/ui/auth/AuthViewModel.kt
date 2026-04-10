@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.GoogleAuthProvider
+import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ enum class AuthState {
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState.IDLE)
@@ -47,7 +49,7 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
     }
 
-    fun onGoogleSignInSuccess(idToken: String, name: String, email: String) {
+    fun onGoogleSignInSuccess(idToken: String, name: String, email: String, photoUrl: String = "") {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
@@ -62,6 +64,11 @@ class AuthViewModel @Inject constructor(
                     name = name,
                     email = email
                 )
+
+                userPreferencesRepository.saveUserName(name)
+                if (photoUrl.isNotBlank()) {
+                    userPreferencesRepository.setProfileImageUri(photoUrl)
+                }
 
                 _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
