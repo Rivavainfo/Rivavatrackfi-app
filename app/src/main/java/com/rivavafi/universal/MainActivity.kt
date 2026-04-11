@@ -144,21 +144,15 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
-    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
 
-    if (showPremiumUnlockDialog) {
-        PremiumUnlockDialog(
-            userName = userName ?: "",
-            onDismiss = { showPremiumUnlockDialog = false },
-            onUnlockSuccess = {
-                coroutineScope.launch {
-                    preferencesRepository?.setPremiumUserForCurrent(true)
-                }
-                showPremiumUnlockDialog = false
+    LaunchedEffect(userName) {
+        if (userName.isNullOrBlank() && currentRoute != Screen.Auth.route && currentRoute != Screen.Welcome.route && currentRoute != Screen.Greeting.route) {
+            navController.navigate(Screen.Auth.route) {
+                popUpTo(0) { inclusive = true }
             }
-        )
+        }
     }
 
     Scaffold(
@@ -184,16 +178,14 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
-                            val isLocked = screen == Screen.RivavaPortfolio && !isPremiumUser
+                            val isLocked = false
 
                             CustomBottomNavItem(
                                 screen = screen,
                                 isSelected = isSelected,
                                 isLocked = isLocked,
                                 onClick = {
-                                    if (isLocked) {
-                                        showPremiumUnlockDialog = true
-                                    } else if (!isSelected) {
+                                    if (!isSelected) {
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true

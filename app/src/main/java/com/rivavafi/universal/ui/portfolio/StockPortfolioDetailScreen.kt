@@ -39,6 +39,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.view.WindowManager
+import android.content.ContextWrapper
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +52,20 @@ fun StockPortfolioDetailScreen(
     onNavigateToPdfViewer: ((String) -> Unit)? = null,
     viewModel: StockViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        var ctx = context
+        while (ctx is ContextWrapper) {
+            if (ctx is android.app.Activity) break
+            ctx = ctx.baseContext
+        }
+        val window = (ctx as? android.app.Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
 
     val stockStates by viewModel.stockStates.collectAsState()

@@ -89,6 +89,7 @@ class SettingsViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
             preferencesRepository.setOnboardingCompleted(false)
             preferencesRepository.saveUserName("")
         }

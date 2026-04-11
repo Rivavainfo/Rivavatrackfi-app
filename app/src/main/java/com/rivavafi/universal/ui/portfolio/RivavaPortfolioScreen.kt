@@ -42,6 +42,10 @@ import com.rivavafi.universal.ui.theme.SecondaryPink
 import com.rivavafi.universal.ui.theme.PrimarySky
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import android.view.WindowManager
+import android.content.ContextWrapper
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 
 data class PortfolioItem(
     val exchange: String,
@@ -65,6 +69,20 @@ fun RivavaPortfolioScreen(
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        var ctx = context
+        while (ctx is ContextWrapper) {
+            if (ctx is android.app.Activity) break
+            ctx = ctx.baseContext
+        }
+        val window = (ctx as? android.app.Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
     val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
     val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value

@@ -231,7 +231,7 @@ fun PortfolioStockCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = marketPrice,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
                     Row(
@@ -242,11 +242,11 @@ fun PortfolioStockCard(
                             imageVector = arrowIcon,
                             contentDescription = null,
                             tint = priceColor,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = percentageChange.replace("+", "").replace("-", ""),
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = priceColor
                         )
                     }
