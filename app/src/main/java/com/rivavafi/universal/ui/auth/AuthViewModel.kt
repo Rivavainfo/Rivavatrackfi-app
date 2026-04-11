@@ -122,6 +122,8 @@ class AuthViewModel @Inject constructor(
                 repository.auth.signInWithEmailAndPassword(email, pass).await()
                 Log.d("AuthViewModel", "Email login successful")
 
+                repository.auth.currentUser?.reload()?.await()
+
                 if (repository.auth.currentUser?.isEmailVerified == true) {
                     _authState.value = AuthState.SUCCESS
                 } else {
@@ -217,7 +219,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun startPhoneVerification(phoneNumber: String, activity: android.app.Activity) {
-        if (phoneNumber.isBlank() || phoneNumber.length < 10) {
+        if (phoneNumber.isBlank() || phoneNumber.length < 12) { // Minimum "+91" + 10 digits = 13 chars usually, but accepting any formatted properly
             _errorMessage.value = "Invalid phone number"
             return
         }
