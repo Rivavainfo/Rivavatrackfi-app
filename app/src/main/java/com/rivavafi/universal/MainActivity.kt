@@ -91,6 +91,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
     object Profile : Screen("profile", "Profile", Icons.Outlined.Person)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
+    object HelpCenter : Screen("help_center", "Help Center", Icons.Outlined.Info)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
     object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
 }
@@ -300,7 +301,13 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             composable(Screen.Profile.route) {
                 com.rivavafi.universal.ui.profile.ProfileScreen(
                     onBack = { navController.popBackStack() },
-                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToHelpCenter = { navController.navigate(Screen.HelpCenter.route) }
+                )
+            }
+            composable(Screen.HelpCenter.route) {
+                com.rivavafi.universal.ui.help.HelpCenterScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.Transactions.route) {
