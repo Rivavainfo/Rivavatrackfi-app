@@ -4,36 +4,57 @@ import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
-import com.rivavafi.universal.data.network.GoogleAppsScriptApi
-import com.rivavafi.universal.data.network.UserAuthData
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
 import javax.inject.Inject
 
 class AuthRepository @Inject constructor() {
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    private val googleAppsScriptApi: GoogleAppsScriptApi by lazy {
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-        val client = OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .followRedirects(true)
-            .followSslRedirects(true)
+    fun sendUserToSheet(user: FirebaseUser, provider: String) {
+        val client = OkHttpClient()
+
+        val json = JSONObject()
+        json.put("name", user.displayName ?: "")
+        json.put("email", user.email ?: "")
+        json.put("phone", user.phoneNumber ?: "")
+        json.put("uid", user.uid)
+        json.put("provider", provider)
+
+        val body = RequestBody.create(
+            "application/json".toMediaTypeOrNull(),
+            json.toString()
+        )
+
+        val request = Request.Builder()
+            .url("https://script.google.com/macros/s/AKfycbx2EmeSjsbcD_bGTZQBmG7xwhUBEdvjL33k4GqqcH8lv-b4mmzzjAOtZt7FwQksVvhF/exec")
+            .post(body)
             .build()
 
-        Retrofit.Builder()
-            .baseUrl("https://script.google.com/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(GoogleAppsScriptApi::class.java)
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("AuthRepository", "Failed to send user to sheet", e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    Log.d("AuthRepository", "Successfully sent user to sheet")
+                } else {
+                    Log.e("AuthRepository", "Failed to send user to sheet. Code: ${response.code}")
+                }
+                response.close()
+            }
+        })
     }
 
     suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
@@ -55,30 +76,6 @@ class AuthRepository @Inject constructor() {
             }
         }.onFailure { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
-        }
-
-        // Sync with Google Sheets
-        try {
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            val currentTimestamp = dateFormat.format(Date())
-
-            val sheetData = UserAuthData(
-                name = name,
-                email = email,
-                phone = "",
-                uid = uid,
-                verifiedStatus = "verified",
-                timestamp = currentTimestamp
-            )
-
-            val response = googleAppsScriptApi.saveUserData(sheetData)
-            if (response.isSuccessful) {
-                Log.d("AuthRepository", "Successfully appended user to Google Sheet")
-            } else {
-                Log.e("AuthRepository", "Failed to append to Google Sheet: ${response.code()}")
-            }
-        } catch (sheetError: Exception) {
-            Log.e("AuthRepository", "Error saving to Google Sheets", sheetError)
         }
     }
 }

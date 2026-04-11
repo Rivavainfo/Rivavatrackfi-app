@@ -85,6 +85,7 @@ class AuthViewModel @Inject constructor(
                     name = name,
                     email = email
                 )
+                authResult.user?.let { repository.sendUserToSheet(it, "Google") }
 
                 userPreferencesRepository.saveUserName(name)
                 if (photoUrl.isNotBlank()) {
@@ -125,6 +126,7 @@ class AuthViewModel @Inject constructor(
                 repository.auth.currentUser?.reload()?.await()
 
                 if (repository.auth.currentUser?.isEmailVerified == true) {
+                    repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
                     _authState.value = AuthState.SUCCESS
                 } else {
                     repository.auth.signOut()
@@ -191,6 +193,7 @@ class AuthViewModel @Inject constructor(
                         name = "Phone User",
                         email = ""
                     )
+                    authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
                     _authState.value = AuthState.SUCCESS
                 } catch (e: Exception) {
@@ -270,6 +273,7 @@ class AuthViewModel @Inject constructor(
                     name = "Phone User",
                     email = ""
                 )
+                authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
                 _authState.value = AuthState.SUCCESS
