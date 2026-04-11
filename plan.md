@@ -1,11 +1,21 @@
-1. **Fix Email Verification Login Bug:**
-   - In `AuthViewModel.kt`, within `onEmailLogin`, add `repository.auth.currentUser?.reload()?.await()` immediately after `signInWithEmailAndPassword`. This refreshes the token to ensure the most recent `isEmailVerified` status is retrieved from Firebase, preventing a bug where newly verified emails still act as unverified.
+1. **Update Resend Timer to 60 Seconds:**
+   - In `AuthScreen.kt`, within the `CODE_SENT` block of `AuthMethodsSection`, change the initialization of `timer` from `30` to `60`.
 
-2. **Fix Phone Authentication Formatting:**
-   - In `AuthScreen.kt`, inside the `PhoneSignInSection` button `onClick` handler, strip out any non-digit characters from the input `phoneNumber` and check if it already starts with "91" (to prevent "+9191...") before correctly formatting it to exactly `+91<10-digits>`.
-   - Apply the same validation check in `AuthViewModel.startPhoneVerification` or ensure the ViewModel relies entirely on the formatted string. The frontend validation ensures we pass exactly what is needed.
+2. **Implement 6-Digit OTP UI in AuthScreen.kt:**
+   - In `AuthScreen.kt`, add a new composable `OtpInputField` that takes `otpText: String` and `onOtpChange: (String) -> Unit`.
+   - The `OtpInputField` should use a `BasicTextField` (transparent) overlaid on a `Row` of 6 `Box` composables that render the individual digits. This will naturally support auto-moving the cursor as the user types.
+   - Replace the existing `OutlinedTextField` for OTP input within the `CODE_SENT` block with this new `OtpInputField` composable.
+   - Ensure the "Verify OTP" button logic calls `viewModel.verifyOtp(otp)`.
 
-3. **Verify and Pre-commit:**
-   - Run tests and assemble builds to ensure no regression.
-   - Complete pre-commit actions.
-   - Submit.
+3. **Verify Implementation:**
+   - Use `read_file` on `app/src/main/java/com/rivavafi/universal/ui/auth/AuthScreen.kt` to verify that the OTP UI and timer modifications were successfully applied.
+
+4. **Run Tests:**
+   - Execute `./gradlew assembleDebug` to ensure there are no compilation errors.
+   - Execute `./gradlew test` to ensure existing tests pass.
+
+5. **Pre-commit Steps:**
+   - Complete pre-commit steps to ensure proper testing, verification, review, and reflection are done.
+
+6. **Submit:**
+   - Submit the changes with a descriptive commit message.

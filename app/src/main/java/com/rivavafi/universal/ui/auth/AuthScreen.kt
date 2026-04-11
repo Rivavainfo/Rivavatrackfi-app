@@ -31,6 +31,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.R
@@ -252,7 +255,7 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
                 PhoneSignInSection(viewModel) { num -> currentPhoneNumber = num }
             } else if (phoneAuthState == PhoneAuthState.CODE_SENT) {
                 var otp by remember { mutableStateOf("") }
-                var timer by remember { mutableStateOf(30) }
+                var timer by remember { mutableStateOf(60) }
                 val context = LocalContext.current
 
                 LaunchedEffect(Unit) {
@@ -262,22 +265,23 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
                     }
                 }
 
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = { otp = it },
-                    label = { Text("Enter 6-digit OTP", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimarySky,
-                        focusedLabelColor = PrimarySky,
-                        cursorColor = PrimarySky
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    "Enter 6-digit OTP",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
+                OtpInputField(otpText = otp, onOtpChange = { otp = it })
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = { viewModel.verifyOtp(otp) },
+                    onClick = {
+                        if (otp.length == 6) {
+                            viewModel.verifyOtp(otp)
+                        } else {
+                            viewModel.setErrorMessage("Please enter all 6 digits")
+                        }
+                    },
+                    enabled = otp.length == 6,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
                     modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
@@ -346,6 +350,51 @@ fun PhoneSignInSection(viewModel: AuthViewModel, onPhoneNumberSubmit: (String) -
         Spacer(modifier = Modifier.width(8.dp))
         Text("Send OTP", fontWeight = FontWeight.Bold)
     }
+}
+
+@Composable
+fun OtpInputField(otpText: String, onOtpChange: (String) -> Unit) {
+    BasicTextField(
+        value = otpText,
+        onValueChange = {
+            if (it.length <= 6) {
+                onOtpChange(it)
+            }
+        },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+        decorationBox = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                repeat(6) { index ->
+                    val char = when {
+                        index >= otpText.length -> ""
+                        else -> otpText[index].toString()
+                    }
+                    val isFocused = otpText.length == index
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .border(
+                                width = if (isFocused) 2.dp else 1.dp,
+                                color = if (isFocused) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .background(
+                                color = if (isFocused) PrimarySky.copy(alpha = 0.1f) else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = char,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    )
 }
 
 @Composable
