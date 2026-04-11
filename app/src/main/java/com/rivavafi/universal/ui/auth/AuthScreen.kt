@@ -50,6 +50,15 @@ import com.rivavafi.universal.ui.theme.PrimaryContainerSky
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.foundation.layout.Row
+import kotlinx.coroutines.delay
+
+tailrec fun android.content.Context.getActivity(): android.app.Activity? = when (this) {
+    is android.app.Activity -> this
+    is android.content.ContextWrapper -> baseContext.getActivity()
+    else -> null
+}
 
 @Composable
 fun AuthScreen(
@@ -132,77 +141,158 @@ fun AuthScreen(
     }
 }
 
+enum class LoginMethod {
+    EMAIL, PHONE
+}
+
 @Composable
 fun AuthMethodsSection(viewModel: AuthViewModel) {
+    var loginMethod by remember { mutableStateOf(LoginMethod.EMAIL) }
     var isLoginMode by remember { mutableStateOf(true) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    val phoneAuthState by viewModel.phoneAuthState.collectAsState()
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedTextField(
-            value = email,
-            onValueChange = {
-                viewModel.resetState()
-                email = it
-            },
-            label = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimarySky,
-                focusedLabelColor = PrimarySky,
-                cursorColor = PrimarySky
-            ),
+        Row(
             modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = {
-                viewModel.resetState()
-                password = it
-            },
-            label = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = PrimarySky,
-                focusedLabelColor = PrimarySky,
-                cursorColor = PrimarySky
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                if (isLoginMode) {
-                    viewModel.onEmailLogin(email, password)
-                } else {
-                    viewModel.onEmailRegister(email, password)
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(
-                    brush = Brush.linearGradient(listOf(PrimarySky, PrimaryContainerSky)),
-                    shape = RoundedCornerShape(16.dp)
-                )
         ) {
-            Icon(Icons.Outlined.Email, contentDescription = null, tint = AmoledBlack)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isLoginMode) "Sign in with Email" else "Register with Email", fontWeight = FontWeight.Bold, color = AmoledBlack)
+            TextButton(
+                onClick = {
+                    viewModel.resetState()
+                    loginMethod = LoginMethod.EMAIL
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Email", color = if (loginMethod == LoginMethod.EMAIL) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            TextButton(
+                onClick = {
+                    viewModel.resetState()
+                    loginMethod = LoginMethod.PHONE
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Phone", color = if (loginMethod == LoginMethod.PHONE) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(onClick = {
-            viewModel.resetState()
-            isLoginMode = !isLoginMode
-        }) {
-            Text(if (isLoginMode) "Don't have an account? Register" else "Already have an account? Login", color = PrimarySky)
+        // We will store the current phone number globally for resend capability
+        var currentPhoneNumber by remember { mutableStateOf("") }
+        if (loginMethod == LoginMethod.EMAIL) {
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    viewModel.resetState()
+                    email = it
+                },
+                label = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimarySky,
+                    focusedLabelColor = PrimarySky,
+                    cursorColor = PrimarySky
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    viewModel.resetState()
+                    password = it
+                },
+                label = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = PrimarySky,
+                    focusedLabelColor = PrimarySky,
+                    cursorColor = PrimarySky
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    if (isLoginMode) {
+                        viewModel.onEmailLogin(email, password)
+                    } else {
+                        viewModel.onEmailRegister(email, password)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        brush = Brush.linearGradient(listOf(PrimarySky, PrimaryContainerSky)),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+            ) {
+                Icon(Icons.Outlined.Email, contentDescription = null, tint = AmoledBlack)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (isLoginMode) "Sign in with Email" else "Register with Email", fontWeight = FontWeight.Bold, color = AmoledBlack)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(onClick = {
+                viewModel.resetState()
+                isLoginMode = !isLoginMode
+            }) {
+                Text(if (isLoginMode) "Don't have an account? Register" else "Already have an account? Login", color = PrimarySky)
+            }
+        } else {
+            if (phoneAuthState == PhoneAuthState.IDLE || phoneAuthState == PhoneAuthState.ERROR) {
+                PhoneSignInSection(viewModel) { num -> currentPhoneNumber = num }
+            } else if (phoneAuthState == PhoneAuthState.CODE_SENT) {
+                var otp by remember { mutableStateOf("") }
+                var timer by remember { mutableStateOf(30) }
+                val context = LocalContext.current
+
+                LaunchedEffect(Unit) {
+                    while (timer > 0) {
+                        delay(1000)
+                        timer--
+                    }
+                }
+
+                OutlinedTextField(
+                    value = otp,
+                    onValueChange = { otp = it },
+                    label = { Text("Enter 6-digit OTP", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrimarySky,
+                        focusedLabelColor = PrimarySky,
+                        cursorColor = PrimarySky
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { viewModel.verifyOtp(otp) },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text("Verify OTP", fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = {
+                        context.getActivity()?.let { viewModel.resendOtp(currentPhoneNumber, it) }
+                    },
+                    enabled = timer == 0
+                ) {
+                    Text(if (timer > 0) "Resend OTP in ${timer}s" else "Resend OTP", color = if (timer > 0) MaterialTheme.colorScheme.onSurfaceVariant else PrimarySky)
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -210,6 +300,45 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         GoogleSignInSection(viewModel)
+    }
+}
+
+@Composable
+fun PhoneSignInSection(viewModel: AuthViewModel, onPhoneNumberSubmit: (String) -> Unit) {
+    var phoneNumber by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    OutlinedTextField(
+        value = phoneNumber,
+        onValueChange = { phoneNumber = it },
+        label = { Text("Phone Number", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = PrimarySky,
+            focusedLabelColor = PrimarySky,
+            cursorColor = PrimarySky
+        ),
+        modifier = Modifier.fillMaxWidth(),
+        leadingIcon = {
+            Text("+91", modifier = Modifier.padding(start = 16.dp, end = 8.dp), color = MaterialTheme.colorScheme.onSurface)
+        }
+    )
+    Spacer(modifier = Modifier.height(24.dp))
+    Button(
+        onClick = {
+            val formattedNumber = "+91$phoneNumber"
+            onPhoneNumberSubmit(formattedNumber)
+            context.getActivity()?.let {
+                viewModel.startPhoneVerification(formattedNumber, it)
+            } ?: viewModel.setErrorMessage("Error: Could not retrieve Activity context for Phone Auth.")
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack),
+        modifier = Modifier.fillMaxWidth().height(56.dp)
+    ) {
+        Icon(Icons.Outlined.Phone, contentDescription = null)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Send OTP", fontWeight = FontWeight.Bold)
     }
 }
 
