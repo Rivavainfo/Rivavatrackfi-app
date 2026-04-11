@@ -1,6 +1,5 @@
 package com.rivavafi.universal.di
 
-import com.rivavafi.universal.data.network.GoogleAppsScriptApi
 import com.rivavafi.universal.data.network.YahooFinanceApi
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockApiService
@@ -78,20 +77,4 @@ object NetworkModule {
         return retrofit.create(CryptoApiService::class.java)
     }
 
-    @Provides
-    @Singleton
-    @Named("googleAppsScript")
-    fun provideGoogleAppsScriptRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://script.google.com/")
-            .client(okHttpClient.newBuilder().followRedirects(true).followSslRedirects(true).build())
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideGoogleAppsScriptApi(@Named("googleAppsScript") retrofit: Retrofit): GoogleAppsScriptApi {
-        return retrofit.create(GoogleAppsScriptApi::class.java)
-    }
 }
