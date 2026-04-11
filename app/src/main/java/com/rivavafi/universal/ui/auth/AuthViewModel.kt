@@ -141,6 +141,25 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onForgotPassword(email: String) {
+        if (email.isBlank()) {
+            _errorMessage.value = "Please enter your email to reset your password."
+            return
+        }
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.sendPasswordResetEmail(email).await()
+                _errorMessage.value = "Password reset email sent."
+                _authState.value = AuthState.IDLE
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Password reset failed", e)
+                _errorMessage.value = e.message ?: "Failed to send reset email."
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
+
     fun onEmailRegister(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             Log.w("AuthViewModel", "Email register rejected: Email or password was blank")
