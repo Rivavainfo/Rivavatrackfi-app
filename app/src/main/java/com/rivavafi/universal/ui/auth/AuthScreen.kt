@@ -327,7 +327,13 @@ fun PhoneSignInSection(viewModel: AuthViewModel, onPhoneNumberSubmit: (String) -
     Spacer(modifier = Modifier.height(24.dp))
     Button(
         onClick = {
-            val formattedNumber = "+91$phoneNumber"
+            val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
+            val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
+                digitsOnly.substring(2)
+            } else {
+                digitsOnly
+            }
+            val formattedNumber = "+91$cleanNumber"
             onPhoneNumberSubmit(formattedNumber)
             context.getActivity()?.let {
                 viewModel.startPhoneVerification(formattedNumber, it)
