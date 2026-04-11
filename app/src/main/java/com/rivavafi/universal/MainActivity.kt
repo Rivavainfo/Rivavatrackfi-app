@@ -91,6 +91,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
     object Profile : Screen("profile", "Profile", Icons.Outlined.Person)
     object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
+    object HelpCenter : Screen("help_center", "Help Center", Icons.Outlined.Info)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
     object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
 }
@@ -143,21 +144,15 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 
     val isBottomBarVisible = currentRoute in bottomNavigationItems.map { it.route }
 
-    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
 
-    if (showPremiumUnlockDialog) {
-        PremiumUnlockDialog(
-            userName = userName ?: "",
-            onDismiss = { showPremiumUnlockDialog = false },
-            onUnlockSuccess = {
-                coroutineScope.launch {
-                    preferencesRepository?.setPremiumUserForCurrent(true)
-                }
-                showPremiumUnlockDialog = false
+    LaunchedEffect(userName) {
+        if (userName.isNullOrBlank() && currentRoute != Screen.Auth.route && currentRoute != Screen.Welcome.route && currentRoute != Screen.Greeting.route) {
+            navController.navigate(Screen.Auth.route) {
+                popUpTo(0) { inclusive = true }
             }
-        )
+        }
     }
 
     Scaffold(
@@ -183,16 +178,14 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
-                            val isLocked = screen == Screen.RivavaPortfolio && !isPremiumUser
+                            val isLocked = false
 
                             CustomBottomNavItem(
                                 screen = screen,
                                 isSelected = isSelected,
                                 isLocked = isLocked,
                                 onClick = {
-                                    if (isLocked) {
-                                        showPremiumUnlockDialog = true
-                                    } else if (!isSelected) {
+                                    if (!isSelected) {
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
@@ -300,7 +293,13 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             composable(Screen.Profile.route) {
                 com.rivavafi.universal.ui.profile.ProfileScreen(
                     onBack = { navController.popBackStack() },
-                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToHelpCenter = { navController.navigate(Screen.HelpCenter.route) }
+                )
+            }
+            composable(Screen.HelpCenter.route) {
+                com.rivavafi.universal.ui.help.HelpCenterScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.Transactions.route) {

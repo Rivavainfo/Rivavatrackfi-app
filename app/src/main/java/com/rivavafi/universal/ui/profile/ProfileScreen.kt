@@ -62,6 +62,7 @@ import java.util.Locale
 fun ProfileScreen(
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToHelpCenter: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val userName by viewModel.userName.collectAsState()
@@ -470,26 +471,33 @@ fun ProfileScreen(
                     icon = Icons.Default.Security,
                     title = "Security & Privacy",
                     tint = MaterialTheme.colorScheme.primary,
-                    onClick = { android.widget.Toast.makeText(context, "Security & Privacy Settings", android.widget.Toast.LENGTH_SHORT).show() }
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/privacy-policy.html"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
                 QuickActionItem(
                     icon = Icons.Default.Notifications,
-                    title = "Notifications",
+                    title = "Website",
                     tint = MaterialTheme.colorScheme.secondary,
-                    onClick = { android.widget.Toast.makeText(context, "Notification Settings", android.widget.Toast.LENGTH_SHORT).show() }
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
                 QuickActionItem(
                     icon = Icons.Default.HelpOutline,
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary,
-                    onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://rivavainfo.com/help"))
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            android.widget.Toast.makeText(context, "Help Center unavailable", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onClick = onNavigateToHelpCenter
                 )
                 QuickActionItem(
                     icon = Icons.Default.Logout,
