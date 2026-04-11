@@ -219,7 +219,15 @@ fun AuthMethodsSection(viewModel: AuthViewModel) {
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            if (isLoginMode) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { viewModel.onForgotPassword(email) }) {
+                        Text("Forgot Password?", color = PrimarySky)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
