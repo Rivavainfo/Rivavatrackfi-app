@@ -50,6 +50,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -94,6 +95,8 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object HelpCenter : Screen("help_center", "Help Center", Icons.Outlined.Info)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
     object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
+    object VerifyEmail : Screen("verify_email", "Verify Email", Icons.Outlined.Home)
+    object ResetPassword : Screen("reset_password", "Reset Password", Icons.Outlined.Home)
 }
 
 val BaseBottomNavigationItems = listOf(
@@ -238,10 +241,47 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
         ) {
             composable(Screen.Auth.route) {
                 com.rivavafi.universal.ui.auth.AuthScreen(
-                    onAuthSuccess = {
-                        val route = if (hasCompletedOnboarding) Screen.Home.route else Screen.Welcome.route
+                    onAuthSuccess = { isNewUser ->
+                        // If they are returning OR have already done onboarding, skip welcome
+                        val route = if (hasCompletedOnboarding || !isNewUser) Screen.Home.route else Screen.Welcome.route
                         navController.navigate(route) {
                             popUpTo(Screen.Auth.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(
+                route = "${Screen.VerifyEmail.route}?oobCode={oobCode}",
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://rivava.in/verify?mode=verifyEmail&oobCode={oobCode}&apiKey={apiKey}&lang={lang}" },
+                    navDeepLink { uriPattern = "https://rivava.in/verify?oobCode={oobCode}" }
+                ),
+                arguments = listOf(navArgument("oobCode") { type = NavType.StringType; defaultValue = "" })
+            ) { backStackEntry ->
+                val oobCode = backStackEntry.arguments?.getString("oobCode") ?: ""
+                com.rivavafi.universal.ui.auth.VerifyEmailScreen(
+                    oobCode = oobCode,
+                    onSuccess = {
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(
+                route = "${Screen.ResetPassword.route}?oobCode={oobCode}",
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://rivava.in/reset?mode=resetPassword&oobCode={oobCode}&apiKey={apiKey}&lang={lang}" },
+                    navDeepLink { uriPattern = "https://rivava.in/reset?oobCode={oobCode}" }
+                ),
+                arguments = listOf(navArgument("oobCode") { type = NavType.StringType; defaultValue = "" })
+            ) { backStackEntry ->
+                val oobCode = backStackEntry.arguments?.getString("oobCode") ?: ""
+                com.rivavafi.universal.ui.auth.ResetPasswordScreen(
+                    oobCode = oobCode,
+                    onSuccess = {
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )
