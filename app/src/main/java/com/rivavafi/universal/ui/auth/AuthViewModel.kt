@@ -159,18 +159,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
-                    .setUrl("https://rivava.in/reset")
-                    .setHandleCodeInApp(true)
-                    .setAndroidPackageName(
-                        "com.rivavafi.universal",
-                        true,
-                        null
-                    )
-                    .build()
-
-                repository.auth.sendPasswordResetEmail(email, settings).await()
-                _errorMessage.value = "Password reset email sent."
+                repository.auth.sendPasswordResetEmail(email).await()
+                _errorMessage.value = "Reset link sent to your email"
                 _authState.value = AuthState.IDLE
                 onSuccess()
             } catch (e: Exception) {
@@ -211,11 +201,6 @@ class AuthViewModel @Inject constructor(
                 val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
                     .setUrl("https://rivava.in/verify")
                     .setHandleCodeInApp(true)
-                    .setAndroidPackageName(
-                        "com.rivavafi.universal",
-                        true,
-                        null
-                    )
                     .build()
 
                 result.user?.sendEmailVerification(settings)?.await()
