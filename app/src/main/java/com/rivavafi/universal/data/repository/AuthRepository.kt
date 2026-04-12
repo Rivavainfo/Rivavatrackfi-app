@@ -57,25 +57,28 @@ class AuthRepository @Inject constructor() {
         })
     }
 
-    suspend fun saveUserToFirestore(uid: String, name: String, email: String) {
+    suspend fun saveUserToFirestore(uid: String, name: String, email: String): Boolean {
         val userData = hashMapOf<String, Any>(
             "uid" to uid,
             "name" to name,
             "email" to email
         )
 
-        runCatching {
+        return runCatching {
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
 
-            if (!docSnap.exists()) {
+            val isNewUser = !docSnap.exists()
+            if (isNewUser) {
                 userData["timestamp"] = System.currentTimeMillis().toString()
                 docRef.set(userData).await()
             } else {
                 docRef.set(userData, SetOptions.merge()).await()
             }
-        }.onFailure { firestoreError ->
+            isNewUser
+        }.getOrElse { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
+            false // Default to treating them as returning if Firestore fails, to not force onboarding
         }
     }
 }

@@ -48,11 +48,15 @@ class AuthViewModel @Inject constructor(
     private val _phoneAuthState = MutableStateFlow(PhoneAuthState.IDLE)
     val phoneAuthState: StateFlow<PhoneAuthState> = _phoneAuthState.asStateFlow()
 
+    private val _isNewUser = MutableStateFlow<Boolean?>(null)
+    val isNewUser: StateFlow<Boolean?> = _isNewUser.asStateFlow()
+
     private var _verificationId: String? = null
     private var _resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
     init {
         if (repository.auth.currentUser != null) {
+            _isNewUser.value = false // if already logged in, they are not a new user
             _authState.value = AuthState.SUCCESS
         }
     }
@@ -80,11 +84,12 @@ class AuthViewModel @Inject constructor(
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                repository.saveUserToFirestore(
+                val isNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
                     email = email
                 )
+                _isNewUser.value = isNew
                 authResult.user?.let { repository.sendUserToSheet(it, "Google") }
 
                 userPreferencesRepository.saveUserName(name)
@@ -126,6 +131,9 @@ class AuthViewModel @Inject constructor(
                 repository.auth.currentUser?.reload()?.await()
 
                 if (repository.auth.currentUser?.isEmailVerified == true) {
+                    val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
+                    val isNew = repository.saveUserToFirestore(uid, "Email User", email)
+                    _isNewUser.value = isNew
                     repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
                     _authState.value = AuthState.SUCCESS
                 } else {
@@ -149,7 +157,17 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                repository.auth.sendPasswordResetEmail(email).await()
+                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
+                    .setUrl("https://rivava.in/reset")
+                    .setHandleCodeInApp(true)
+                    .setAndroidPackageName(
+                        "com.rivavafi.universal",
+                        true,
+                        null
+                    )
+                    .build()
+
+                repository.auth.sendPasswordResetEmail(email, settings).await()
                 _errorMessage.value = "Password reset email sent."
                 _authState.value = AuthState.IDLE
             } catch (e: Exception) {
@@ -187,13 +205,53 @@ class AuthViewModel @Inject constructor(
                     email = email
                 )
 
-                result.user?.sendEmailVerification()?.await()
+                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
+                    .setUrl("https://rivava.in/verify")
+                    .setHandleCodeInApp(true)
+                    .setAndroidPackageName(
+                        "com.rivavafi.universal",
+                        true,
+                        null
+                    )
+                    .build()
+
+                result.user?.sendEmailVerification(settings)?.await()
                 repository.auth.signOut()
                 _errorMessage.value = "Registration successful. Please verify your email before logging in."
                 _authState.value = AuthState.IDLE
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email registration failed", e)
                 _errorMessage.value = e.message ?: "Registration failed"
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
+
+    fun verifyEmailActionCode(oobCode: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.applyActionCode(oobCode).await()
+                _authState.value = AuthState.IDLE
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to verify email with oobCode", e)
+                _errorMessage.value = "Failed to verify email: ${e.message}"
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
+
+    fun resetPasswordWithActionCode(oobCode: String, newPassword: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.confirmPasswordReset(oobCode, newPassword).await()
+                _authState.value = AuthState.IDLE
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to reset password with oobCode", e)
+                _errorMessage.value = "Failed to reset password: ${e.message}"
                 _authState.value = AuthState.IDLE
             }
         }
@@ -207,11 +265,12 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                    repository.saveUserToFirestore(
+                val isNew = repository.saveUserToFirestore(
                         uid = uid,
                         name = "Phone User",
                         email = ""
                     )
+                _isNewUser.value = isNew
                     authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
                     _authState.value = AuthState.SUCCESS
@@ -287,11 +346,12 @@ class AuthViewModel @Inject constructor(
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                repository.saveUserToFirestore(
+                val isNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = "Phone User",
                     email = ""
                 )
+                _isNewUser.value = isNew
                 authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS

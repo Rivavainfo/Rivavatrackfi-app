@@ -65,11 +65,12 @@ tailrec fun android.content.Context.getActivity(): android.app.Activity? = when 
 
 @Composable
 fun AuthScreen(
-    onAuthSuccess: () -> Unit,
+    onAuthSuccess: (isNewUser: Boolean) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val isNewUser by viewModel.isNewUser.collectAsState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -128,8 +129,10 @@ fun AuthScreen(
                         AuthState.IDLE, AuthState.ERROR -> AuthMethodsSection(viewModel)
                         AuthState.LOADING -> CircularProgressIndicator(color = PrimarySky)
                         AuthState.SUCCESS -> {
-                            LaunchedEffect(Unit) {
-                                onAuthSuccess()
+                            LaunchedEffect(isNewUser) {
+                                if (isNewUser != null) {
+                                    onAuthSuccess(isNewUser!!)
+                                }
                             }
                             Text(
                                 text = "Verification Successful!",
