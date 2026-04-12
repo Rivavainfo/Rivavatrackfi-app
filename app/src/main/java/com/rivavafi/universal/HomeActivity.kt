@@ -107,13 +107,14 @@ val BaseBottomNavigationItems = listOf(
 )
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class HomeActivity : ComponentActivity() {
 
     @Inject
     lateinit var preferencesRepository: UserPreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val isNewUser = intent.getBooleanExtra("isNewUser", false)
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
 
             TrackFiTheme(isPremium = isPremiumUser) {
                 if (hasCompletedOnboarding != null) {
-                    TrackFiAppContent(hasCompletedOnboarding, preferencesRepository)
+                    TrackFiAppContent(hasCompletedOnboarding, preferencesRepository, isNewUser)
                 } else {
                     // Show a minimal loading state or nothing while reading preferences
                     androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize())
@@ -135,7 +136,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: UserPreferencesRepository? = null) {
+fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: UserPreferencesRepository? = null, isNewUser: Boolean = false) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -149,12 +150,13 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
 
     val coroutineScope = rememberCoroutineScope()
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(userName) {
-        if (userName.isNullOrBlank() && currentRoute != Screen.Auth.route && currentRoute != Screen.Welcome.route && currentRoute != Screen.Greeting.route) {
-            navController.navigate(Screen.Auth.route) {
-                popUpTo(0) { inclusive = true }
-            }
+        if (userName.isNullOrBlank() && currentRoute != Screen.Welcome.route && currentRoute != Screen.Greeting.route) {
+            val intent = android.content.Intent(context, com.rivavafi.universal.ui.auth.AuthActivity::class.java)
+            context.startActivity(intent)
+            (context as? android.app.Activity)?.finish()
         }
     }
 
@@ -208,7 +210,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     ) { _ ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Auth.route,
+            startDestination = if (hasCompletedOnboarding || !isNewUser) Screen.Home.route else Screen.Welcome.route,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) +
@@ -239,53 +241,6 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 )
             }
         ) {
-            composable(Screen.Auth.route) {
-                com.rivavafi.universal.ui.auth.AuthScreen(
-                    onAuthSuccess = { isNewUser ->
-                        // If they are returning OR have already done onboarding, skip welcome
-                        val route = if (hasCompletedOnboarding || !isNewUser) Screen.Home.route else Screen.Welcome.route
-                        navController.navigate(route) {
-                            popUpTo(Screen.Auth.route) { inclusive = true }
-                        }
-                    }
-                )
-            }
-            composable(
-                route = "${Screen.VerifyEmail.route}?oobCode={oobCode}",
-                deepLinks = listOf(
-                    navDeepLink { uriPattern = "https://rivava.in/verify?mode=verifyEmail&oobCode={oobCode}&apiKey={apiKey}&lang={lang}" },
-                    navDeepLink { uriPattern = "https://rivava.in/verify?oobCode={oobCode}" }
-                ),
-                arguments = listOf(navArgument("oobCode") { type = NavType.StringType; defaultValue = "" })
-            ) { backStackEntry ->
-                val oobCode = backStackEntry.arguments?.getString("oobCode") ?: ""
-                com.rivavafi.universal.ui.auth.VerifyEmailScreen(
-                    oobCode = oobCode,
-                    onSuccess = {
-                        navController.navigate(Screen.Auth.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
-            }
-            composable(
-                route = "${Screen.ResetPassword.route}?oobCode={oobCode}",
-                deepLinks = listOf(
-                    navDeepLink { uriPattern = "https://rivava.in/reset?mode=resetPassword&oobCode={oobCode}&apiKey={apiKey}&lang={lang}" },
-                    navDeepLink { uriPattern = "https://rivava.in/reset?oobCode={oobCode}" }
-                ),
-                arguments = listOf(navArgument("oobCode") { type = NavType.StringType; defaultValue = "" })
-            ) { backStackEntry ->
-                val oobCode = backStackEntry.arguments?.getString("oobCode") ?: ""
-                com.rivavafi.universal.ui.auth.ResetPasswordScreen(
-                    oobCode = oobCode,
-                    onSuccess = {
-                        navController.navigate(Screen.Auth.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
-            }
             composable(Screen.Welcome.route) {
                 WelcomeScreen(onNavigateNext = {
                     navController.navigate(Screen.Greeting.route) {
