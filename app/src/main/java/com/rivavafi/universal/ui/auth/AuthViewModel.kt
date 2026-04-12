@@ -159,7 +159,17 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                repository.auth.sendPasswordResetEmail(email).await()
+                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
+                    .setUrl("https://rivava.in/reset")
+                    .setHandleCodeInApp(true)
+                    .setAndroidPackageName(
+                        "com.rivavafi.universal",
+                        true,
+                        null
+                    )
+                    .build()
+
+                repository.auth.sendPasswordResetEmail(email, settings).await()
                 _errorMessage.value = "Password reset email sent."
                 _authState.value = AuthState.IDLE
                 onSuccess()
@@ -198,7 +208,17 @@ class AuthViewModel @Inject constructor(
                     email = email
                 )
 
-                result.user?.sendEmailVerification()?.await()
+                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
+                    .setUrl("https://rivava.in/verify")
+                    .setHandleCodeInApp(true)
+                    .setAndroidPackageName(
+                        "com.rivavafi.universal",
+                        true,
+                        null
+                    )
+                    .build()
+
+                result.user?.sendEmailVerification(settings)?.await()
 
                 _errorMessage.value = "Registration successful. Please verify your email."
                 _authState.value = AuthState.IDLE
@@ -206,6 +226,36 @@ class AuthViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email registration failed", e)
                 _errorMessage.value = e.message ?: "Registration failed"
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
+
+    fun verifyEmailActionCode(oobCode: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.applyActionCode(oobCode).await()
+                _authState.value = AuthState.IDLE
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to verify email with oobCode", e)
+                _errorMessage.value = "Failed to verify email: ${e.message}"
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
+
+    fun resetPasswordWithActionCode(oobCode: String, newPassword: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                repository.auth.confirmPasswordReset(oobCode, newPassword).await()
+                _authState.value = AuthState.IDLE
+                onSuccess()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to reset password with oobCode", e)
+                _errorMessage.value = "Failed to reset password: ${e.message}"
                 _authState.value = AuthState.IDLE
             }
         }
