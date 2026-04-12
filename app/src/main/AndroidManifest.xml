@@ -39,6 +39,12 @@
                 <data
                     android:scheme="https"
                     android:host="rivava.in"/>
+                <data
+                    android:scheme="https"
+                    android:host="rivava-signin.firebaseapp.com"/>
+                <data
+                    android:scheme="https"
+                    android:host="rivava-signin.web.app"/>
             </intent-filter>
         </activity>
 
