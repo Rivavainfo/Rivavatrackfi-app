@@ -30,6 +30,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="rivava.in" android:path="/verify"/>
+                <data android:scheme="https" android:host="rivava.in" android:path="/reset"/>
+            </intent-filter>
         </activity>
 
         <activity
@@ -41,6 +48,12 @@
 
         <activity
             android:name=".ui.auth.OtpActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:name=".ui.auth.SetNewPasswordActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize">
         </activity>

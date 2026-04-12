@@ -152,14 +152,6 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(userName) {
-        if (userName.isNullOrBlank() && currentRoute != Screen.Welcome.route && currentRoute != Screen.Greeting.route) {
-            val intent = android.content.Intent(context, com.rivavafi.universal.ui.auth.AuthActivity::class.java)
-            context.startActivity(intent)
-            (context as? android.app.Activity)?.finish()
-        }
-    }
-
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
@@ -321,11 +313,10 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(onRestartApp = {
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
+                    val intent = android.content.Intent(context, com.rivavafi.universal.ui.auth.AuthActivity::class.java)
+                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    context.startActivity(intent)
+                    (context as? android.app.Activity)?.finish()
                 })
             }
             composable(Screen.RivavaPortfolio.route) {

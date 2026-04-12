@@ -57,6 +57,8 @@ class AuthActivity : ComponentActivity() {
             }
         }
 
+        handleIntent(intent)
+
         setContent {
             TrackFiTheme {
                 Surface(
@@ -69,6 +71,32 @@ class AuthActivity : ComponentActivity() {
                         onNavigateToOtp = { verificationId, phone -> goToOtp(verificationId, phone) },
                         onNavigateToReset = { goToResetPassword() }
                     )
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let { handleIntent(it) }
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val action = intent.action
+        val data = intent.data
+
+        if (Intent.ACTION_VIEW == action && data != null) {
+            val oobCode = data.getQueryParameter("oobCode")
+            if (oobCode != null) {
+                if (data.path?.contains("/verify") == true) {
+                    viewModel.verifyEmailActionCode(oobCode) {
+                        Toast.makeText(this, "Email verified successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                } else if (data.path?.contains("/reset") == true) {
+                    val resetIntent = Intent(this, SetNewPasswordActivity::class.java).apply {
+                        putExtra("oobCode", oobCode)
+                    }
+                    startActivity(resetIntent)
                 }
             }
         }
