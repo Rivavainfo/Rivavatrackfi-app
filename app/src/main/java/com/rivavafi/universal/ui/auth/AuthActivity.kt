@@ -86,17 +86,35 @@ class AuthActivity : ComponentActivity() {
         val data = intent.data
 
         if (Intent.ACTION_VIEW == action && data != null) {
+            val mode = data.getQueryParameter("mode")
             val oobCode = data.getQueryParameter("oobCode")
+
             if (oobCode != null) {
-                if (data.path?.contains("/verify") == true) {
-                    viewModel.verifyEmailActionCode(oobCode) {
-                        Toast.makeText(this, "Email verified successfully!", Toast.LENGTH_SHORT).show()
+                when (mode) {
+                    "verifyEmail" -> {
+                        viewModel.verifyEmailActionCode(oobCode) {
+                            Toast.makeText(this, "Email verified successfully!", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                } else if (data.path?.contains("/reset") == true) {
-                    val resetIntent = Intent(this, SetNewPasswordActivity::class.java).apply {
-                        putExtra("oobCode", oobCode)
+                    "resetPassword" -> {
+                        val resetIntent = Intent(this, SetNewPasswordActivity::class.java).apply {
+                            putExtra("oobCode", oobCode)
+                        }
+                        startActivity(resetIntent)
                     }
-                    startActivity(resetIntent)
+                    else -> {
+                        // Fallback for paths if mode is not explicitly passed by Firebase
+                        if (data.path?.contains("/verify") == true) {
+                            viewModel.verifyEmailActionCode(oobCode) {
+                                Toast.makeText(this, "Email verified successfully!", Toast.LENGTH_SHORT).show()
+                            }
+                        } else if (data.path?.contains("/reset") == true) {
+                            val resetIntent = Intent(this, SetNewPasswordActivity::class.java).apply {
+                                putExtra("oobCode", oobCode)
+                            }
+                            startActivity(resetIntent)
+                        }
+                    }
                 }
             }
         }
