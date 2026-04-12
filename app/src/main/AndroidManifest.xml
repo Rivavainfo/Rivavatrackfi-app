@@ -22,30 +22,33 @@
         android:requestLegacyExternalStorage="false">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.auth.AuthActivity"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
 
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
 
-                <data
-                    android:scheme="https"
-                    android:host="rivava.in"/>
-                <data
-                    android:scheme="https"
-                    android:host="rivava-signin.firebaseapp.com"/>
-                <data
-                    android:scheme="https"
-                    android:host="rivava-signin.web.app"/>
-            </intent-filter>
+        <activity
+            android:name=".ui.auth.OtpActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:name=".ui.auth.ResetPasswordActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize">
         </activity>
 
         <receiver

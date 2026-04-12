@@ -134,7 +134,9 @@ class AuthViewModel @Inject constructor(
                     val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                     val isNew = repository.saveUserToFirestore(uid, "Email User", email)
                     _isNewUser.value = isNew
-                    repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                    if (isNew) {
+                        repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                    }
                     _authState.value = AuthState.SUCCESS
                 } else {
                     repository.auth.signOut()
@@ -149,7 +151,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun onForgotPassword(email: String) {
+    fun onForgotPassword(email: String, onSuccess: () -> Unit) {
         if (email.isBlank()) {
             _errorMessage.value = "Please enter your email to reset your password."
             return
@@ -157,19 +159,10 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
-                    .setUrl("https://rivava.in/reset")
-                    .setHandleCodeInApp(true)
-                    .setAndroidPackageName(
-                        "com.rivavafi.universal",
-                        true,
-                        null
-                    )
-                    .build()
-
-                repository.auth.sendPasswordResetEmail(email, settings).await()
+                repository.auth.sendPasswordResetEmail(email).await()
                 _errorMessage.value = "Password reset email sent."
                 _authState.value = AuthState.IDLE
+                onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Password reset failed", e)
                 _errorMessage.value = e.message ?: "Failed to send reset email."
@@ -178,7 +171,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun onEmailRegister(email: String, pass: String) {
+    fun onEmailRegister(email: String, pass: String, onVerificationSent: () -> Unit) {
         if (email.isBlank() || pass.isBlank()) {
             Log.w("AuthViewModel", "Email register rejected: Email or password was blank")
             _errorMessage.value = "Email and Password cannot be empty."
@@ -205,20 +198,11 @@ class AuthViewModel @Inject constructor(
                     email = email
                 )
 
-                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
-                    .setUrl("https://rivava.in/verify")
-                    .setHandleCodeInApp(true)
-                    .setAndroidPackageName(
-                        "com.rivavafi.universal",
-                        true,
-                        null
-                    )
-                    .build()
+                result.user?.sendEmailVerification()?.await()
 
-                result.user?.sendEmailVerification(settings)?.await()
-                repository.auth.signOut()
-                _errorMessage.value = "Registration successful. Please verify your email before logging in."
+                _errorMessage.value = "Registration successful. Please verify your email."
                 _authState.value = AuthState.IDLE
+                onVerificationSent()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email registration failed", e)
                 _errorMessage.value = e.message ?: "Registration failed"
@@ -227,37 +211,38 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun verifyEmailActionCode(oobCode: String, onSuccess: () -> Unit) {
+    fun checkEmailVerified(onVerified: () -> Unit, onNotVerified: () -> Unit) {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                repository.auth.applyActionCode(oobCode).await()
-                _authState.value = AuthState.IDLE
-                onSuccess()
+                repository.auth.currentUser?.reload()?.await()
+                if (repository.auth.currentUser?.isEmailVerified == true) {
+                    val isNew = repository.saveUserToFirestore(
+                        uid = repository.auth.currentUser?.uid ?: "",
+                        name = "Email User",
+                        email = repository.auth.currentUser?.email ?: ""
+                    )
+                    _isNewUser.value = isNew
+                    if (isNew) {
+                        repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                    }
+                    _authState.value = AuthState.SUCCESS
+                    onVerified()
+                } else {
+                    _errorMessage.value = "Email not verified yet. Please check your inbox."
+                    _authState.value = AuthState.IDLE
+                    onNotVerified()
+                }
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Failed to verify email with oobCode", e)
-                _errorMessage.value = "Failed to verify email: ${e.message}"
+                Log.e("AuthViewModel", "Failed to check email verification", e)
+                _errorMessage.value = "Failed to verify email status: ${e.message}"
                 _authState.value = AuthState.IDLE
+                onNotVerified()
             }
         }
     }
 
-    fun resetPasswordWithActionCode(oobCode: String, newPassword: String, onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            _authState.value = AuthState.LOADING
-            try {
-                repository.auth.confirmPasswordReset(oobCode, newPassword).await()
-                _authState.value = AuthState.IDLE
-                onSuccess()
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Failed to reset password with oobCode", e)
-                _errorMessage.value = "Failed to reset password: ${e.message}"
-                _authState.value = AuthState.IDLE
-            }
-        }
-    }
-
-    private val phoneAuthCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+    private fun createPhoneAuthCallbacks(onCodeSentCallback: (String) -> Unit) = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
             viewModelScope.launch {
                 _authState.value = AuthState.LOADING
@@ -265,13 +250,15 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val isNew = repository.saveUserToFirestore(
+                    val isNew = repository.saveUserToFirestore(
                         uid = uid,
                         name = "Phone User",
                         email = ""
                     )
-                _isNewUser.value = isNew
-                    authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                    _isNewUser.value = isNew
+                    if (isNew) {
+                        authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                    }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
                     _authState.value = AuthState.SUCCESS
                 } catch (e: Exception) {
@@ -296,11 +283,12 @@ class AuthViewModel @Inject constructor(
             _resendToken = token
             _phoneAuthState.value = PhoneAuthState.CODE_SENT
             _authState.value = AuthState.IDLE
+            onCodeSentCallback(verificationId)
         }
     }
 
-    fun startPhoneVerification(phoneNumber: String, activity: android.app.Activity) {
-        if (phoneNumber.isBlank() || phoneNumber.length < 12) { // Minimum "+91" + 10 digits = 13 chars usually, but accepting any formatted properly
+    fun startPhoneVerification(phoneNumber: String, activity: android.app.Activity, onCodeSentCallback: (String) -> Unit) {
+        if (phoneNumber.isBlank() || phoneNumber.length < 12) {
             _errorMessage.value = "Invalid phone number"
             return
         }
@@ -311,12 +299,12 @@ class AuthViewModel @Inject constructor(
             .setPhoneNumber(phoneNumber)
             .setTimeout(60L, TimeUnit.SECONDS)
             .setActivity(activity)
-            .setCallbacks(phoneAuthCallbacks)
+            .setCallbacks(createPhoneAuthCallbacks(onCodeSentCallback))
 
         PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
     }
 
-    fun resendOtp(phoneNumber: String, activity: android.app.Activity) {
+    fun resendOtp(phoneNumber: String, activity: android.app.Activity, onCodeSentCallback: (String) -> Unit) {
         if (_resendToken == null) {
             _errorMessage.value = "Cannot resend code. Please try again later."
             return
@@ -327,22 +315,23 @@ class AuthViewModel @Inject constructor(
             .setPhoneNumber(phoneNumber)
             .setTimeout(60L, TimeUnit.SECONDS)
             .setActivity(activity)
-            .setCallbacks(phoneAuthCallbacks)
+            .setCallbacks(createPhoneAuthCallbacks(onCodeSentCallback))
             .setForceResendingToken(_resendToken!!)
 
         PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
     }
 
-    fun verifyOtp(otp: String) {
-        if (_verificationId == null || otp.isBlank()) {
+    fun verifyOtp(verificationId: String, otp: String, onSuccess: () -> Unit, onError: () -> Unit) {
+        if (verificationId.isBlank() || otp.isBlank()) {
             _errorMessage.value = "Invalid OTP or missing verification ID."
+            onError()
             return
         }
 
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
             try {
-                val credential = PhoneAuthProvider.getCredential(_verificationId!!, otp)
+                val credential = PhoneAuthProvider.getCredential(verificationId, otp)
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
@@ -352,15 +341,19 @@ class AuthViewModel @Inject constructor(
                     email = ""
                 )
                 _isNewUser.value = isNew
-                authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                if (isNew) {
+                    authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
                 _authState.value = AuthState.SUCCESS
+                onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)
-                _errorMessage.value = "Invalid OTP. Please try again."
+                _errorMessage.value = "OTP failed. Try again or use test number"
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
+                onError()
             }
         }
     }
