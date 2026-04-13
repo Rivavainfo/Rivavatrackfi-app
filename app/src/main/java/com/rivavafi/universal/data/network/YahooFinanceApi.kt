@@ -10,6 +10,11 @@ interface YahooFinanceApi {
         @Query("range") range: String = "1d",
         @Query("interval") interval: String = "1m"
     ): YahooFinanceResponse
+
+    @GET("v7/finance/quote")
+    suspend fun getFallbackQuotes(
+        @Query("symbols") symbols: String
+    ): YahooQuoteResponse
 }
 
 data class YahooFinanceResponse(
@@ -27,4 +32,18 @@ data class Result(
 data class Meta(
     val regularMarketPrice: Double?,
     val previousClose: Double?
+)
+
+data class YahooQuoteResponse(
+    val quoteResponse: QuoteResponseObj?
+)
+
+data class QuoteResponseObj(
+    val result: List<YahooQuoteItem>?
+)
+
+data class YahooQuoteItem(
+    val symbol: String?,
+    val regularMarketPrice: Double?,
+    val regularMarketChangePercent: Double?
 )
