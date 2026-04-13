@@ -56,7 +56,7 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-val stocksToLoad = listOf("IREDA.BSE", "RTX")
+val stocksToLoad = listOf("IREDA.NS", "RTX")
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
