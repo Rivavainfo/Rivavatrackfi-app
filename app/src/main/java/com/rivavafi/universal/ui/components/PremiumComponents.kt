@@ -156,19 +156,7 @@ fun PortfolioStockCard(
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-    val context = LocalContext.current
-    DisposableEffect(Unit) {
-        var ctx = context
-        while (ctx is ContextWrapper) {
-            if (ctx is android.app.Activity) break
-            ctx = ctx.baseContext
-        }
-        val window = (ctx as? android.app.Activity)?.window
-        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
+
 
     val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else com.rivavafi.universal.ui.theme.PrimaryContainerSky
     val badgeBgColor = primaryColor.copy(alpha = 0.1f)

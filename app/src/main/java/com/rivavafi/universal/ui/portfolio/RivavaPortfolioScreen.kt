@@ -65,6 +65,7 @@ fun RivavaPortfolioScreen(
     viewModel: StockViewModel = hiltViewModel(),
     alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
+    newsViewModel: NewsViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -90,6 +91,7 @@ fun RivavaPortfolioScreen(
     val alphaIsLoading by alphaViewModel.isLoading.collectAsState()
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+    val financeNews by newsViewModel.newsData.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
@@ -97,6 +99,7 @@ fun RivavaPortfolioScreen(
         viewModel.startPolling(emptyList())
         alphaViewModel.startAutoRefresh(stocksToLoad)
         cryptoViewModel.startPolling(cryptoIds)
+        newsViewModel.startNewsRefresh()
     }
 
 
@@ -189,17 +192,17 @@ fun RivavaPortfolioScreen(
                 // Market News Hero Carousel
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-                if (marketNews.isEmpty()) {
+                if (financeNews.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        Text("No news available", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
-                    val displayNews = marketNews.take(5)
+                    val displayNews = financeNews.take(5)
                     val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
 
                     LaunchedEffect(pagerState.currentPage) {
                         if (displayNews.size > 1) {
-                            delay(4000)
+                            delay(3000)
                             val nextPage = (pagerState.currentPage + 1) % displayNews.size
                             pagerState.animateScrollToPage(nextPage)
                         }
@@ -216,9 +219,9 @@ fun RivavaPortfolioScreen(
                     ) { page ->
                     Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
                         val newsItem = displayNews[page]
-                        val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
-                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
-                        val newsHeadline = newsItem.headline
+                        val newsUrl = newsItem.url ?: ""
+                        val newsImage = if (!newsItem.urlToImage.isNullOrBlank()) newsItem.urlToImage else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
+                        val newsHeadline = newsItem.title ?: "No Title"
 
                         Box(
                             modifier = Modifier
@@ -258,7 +261,7 @@ fun RivavaPortfolioScreen(
                             verticalArrangement = Arrangement.Bottom
                         ) {
                             Text(
-                                text = "MARKET NEWS",
+                                text = "FINANCE NEWS",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp
@@ -285,7 +288,7 @@ fun RivavaPortfolioScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "READ ANALYSIS",
+                                        text = "READ MORE",
                                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = PrimarySky
                                     )
