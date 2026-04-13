@@ -22,4 +22,10 @@ interface NewsApi {
         @Query("country") country: String = "in",
         @Query("apiKey") apiKey: String = "110b0e149cb34598b1fb69ba8a78963"
     ): NewsResponse
+
+    @GET("everything")
+    suspend fun getEverythingNews(
+        @Query("q") query: String = "finance OR stock market",
+        @Query("apiKey") apiKey: String = "110b0e149cb34598b1fb69ba8a78963"
+    ): NewsResponse
 }
