@@ -48,6 +48,8 @@ android {
         versionName = "1.0.2"
 
         buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: "1JCULNPFKQXWC62U"}\"")
+        buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
+        buildConfigField("String", "NEWS_API_KEY", "\"${System.getenv("NEWS_API_KEY") ?: localProperties.getProperty("newsapi.apikey") ?: "110b0e149cb34598b1fb69ba8a78963"}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

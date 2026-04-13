@@ -1,5 +1,6 @@
 package com.rivavafi.universal.domain.repository
 
+import com.rivavafi.universal.BuildConfig
 import com.rivavafi.universal.domain.api.Quote
 import com.rivavafi.universal.domain.api.StockApi
 import retrofit2.Retrofit
@@ -18,22 +19,34 @@ class AlphaVantageRepository @Inject constructor() {
 
     private val cache = mutableMapOf<String, Quote>()
 
-    private val API_KEY = "1JCULNPFKQXWC62U"
+    private val API_KEY = BuildConfig.ALPHA_VANTAGE_API_KEY
 
     suspend fun getStock(symbol: String): Quote? {
-        return try {
-            val response = api.getStockPrice(symbol = symbol, apiKey = API_KEY)
-            val data = response.quote
+        val requestSymbols = candidateSymbols(symbol)
 
-            if (data != null && data.price != null) {
-                cache[symbol] = data
-                data
-            } else {
-                cache[symbol]
+        for (requestSymbol in requestSymbols) {
+            try {
+                val response = api.getStockPrice(symbol = requestSymbol, apiKey = API_KEY)
+                val data = response.quote
+
+                if (data != null && data.price != null) {
+                    val resolved = data.copy(symbol = symbol)
+                    cache[symbol] = resolved
+                    return resolved
+                }
+            } catch (_: Exception) {
+                // try next candidate
             }
+        }
 
-        } catch (e: Exception) {
-            cache[symbol]
+        return cache[symbol]
+    }
+
+    private fun candidateSymbols(symbol: String): List<String> {
+        return when (symbol.uppercase()) {
+            "IREDA.BSE", "IREDA", "IREDA.NS" -> listOf("IREDA.BSE", "IREDA.NSE", "IREDA.NS")
+            "RTX" -> listOf("RTX", "NYSE:RTX")
+            else -> listOf(symbol)
         }
     }
 }

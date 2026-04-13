@@ -6,6 +6,7 @@ import com.rivavafi.universal.domain.api.MarketItem
 import com.rivavafi.universal.domain.api.News
 import com.rivavafi.universal.domain.repository.MarketRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,24 +33,19 @@ class MarketViewModel @Inject constructor(
     private val _newsState = MutableStateFlow<UiState<List<News>>>(UiState.Loading)
     val newsState: StateFlow<UiState<List<News>>> = _newsState
 
-    private var stockJob: kotlinx.coroutines.Job? = null
-    private var newsJob: kotlinx.coroutines.Job? = null
+    private var stockJob: Job? = null
+    private var newsJob: Job? = null
+    private var cryptoHealthJob: Job? = null
 
     init {
         viewModelScope.launch {
             repository.cryptoState.collect { items ->
-                if (items.isNotEmpty()) {
-                    _cryptoState.value = UiState.Success(items)
-                }
+                _cryptoState.value = UiState.Success(items)
             }
         }
         viewModelScope.launch {
             repository.stockState.collect { items ->
-                if (items.isNotEmpty()) {
-                    _stockState.value = UiState.Success(items)
-                } else if (_stockState.value is UiState.Success) {
-                    // Do not revert to loading or empty if we already had items and just failed an update gracefully.
-                }
+                _stockState.value = UiState.Success(items)
             }
         }
     }
@@ -57,15 +53,14 @@ class MarketViewModel @Inject constructor(
     fun startUpdates() {
         startStockUpdates()
         startNewsUpdates()
+        startCryptoHealthUpdates()
     }
 
     fun retryStocks() {
-        _stockState.value = UiState.Loading
         startStockUpdates()
     }
 
     fun retryNews() {
-        _newsState.value = UiState.Loading
         startNewsUpdates()
     }
 
@@ -81,6 +76,19 @@ class MarketViewModel @Inject constructor(
                     _stockState.value = UiState.Error("Failed to fetch stock data")
                 }
                 delay(10000) // Poll stocks every 10s
+                val stocks = repository.fetchStocks()
+                _stockState.value = UiState.Success(stocks)
+                delay(10_000) // Poll stocks every 10 seconds
+            }
+        }
+    }
+
+    private fun startCryptoHealthUpdates() {
+        cryptoHealthJob?.cancel()
+        cryptoHealthJob = viewModelScope.launch {
+            while (true) {
+                repository.fetchCryptoSnapshot()
+                delay(10_000)
             }
         }
     }
@@ -97,6 +105,9 @@ class MarketViewModel @Inject constructor(
                     _newsState.value = UiState.Error("No news available")
                 }
                 delay(1800000) // Poll news every 30 mins
+                val news = repository.fetchNews()
+                _newsState.value = UiState.Success(news)
+                delay(1_800_000) // Poll news every 30 mins
             }
         }
     }
