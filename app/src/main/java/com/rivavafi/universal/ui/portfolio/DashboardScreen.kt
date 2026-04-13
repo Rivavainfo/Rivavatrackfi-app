@@ -297,3 +297,63 @@ fun MarketCard(item: MarketItem, onNavigateToDetail: (ticker: String, focus: Str
         }
     )
 }
+
+@Composable
+fun DashboardNewsCard(news: com.rivavafi.universal.domain.api.News) {
+    val uriHandler = LocalUriHandler.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(news.url)
+                } catch (e: Exception) {}
+            },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            if (news.imageUrl.isNotBlank()) {
+                AsyncImage(
+                    model = news.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            Text(
+                text = news.title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = news.source,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                val timeAgo = try {
+                    val format = java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault())
+                    format.format(java.util.Date(news.publishedAt * 1000))
+                } catch(e: Exception) { "" }
+
+                Text(
+                    text = timeAgo,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}

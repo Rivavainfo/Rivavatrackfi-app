@@ -68,6 +68,14 @@ class MarketViewModel @Inject constructor(
         stockJob?.cancel()
         stockJob = viewModelScope.launch {
             while (true) {
+                val stocks = repository.fetchStocksWithRetry()
+                if (stocks.isNotEmpty()) {
+                    _stockState.value = UiState.Success(stocks)
+                } else if (_stockState.value !is UiState.Success) {
+                    // Try to avoid Error state entirely if possible, but if we have literally nothing to show:
+                    _stockState.value = UiState.Error("Failed to fetch stock data")
+                }
+                delay(10000) // Poll stocks every 10s
                 val stocks = repository.fetchStocks()
                 _stockState.value = UiState.Success(stocks)
                 delay(10_000) // Poll stocks every 10 seconds
@@ -89,6 +97,14 @@ class MarketViewModel @Inject constructor(
         newsJob?.cancel()
         newsJob = viewModelScope.launch {
             while (true) {
+                val news = repository.fetchNewsWithRetry()
+                if (news.isNotEmpty()) {
+                    _newsState.value = UiState.Success(news)
+                } else if (_newsState.value !is UiState.Success) {
+                    // Try to avoid Error state entirely if possible, but if we have literally nothing to show:
+                    _newsState.value = UiState.Error("No news available")
+                }
+                delay(1800000) // Poll news every 30 mins
                 val news = repository.fetchNews()
                 _newsState.value = UiState.Success(news)
                 delay(1_800_000) // Poll news every 30 mins
