@@ -87,11 +87,9 @@ fun DashboardScreen(
                     is UiState.Error -> {
                         Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text((newsState as UiState.Error).message, color = MaterialTheme.colorScheme.error)
+                                Text("Updating news...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = { viewModel.retryNews() }) {
-                                    Text("Retry")
-                                }
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -240,11 +238,9 @@ fun DashboardScreen(
                     }
                     is UiState.Error -> {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text((stockState as UiState.Error).message, color = MaterialTheme.colorScheme.error)
+                            Text("Updating stocks...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = { viewModel.retryStocks() }) {
-                                Text("Retry")
-                            }
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     is UiState.Success -> {
@@ -267,8 +263,7 @@ fun DashboardScreen(
                         }
                     }
                     is UiState.Error -> {
-                        // Usually WebSocket handles reconnecting on its own, but just in case
-                        Text("Connecting to stream...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Updating crypto stream...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     is UiState.Success -> {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

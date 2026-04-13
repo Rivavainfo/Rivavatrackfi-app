@@ -1,30 +1,25 @@
 package com.rivavafi.universal.data.network
 
-import com.google.gson.annotations.SerializedName
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface YahooFinanceApi {
-    @GET("v8/finance/chart/IREDA.NS")
-    suspend fun getIredaStockData(
-        @Query("range") range: String = "1d",
-        @Query("interval") interval: String = "1m"
-    ): YahooFinanceResponse
-}
-
-data class YahooFinanceResponse(
-    val chart: Chart?
+data class YahooQuoteResponse(
+    val quoteResponse: YahooQuoteResultWrapper?
 )
 
-data class Chart(
-    val result: List<Result>?
+data class YahooQuoteResultWrapper(
+    val result: List<YahooQuoteItem>?
 )
 
-data class Result(
-    val meta: Meta?
-)
-
-data class Meta(
+data class YahooQuoteItem(
+    val symbol: String?,
     val regularMarketPrice: Double?,
-    val previousClose: Double?
+    val regularMarketChangePercent: Double?
 )
+
+interface YahooFinanceApi {
+    @GET("v7/finance/quote")
+    suspend fun getQuotes(
+        @Query("symbols") symbols: String
+    ): YahooQuoteResponse
+}
