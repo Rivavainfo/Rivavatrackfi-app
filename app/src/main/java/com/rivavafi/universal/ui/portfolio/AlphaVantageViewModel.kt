@@ -35,19 +35,19 @@ class AlphaVantageViewModel @Inject constructor(
     }
 
     private suspend fun loadStocks(symbols: List<String>) {
-        val result = mutableListOf<Quote>()
+        val currentData = _stockData.value.associateBy { it.symbol }.toMutableMap()
 
         for (symbol in symbols) {
             val data = repo.getStock(symbol)
 
             if (data != null) {
-                result.add(data)
-            } else {
-                result.add(Quote(symbol = symbol, price = null, changePercent = null))
+                currentData[symbol] = data
+            } else if (!currentData.containsKey(symbol)) {
+                currentData[symbol] = Quote(symbol = symbol, price = null, changePercent = null)
             }
 
-            _stockData.value = result.toList()
-            _isLoading.value = false // We have some data, stop total loading
+            _stockData.value = currentData.values.toList()
+            _isLoading.value = false
 
             delay(12000) // avoid rate limit
         }

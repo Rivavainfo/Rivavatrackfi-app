@@ -18,7 +18,7 @@ class AlphaVantageRepository @Inject constructor() {
 
     private val cache = mutableMapOf<String, Quote>()
 
-    private val API_KEY = "1JCULNPFKQXWC62U"
+    private val API_KEY = com.rivavafi.universal.BuildConfig.FINNHUB_API_KEY // Use existing key mechanism or default
 
     suspend fun getStock(symbol: String): Quote? {
         return try {

@@ -56,7 +56,7 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-val stocksToLoad = listOf("AAPL", "GOOGL", "TSLA", "RELIANCE.BSE")
+val stocksToLoad = listOf("IREDA.BSE", "RTX")
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -340,17 +340,21 @@ fun RivavaPortfolioScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             alphaStockData.forEach { stock ->
-                                val price = stock.price?.let { "$$it" } ?: "Data unavailable"
+
                                 val change = stock.changePercent?.let {
                                     if (it.startsWith("-")) it else "+$it"
                                 } ?: "--"
                                 val isPositive = !(stock.changePercent?.startsWith("-") ?: false)
 
+                                val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
+                                val resolvedExchange = if (isIndian) "NSE" else "NYSE"
+                                val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
+
                                 PortfolioStockCard(
-                                    exchange = "US",
-                                    ticker = stock.symbol ?: "N/A",
+                                    exchange = resolvedExchange,
+                                    ticker = stock.symbol?.replace(".BSE", "")?.replace(".NS", "") ?: "N/A",
                                     companyName = "",
-                                    marketPrice = price,
+                                    marketPrice = priceFormatted,
                                     isPositive = isPositive,
                                     percentageChange = change,
                                     onValueClick = { focus ->
