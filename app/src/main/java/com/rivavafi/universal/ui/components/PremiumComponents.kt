@@ -12,6 +12,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.ContextWrapper
+import android.view.WindowManager
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import com.rivavafi.universal.ui.theme.glassMorphism
 import com.rivavafi.universal.ui.theme.glowEffect
 import androidx.compose.ui.graphics.Brush
@@ -151,6 +155,8 @@ fun PortfolioStockCard(
     onValueClick: ((String) -> Unit)? = null
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
+
+
 
     val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else com.rivavafi.universal.ui.theme.PrimaryContainerSky
     val badgeBgColor = primaryColor.copy(alpha = 0.1f)

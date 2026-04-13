@@ -56,17 +56,16 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-val portfolioItems = listOf(
-    PortfolioItem("NSE", "IREDA", "Buy Rate: ₹32.00  •  Returns: 715%", "₹228.84"),
-    PortfolioItem("NYSE", "RTX", "Buy Rate: $74.00  •  Returns: 62.8%", "$207.00")
-)
+val stocksToLoad = listOf("IREDA.BSE", "RTX")
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
+    alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
+    newsViewModel: NewsViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -88,17 +87,22 @@ fun RivavaPortfolioScreen(
     val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
     val isError = portfolioViewModel.isError.collectAsState(initial = false).value
     val stockStates by viewModel.stockStates.collectAsState()
+    val alphaStockData by alphaViewModel.stockData.collectAsState()
+    val alphaIsLoading by alphaViewModel.isLoading.collectAsState()
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+    val financeNews by newsViewModel.newsData.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        viewModel.startPolling(portfolioItems.map { it.ticker })
+        viewModel.startPolling(emptyList())
+        alphaViewModel.startAutoRefresh(stocksToLoad)
         cryptoViewModel.startPolling(cryptoIds)
+        newsViewModel.startNewsRefresh()
     }
 
-    val groupedPortfolio = portfolioItems.groupBy { it.exchange }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -188,17 +192,17 @@ fun RivavaPortfolioScreen(
                 // Market News Hero Carousel
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-                if (marketNews.isEmpty()) {
+                if (financeNews.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        Text("No news available", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
-                    val displayNews = marketNews.take(5)
+                    val displayNews = financeNews.take(5)
                     val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
 
                     LaunchedEffect(pagerState.currentPage) {
                         if (displayNews.size > 1) {
-                            delay(4000)
+                            delay(3000)
                             val nextPage = (pagerState.currentPage + 1) % displayNews.size
                             pagerState.animateScrollToPage(nextPage)
                         }
@@ -215,9 +219,9 @@ fun RivavaPortfolioScreen(
                     ) { page ->
                     Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
                         val newsItem = displayNews[page]
-                        val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
-                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
-                        val newsHeadline = newsItem.headline
+                        val newsUrl = newsItem.url ?: ""
+                        val newsImage = if (!newsItem.urlToImage.isNullOrBlank()) newsItem.urlToImage else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
+                        val newsHeadline = newsItem.title ?: "No Title"
 
                         Box(
                             modifier = Modifier
@@ -257,7 +261,7 @@ fun RivavaPortfolioScreen(
                             verticalArrangement = Arrangement.Bottom
                         ) {
                             Text(
-                                text = "MARKET NEWS",
+                                text = "FINANCE NEWS",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 2.sp
@@ -284,7 +288,7 @@ fun RivavaPortfolioScreen(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "READ ANALYSIS",
+                                        text = "READ MORE",
                                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = PrimarySky
                                     )
@@ -322,114 +326,42 @@ fun RivavaPortfolioScreen(
                 }
             }
 
-            groupedPortfolio.forEach { (exchange, items) ->
-                item {
-                    val titleText = if (exchange == "NSE") "NSE India" else "NYSE US"
-                    val subtitleText = if (exchange == "NSE") "INDIAN BLUE CHIPS" else "WALL STREET TECH"
-                    val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-                    val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else PrimaryContainerSky
-                    val totalValue = if (isNyse) "$42,912.18" else "₹82,44,120"
-                    val dailyChange = if (isNyse) "+0.9% today" else "+1.8% today"
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(title = "My Portfolio")
 
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                Column {
-                                    Text(
-                                        text = titleText,
-                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = primaryColor
-                                    )
-                                    Text(
-                                        text = subtitleText,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Medium,
-                                            letterSpacing = 0.5.sp
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = totalValue,
-                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = dailyChange,
-                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = TertiaryEmerald
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .background(primaryColor.copy(alpha = 0.2f))
-                            )
+                    if (alphaIsLoading) {
+                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
-
+                    } else if (alphaStockData.isEmpty()) {
+                        Text("Data unavailable", color = MaterialTheme.colorScheme.error)
+                    } else {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items.forEach { item ->
-                                val state = stockStates[item.ticker]
-                                val currency = if (item.exchange == "NSE") "₹" else "$"
+                            alphaStockData.forEach { stock ->
 
-                                val displayPrice = state?.data?.let {
-                                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                                } ?: item.marketPrice
+                                val change = stock.changePercent?.let {
+                                    if (it.startsWith("-")) it else "+$it"
+                                } ?: "--"
+                                val isPositive = !(stock.changePercent?.startsWith("-") ?: false)
 
-                                val displayChange = state?.data?.let {
-                                    val sign = if (it.dp >= 0) "+" else ""
-                                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                                } ?: "+0.00%"
-
-                                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
-
-                                var displayPriceFinal = displayPrice
-                                var displayChangeFinal = displayChange
-                                var isPositiveFinal = isPositive
-
-                                if (item.ticker == "IREDA") {
-                                    if (isLoading) {
-                                        displayPriceFinal = "Loading..."
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else if (isError && iredaPrice == 0.0) {
-                                        displayPriceFinal = "Error"
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else {
-                                        displayPriceFinal = "₹%.2f".format(iredaPrice)
-                                        val change = iredaPrice - iredaPreviousClose
-                                        val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
-                                        isPositiveFinal = change >= 0
-                                        displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                                    }
-                                }
+                                val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
+                                val resolvedExchange = if (isIndian) "NSE" else "NYSE"
+                                val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
 
                                 PortfolioStockCard(
-                                    exchange = item.exchange,
-                                    ticker = item.ticker,
-                                    companyName = item.companyName,
-                                    marketPrice = displayPriceFinal,
-                                    isPositive = isPositiveFinal,
-                                    percentageChange = displayChangeFinal,
+                                    exchange = resolvedExchange,
+                                    ticker = stock.symbol?.replace(".BSE", "")?.replace(".NS", "") ?: "N/A",
+                                    companyName = "",
+                                    marketPrice = priceFormatted,
+                                    isPositive = isPositive,
+                                    percentageChange = change,
                                     onValueClick = { focus ->
-                                        onNavigateToDetail(item.ticker, focus)
+                                        stock.symbol?.let { onNavigateToDetail(it, focus) }
                                     }
                                 )
                             }

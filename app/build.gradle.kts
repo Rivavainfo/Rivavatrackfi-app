@@ -130,6 +130,7 @@ dependencies {
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil:2.6.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     // WorkManager
     val workVersion = "2.9.0"
