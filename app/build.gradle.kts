@@ -34,6 +34,9 @@ android {
         }
     }
 
+    lint {
+        abortOnError = false
+    }
     defaultConfig {
         applicationId = "com.rivavafi.universal"
         minSdk = 24

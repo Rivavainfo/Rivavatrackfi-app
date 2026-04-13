@@ -12,10 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import android.content.ContextWrapper
-import android.view.WindowManager
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalContext
 import com.rivavafi.universal.ui.theme.glassMorphism
 import com.rivavafi.universal.ui.theme.glowEffect
 import androidx.compose.ui.graphics.Brush
