@@ -21,13 +21,11 @@ interface NewsApi {
         @Query("category") category: String = "business",
         @Query("country") country: String = "in",
         @Query("apiKey") apiKey: String = com.rivavafi.universal.BuildConfig.NEWS_API_KEY
-        @Query("apiKey") apiKey: String = BuildConfig.NEWS_API_KEY
     ): NewsResponse
 
     @GET("everything")
     suspend fun getEverythingNews(
         @Query("q") query: String = "finance OR stock market",
         @Query("apiKey") apiKey: String = com.rivavafi.universal.BuildConfig.NEWS_API_KEY
-        @Query("apiKey") apiKey: String = BuildConfig.NEWS_API_KEY
     ): NewsResponse
 }

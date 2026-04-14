@@ -16,17 +16,9 @@ class NewsRepository @Inject constructor() {
         .create(NewsApi::class.java)
 
     suspend fun getNews(): List<Article> {
-        val headlines = try {
-            api.getFinanceNews().articles
-        } catch (_: Exception) {
-            emptyList()
-        }
-
-        if (headlines.isNotEmpty()) return headlines
-
         return try {
-            api.getEverythingNews().articles
-        } catch (_: Exception) {
+            api.getFinanceNews().articles
+        } catch (e: Exception) {
             emptyList()
         }
     }

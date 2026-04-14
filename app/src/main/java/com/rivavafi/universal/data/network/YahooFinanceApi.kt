@@ -1,5 +1,6 @@
 package com.rivavafi.universal.data.network
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -22,18 +23,15 @@ data class YahooFinanceResponse(
 
 data class Chart(
     val result: List<Result>?
-data class YahooQuoteResponse(
-    val quoteResponse: YahooQuoteResultWrapper?
 )
 
-data class YahooQuoteResultWrapper(
-    val result: List<YahooQuoteItem>?
+data class Result(
+    val meta: Meta?
 )
 
-data class YahooQuoteItem(
-    val symbol: String?,
+data class Meta(
     val regularMarketPrice: Double?,
-    val regularMarketChangePercent: Double?
+    val previousClose: Double?
 )
 
 data class YahooQuoteResponse(
@@ -49,9 +47,3 @@ data class YahooQuoteItem(
     val regularMarketPrice: Double?,
     val regularMarketChangePercent: Double?
 )
-interface YahooFinanceApi {
-    @GET("v7/finance/quote")
-    suspend fun getQuotes(
-        @Query("symbols") symbols: String
-    ): YahooQuoteResponse
-}
