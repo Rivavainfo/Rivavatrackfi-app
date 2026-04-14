@@ -190,8 +190,7 @@ fun StockPortfolioDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(newsList.size) { index ->
-                        val n = newsList[index]
-                        DashboardNewsCard(news = com.rivavafi.universal.domain.api.News(title = n.headline, description = n.summary, imageUrl = n.image, source = n.source, url = n.url, publishedAt = n.datetime))
+                        NewsCard(news = newsList[index])
                     }
                 }
             }

@@ -152,8 +152,6 @@ fun PortfolioStockCard(
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-
-
     val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else com.rivavafi.universal.ui.theme.PrimaryContainerSky
     val badgeBgColor = primaryColor.copy(alpha = 0.1f)
 

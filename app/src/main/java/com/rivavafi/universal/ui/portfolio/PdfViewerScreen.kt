@@ -21,8 +21,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import android.content.ContextWrapper
-import android.view.WindowManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -35,19 +33,6 @@ fun PdfViewerScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-
-    DisposableEffect(Unit) {
-        var ctx = context
-        while (ctx is ContextWrapper) {
-            if (ctx is android.app.Activity) break
-            ctx = ctx.baseContext
-        }
-        val window = (ctx as? android.app.Activity)?.window
-        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
     var pdfRenderer by remember { mutableStateOf<PdfRenderer?>(null) }
     var pageCount by remember { mutableStateOf(0) }
     var isLoading by remember { mutableStateOf(true) }
