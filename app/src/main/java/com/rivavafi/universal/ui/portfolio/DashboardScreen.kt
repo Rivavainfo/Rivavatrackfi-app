@@ -87,9 +87,11 @@ fun DashboardScreen(
                     is UiState.Error -> {
                         Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Updating news...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text((newsState as UiState.Error).message, color = MaterialTheme.colorScheme.error)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                                Button(onClick = { viewModel.retryNews() }) {
+                                    Text("Retry")
+                                }
                             }
                         }
                     }
@@ -101,7 +103,7 @@ fun DashboardScreen(
 
                         LaunchedEffect(pagerState.currentPage) {
                             if (displayNews.size > 1) {
-                                kotlinx.coroutines.delay(3000)
+                                kotlinx.coroutines.delay(15000)
                                 val nextPage = (pagerState.currentPage + 1) % displayNews.size
                                 pagerState.animateScrollToPage(nextPage)
                             }
@@ -238,9 +240,11 @@ fun DashboardScreen(
                     }
                     is UiState.Error -> {
                         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Updating stocks...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text((stockState as UiState.Error).message, color = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.height(8.dp))
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            Button(onClick = { viewModel.retryStocks() }) {
+                                Text("Retry")
+                            }
                         }
                     }
                     is UiState.Success -> {
@@ -263,7 +267,8 @@ fun DashboardScreen(
                         }
                     }
                     is UiState.Error -> {
-                        Text("Updating crypto stream...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        // Usually WebSocket handles reconnecting on its own, but just in case
+                        Text("Connecting to stream...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     is UiState.Success -> {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
