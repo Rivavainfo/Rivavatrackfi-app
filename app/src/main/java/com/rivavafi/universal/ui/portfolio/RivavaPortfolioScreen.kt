@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.runtime.collectAsState
 import androidx.compose.material.icons.filled.Refresh
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,18 +55,15 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-val portfolioItems = listOf(
-    PortfolioItem("NSE", "IREDA", "Buy Rate: ₹32.00  •  Returns: 715%", "₹228.84"),
-    PortfolioItem("NYSE", "RTX", "Buy Rate: $74.00  •  Returns: 62.8%", "$207.00")
-)
+val stocksToLoad = listOf("AAPL", "GOOGL", "TSLA", "RELIANCE.BSE")
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
+    alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
-    marketViewModel: MarketViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -84,20 +80,25 @@ fun RivavaPortfolioScreen(
         }
     }
 
-    val stockData by marketViewModel.stocks.collectAsState()
-    val isLoading by marketViewModel.isLoading.collectAsState()
+    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
+    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
+
     val stockStates by viewModel.stockStates.collectAsState()
+    val alphaStockData by alphaViewModel.stockData.collectAsState()
+    val alphaIsLoading by alphaViewModel.isLoading.collectAsState()
+
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        viewModel.startPolling(portfolioItems.map { it.ticker })
+        viewModel.startPolling(emptyList()) // maintain for other dependencies like news
+        alphaViewModel.startAutoRefresh(stocksToLoad)
         cryptoViewModel.startPolling(cryptoIds)
     }
-
-
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -184,9 +185,6 @@ fun RivavaPortfolioScreen(
             }
 
             item {
-                // Market News Hero Carousel
-                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-
                 if (marketNews.isEmpty()) {
                     Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -194,6 +192,7 @@ fun RivavaPortfolioScreen(
                 } else {
                     val displayNews = marketNews.take(5)
                     val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
+                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
                     LaunchedEffect(pagerState.currentPage) {
                         if (displayNews.size > 1) {
@@ -321,52 +320,40 @@ fun RivavaPortfolioScreen(
                 }
             }
 
-
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     SectionHeader(title = "My Portfolio")
 
-                    if (isLoading && stockData.isEmpty()) {
+                    if (alphaIsLoading) {
                         Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
-                    } else if (stockData.isEmpty()) {
-                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                            Text(text = "Updating...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                    } else if (alphaStockData.isEmpty()) {
+                        Text(text = "Data unavailable", color = MaterialTheme.colorScheme.error)
                     } else {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Ensure both RTX and IREDA show up. If one is missing from API, we use cached version (MarketRepo handles this).
-                            // If MarketRepo returns empty for one, we force "Updating..."
-                            val iredaItem = stockData.find { it.symbol == "IREDA.NS" }
-                            val rtxItem = stockData.find { it.symbol == "RTX" }
+                            alphaStockData.forEach { stock ->
+                                val change = stock.changePercent?.let {
+                                    if (it.startsWith("-")) it else "+$it"
+                                } ?: "--"
+                                val isPositive = !(stock.changePercent?.startsWith("-") ?: false)
 
-                            val displayList = listOf(
-                                Pair("NSE", iredaItem ?: com.rivavafi.universal.data.network.YahooStock("IREDA.NS", null, null)),
-                                Pair("NYSE", rtxItem ?: com.rivavafi.universal.data.network.YahooStock("RTX", null, null))
-                            )
-
-                            displayList.forEach { (exchange, stock) ->
-                                val price = stock.regularMarketPrice ?: 0.0
-                                val changePercent = stock.regularMarketChangePercent ?: 0.0
-
-                                val isPositive = changePercent >= 0
-                                val prefix = if (exchange == "NSE") "₹" else "$"
-                                val formattedPrice = if (price > 0) "$prefix${String.format(java.util.Locale.US, "%.2f", price)}" else "Updating..."
-                                val formattedChange = "${if(isPositive) "+" else ""}${String.format(java.util.Locale.US, "%.2f", changePercent)}%"
+                                val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
+                                val resolvedExchange = if (isIndian) "NSE" else "NYSE"
+                                val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
 
                                 PortfolioStockCard(
-                                    exchange = exchange,
-                                    ticker = stock.symbol.replace(".NS", ""),
+                                    exchange = resolvedExchange,
+                                    ticker = stock.symbol?.replace(".BSE", "")?.replace(".NS", "") ?: "N/A",
                                     companyName = "",
-                                    marketPrice = formattedPrice,
+                                    marketPrice = priceFormatted,
                                     isPositive = isPositive,
-                                    percentageChange = formattedChange,
+                                    percentageChange = change,
                                     onValueClick = { focus ->
-                                        onNavigateToDetail(stock.symbol.replace(".NS", ""), focus)
+                                        stock.symbol?.let { onNavigateToDetail(it, focus) }
                                     }
                                 )
                             }
@@ -392,7 +379,7 @@ fun RivavaPortfolioScreen(
                     }
                 } else {
                     Text(
-                        "Loading crypto...",
+                        text = "Loading crypto...",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
