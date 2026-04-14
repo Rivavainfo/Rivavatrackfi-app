@@ -12,9 +12,9 @@ interface YahooFinanceApi {
     ): YahooFinanceResponse
 
     @GET("v7/finance/quote")
-    suspend fun getFallbackQuotes(
+    suspend fun getStocks(
         @Query("symbols") symbols: String
-    ): YahooQuoteResponse
+    ): YahooResponse
 }
 
 data class YahooFinanceResponse(
@@ -34,16 +34,16 @@ data class Meta(
     val previousClose: Double?
 )
 
-data class YahooQuoteResponse(
-    val quoteResponse: QuoteResponseObj?
+data class YahooResponse(
+    val quoteResponse: QuoteResponse?
 )
 
-data class QuoteResponseObj(
-    val result: List<YahooQuoteItem>?
+data class QuoteResponse(
+    val result: List<YahooStock>?
 )
 
-data class YahooQuoteItem(
-    val symbol: String?,
+data class YahooStock(
+    val symbol: String,
     val regularMarketPrice: Double?,
     val regularMarketChangePercent: Double?
 )

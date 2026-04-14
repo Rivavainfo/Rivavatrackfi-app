@@ -67,6 +67,7 @@ fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
+    marketViewModel: MarketViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -83,12 +84,8 @@ fun RivavaPortfolioScreen(
         }
     }
 
-    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
-    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
-    val rtxPrice = portfolioViewModel.rtxPrice.collectAsState(initial = 0.0).value
-    val rtxPreviousClose = portfolioViewModel.rtxPreviousClose.collectAsState(initial = 0.0).value
-    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
-    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
+    val stockData by marketViewModel.stocks.collectAsState()
+    val isLoading by marketViewModel.isLoading.collectAsState()
     val stockStates by viewModel.stockStates.collectAsState()
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
@@ -100,7 +97,7 @@ fun RivavaPortfolioScreen(
         cryptoViewModel.startPolling(cryptoIds)
     }
 
-    val groupedPortfolio = portfolioItems.groupBy { it.exchange }
+
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -324,130 +321,52 @@ fun RivavaPortfolioScreen(
                 }
             }
 
-            groupedPortfolio.forEach { (exchange, items) ->
-                item {
-                    val titleText = if (exchange == "NSE") "NSE India" else "NYSE US"
-                    val subtitleText = if (exchange == "NSE") "INDIAN BLUE CHIPS" else "WALL STREET TECH"
-                    val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-                    val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else PrimaryContainerSky
-                    val totalValue = if (isNyse) "$42,912.18" else "₹82,44,120"
-                    val dailyChange = if (isNyse) "+0.9% today" else "+1.8% today"
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(title = "My Portfolio")
 
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                Column {
-                                    Text(
-                                        text = titleText,
-                                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                                        color = primaryColor
-                                    )
-                                    Text(
-                                        text = subtitleText,
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Medium,
-                                            letterSpacing = 0.5.sp
-                                        ),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = totalValue,
-                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = dailyChange,
-                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = TertiaryEmerald
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .background(primaryColor.copy(alpha = 0.2f))
-                            )
+                    if (isLoading && stockData.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
-
+                    } else if (stockData.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                            Text(text = "Updating...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    } else {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items.forEach { item ->
-                                val state = stockStates[item.ticker]
-                                val currency = if (item.exchange == "NSE") "₹" else "$"
+                            // Ensure both RTX and IREDA show up. If one is missing from API, we use cached version (MarketRepo handles this).
+                            // If MarketRepo returns empty for one, we force "Updating..."
+                            val iredaItem = stockData.find { it.symbol == "IREDA.NS" }
+                            val rtxItem = stockData.find { it.symbol == "RTX" }
 
-                                val displayPrice = state?.data?.let {
-                                    currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                                } ?: item.marketPrice
+                            val displayList = listOf(
+                                Pair("NSE", iredaItem ?: com.rivavafi.universal.data.network.YahooStock("IREDA.NS", null, null)),
+                                Pair("NYSE", rtxItem ?: com.rivavafi.universal.data.network.YahooStock("RTX", null, null))
+                            )
 
-                                val displayChange = state?.data?.let {
-                                    val sign = if (it.dp >= 0) "+" else ""
-                                    "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                                } ?: "+0.00%"
+                            displayList.forEach { (exchange, stock) ->
+                                val price = stock.regularMarketPrice ?: 0.0
+                                val changePercent = stock.regularMarketChangePercent ?: 0.0
 
-                                val isPositive = state?.data?.let { it.dp >= 0 } ?: true
-
-                                var displayPriceFinal = displayPrice
-                                var displayChangeFinal = displayChange
-                                var isPositiveFinal = isPositive
-
-                                if (item.ticker == "IREDA") {
-                                    if (isLoading) {
-                                        displayPriceFinal = "Loading..."
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else if (isError && iredaPrice == 0.0) {
-                                        displayPriceFinal = "Error"
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else {
-                                        displayPriceFinal = "₹%.2f".format(iredaPrice)
-                                        val change = iredaPrice - iredaPreviousClose
-                                        val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
-                                        isPositiveFinal = change >= 0
-                                        displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                                    }
-                                } else if (item.ticker == "RTX") {
-                                    if (isLoading) {
-                                        displayPriceFinal = "Loading..."
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else if (isError && rtxPrice == 0.0) {
-                                        displayPriceFinal = "Error"
-                                        displayChangeFinal = "0.00%"
-                                        isPositiveFinal = true
-                                    } else {
-                                        displayPriceFinal = "$%.2f".format(rtxPrice)
-                                        val change = rtxPrice - rtxPreviousClose
-                                        val changePercent = if (rtxPreviousClose > 0) (change / rtxPreviousClose) * 100 else 0.0
-                                        isPositiveFinal = change >= 0
-                                        displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                                    }
-                                }
+                                val isPositive = changePercent >= 0
+                                val prefix = if (exchange == "NSE") "₹" else "$"
+                                val formattedPrice = if (price > 0) "$prefix${String.format(java.util.Locale.US, "%.2f", price)}" else "Updating..."
+                                val formattedChange = "${if(isPositive) "+" else ""}${String.format(java.util.Locale.US, "%.2f", changePercent)}%"
 
                                 PortfolioStockCard(
-                                    exchange = item.exchange,
-                                    ticker = item.ticker,
-                                    companyName = item.companyName,
-                                    marketPrice = displayPriceFinal,
-                                    isPositive = isPositiveFinal,
-                                    percentageChange = displayChangeFinal,
+                                    exchange = exchange,
+                                    ticker = stock.symbol.replace(".NS", ""),
+                                    companyName = "",
+                                    marketPrice = formattedPrice,
+                                    isPositive = isPositive,
+                                    percentageChange = formattedChange,
                                     onValueClick = { focus ->
-                                        onNavigateToDetail(item.ticker, focus)
+                                        onNavigateToDetail(stock.symbol.replace(".NS", ""), focus)
                                     }
                                 )
                             }
