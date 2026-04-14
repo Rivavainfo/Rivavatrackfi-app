@@ -103,7 +103,7 @@ fun DashboardScreen(
 
                         LaunchedEffect(pagerState.currentPage) {
                             if (displayNews.size > 1) {
-                                kotlinx.coroutines.delay(3000)
+                                kotlinx.coroutines.delay(15000)
                                 val nextPage = (pagerState.currentPage + 1) % displayNews.size
                                 pagerState.animateScrollToPage(nextPage)
                             }
