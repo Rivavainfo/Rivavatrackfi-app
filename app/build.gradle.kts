@@ -34,13 +34,7 @@ android {
         }
     }
 
-    lint {
-        abortOnError = false
-    }
     defaultConfig {
-        buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"1JCULNPFKQXWC62U\"")
-        buildConfigField("String", "NEWS_API_KEY", "\"110b0e149cb34598b1fb69ba8a78963\"")
-        buildConfigField("String", "FINNHUB_API_KEY", "\"d7efv4pr01qi33g64emgd7efv4pr01qi33g64en0\"")
         applicationId = "com.rivavafi.universal"
         minSdk = 24
         targetSdk = 34
@@ -136,7 +130,6 @@ dependencies {
     // Coil
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil:2.6.0")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
 
     // WorkManager
     val workVersion = "2.9.0"
