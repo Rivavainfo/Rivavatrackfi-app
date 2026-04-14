@@ -22,12 +22,6 @@ class PortfolioViewModel @Inject constructor(
     private val _iredaPreviousClose = MutableStateFlow(0.0)
     val iredaPreviousClose: StateFlow<Double> = _iredaPreviousClose
 
-    private val _rtxPrice = MutableStateFlow(0.0)
-    val rtxPrice: StateFlow<Double> = _rtxPrice
-
-    private val _rtxPreviousClose = MutableStateFlow(0.0)
-    val rtxPreviousClose: StateFlow<Double> = _rtxPreviousClose
-
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -41,44 +35,29 @@ class PortfolioViewModel @Inject constructor(
     private fun startPolling() {
         viewModelScope.launch {
             while (isActive) {
-                fetchData()
-                delay(900000) // 15 minutes
+                fetchIredaData()
+                delay(15000) // Poll every 15 seconds
             }
         }
     }
 
-    private suspend fun fetchData() {
-        _isLoading.value = true
-        var success = false
+    private suspend fun fetchIredaData() {
         try {
-            val response = yahooFinanceApi.getFallbackQuotes("IREDA.NS,RTX")
-            val items = response.quoteResponse?.result ?: emptyList()
+            val response = yahooFinanceApi.getIredaStockData()
+            val meta = response.chart?.result?.firstOrNull()?.meta
 
-            items.forEach { item ->
-                val price = item.regularMarketPrice ?: 0.0
-                val changePercent = item.regularMarketChangePercent ?: 0.0
-
-                // Reverse engineer previous close: prevClose = price / (1 + changePercent/100)
-                val prevClose = if (changePercent != -100.0) price / (1 + changePercent / 100) else 0.0
-
-                if (item.symbol?.contains("IREDA") == true) {
-                    _iredaPrice.value = price
-                    _iredaPreviousClose.value = prevClose
-                } else if (item.symbol?.contains("RTX") == true) {
-                    _rtxPrice.value = price
-                    _rtxPreviousClose.value = prevClose
-                }
-            }
-            if (items.isNotEmpty()) {
-                success = true
+            if (meta?.regularMarketPrice != null && meta.previousClose != null) {
+                _iredaPrice.value = meta.regularMarketPrice
+                _iredaPreviousClose.value = meta.previousClose
                 _isError.value = false
+            } else {
+                // Keep previous data but maybe log warning
+                _isError.value = true
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            _isError.value = true
         } finally {
-            if (!success) {
-                _isError.value = true
-            }
             _isLoading.value = false
         }
     }
