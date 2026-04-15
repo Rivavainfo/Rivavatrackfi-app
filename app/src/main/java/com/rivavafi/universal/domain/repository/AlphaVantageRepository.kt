@@ -1,20 +1,17 @@
 package com.rivavafi.universal.domain.repository
 
-import com.rivavafi.universal.domain.api.AlphaVantageApi
+import com.rivavafi.universal.domain.api.StockApi
 import com.rivavafi.universal.domain.api.Quote
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class AlphaVantageRepository @Inject constructor() {
+class AlphaVantageRepository {
 
     private val api = Retrofit.Builder()
         .baseUrl("https://www.alphavantage.co/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-        .create(AlphaVantageApi::class.java)
+        .create(StockApi::class.java)
 
     private val cache = mutableMapOf<String, Quote>()
 

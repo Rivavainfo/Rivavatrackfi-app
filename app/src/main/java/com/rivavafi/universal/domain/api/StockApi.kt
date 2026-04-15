@@ -1,9 +1,8 @@
 package com.rivavafi.universal.domain.api
 
-import com.google.gson.annotations.SerializedName
-import com.rivavafi.universal.BuildConfig
 import retrofit2.http.GET
 import retrofit2.http.Query
+import com.google.gson.annotations.SerializedName
 
 data class AlphaResponse(
     @SerializedName("Global Quote")
@@ -21,7 +20,7 @@ data class Quote(
     val changePercent: String?
 )
 
-interface AlphaVantageApi {
+interface StockApi {
     @GET("query")
     suspend fun getStockPrice(
         @Query("function") function: String = "GLOBAL_QUOTE",
