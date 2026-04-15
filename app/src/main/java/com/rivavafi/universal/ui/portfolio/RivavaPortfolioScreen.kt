@@ -1,5 +1,6 @@
 package com.rivavafi.universal.ui.portfolio
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import java.util.Locale
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,6 +49,9 @@ import android.view.WindowManager
 import android.content.ContextWrapper
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.app.Activity
 
 data class PortfolioItem(
     val exchange: String,
@@ -67,6 +74,17 @@ fun RivavaPortfolioScreen(
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+    var isUnlocked by remember { mutableStateOf(prefs.getBoolean("portfolio_unlocked", false)) }
+    var showUnlockDialog by remember { mutableStateOf(false) }
+
+    val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            isUnlocked = true
+            showUnlockDialog = false
+        }
+    }
+
     DisposableEffect(Unit) {
         var ctx = context
         while (ctx is ContextWrapper) {
@@ -80,16 +98,64 @@ fun RivavaPortfolioScreen(
         }
     }
 
+    if (showUnlockDialog) {
+        PremiumUnlockDialog(
+            userName = "",
+            onDismiss = { showUnlockDialog = false },
+            onUnlockSuccess = {
+                prefs.edit().putBoolean("portfolio_unlocked", true).apply()
+                isUnlocked = true
+                showUnlockDialog = false
+            },
+            onPayClick = {
+                val intent = android.content.Intent(context, PaymentActivity::class.java)
+                paymentLauncher.launch(intent)
+                showUnlockDialog = false
+            }
+        )
+    }
+
+    if (!isUnlocked) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "🔒 Portfolio Locked",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Button(
+                        onClick = { showUnlockDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Unlock for ₹11 or Enter Key")
+                    }
+                }
+            }
+        }
+        return
+    }
+
     val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
     val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
     val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
     val isError = portfolioViewModel.isError.collectAsState(initial = false).value
 
     val stockStates by viewModel.stockStates.collectAsState()
-    val alphaStockData by alphaViewModel.stockData.collectAsState()
-    val alphaIsLoading by alphaViewModel.isLoading.collectAsState()
 
-    val marketNews by viewModel.marketNews.collectAsState()
+
+
+
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
@@ -185,138 +251,30 @@ fun RivavaPortfolioScreen(
             }
 
             item {
-                if (marketNews.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
-                } else {
-                    val displayNews = marketNews.take(5)
-                    val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    SectionHeader(title = "Market News")
+
                     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-                    LaunchedEffect(pagerState.currentPage) {
-                        if (displayNews.size > 1) {
-                            delay(4000)
-                            val nextPage = (pagerState.currentPage + 1) % displayNews.size
-                            pagerState.animateScrollToPage(nextPage)
-                        }
-                    }
+                    // Indian Market
+                    Text(text = "🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
+                    CuratedNewsCard(title = "Business Standard", url = "https://www.business-standard.com/", uriHandler = uriHandler)
+                    CuratedNewsCard(title = "The Economic Times", url = "https://economictimes.indiatimes.com/", uriHandler = uriHandler)
 
-                    androidx.compose.foundation.pager.HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(280.dp),
-                        contentPadding = PaddingValues(horizontal = 24.dp),
-                        pageSpacing = 16.dp,
-                        beyondBoundsPageCount = 1
-                    ) { page ->
-                    Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
-                        val newsItem = displayNews[page]
-                        val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
-                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
-                        val newsHeadline = newsItem.headline
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable {
-                                    try {
-                                        uriHandler.openUri(newsUrl)
-                                    } catch (e: Exception) {}
-                                }
-                        ) {
-                            coil.compose.AsyncImage(
-                                model = newsImage,
-                                contentDescription = "Abstract digital visualization",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                alpha = 0.4f
-                            )
+                    // US Market
+                    Text(text = "🇺🇸 US MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
+                    CuratedNewsCard(title = "The Wall Street Journal", url = "https://www.wsj.com/", uriHandler = uriHandler)
+                    CuratedNewsCard(title = "Bloomberg", url = "https://www.bloomberg.com/", uriHandler = uriHandler)
+                    CuratedNewsCard(title = "The New York Times", url = "https://www.nytimes.com/", uriHandler = uriHandler)
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
-                                                MaterialTheme.colorScheme.background
-                                            )
-                                        )
-                                    )
-                            )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            Text(
-                                text = "MARKET NEWS",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 2.sp
-                                ),
-                                color = SecondaryPink
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = newsHeadline,
-                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = Color.White,
-                                lineHeight = 32.sp,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "READ ANALYSIS",
-                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = PrimarySky
-                                    )
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = null,
-                                        tint = PrimarySky,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-
-                                // Pager Indicators
-                                if (displayNews.size > 1) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        repeat(displayNews.size) { index ->
-                                            val isSelected = pagerState.currentPage == index
-                                            Box(
-                                                modifier = Modifier
-                                                    .height(6.dp)
-                                                    .width(if (isSelected) 16.dp else 6.dp)
-                                                    .clip(RoundedCornerShape(3.dp))
-                                                    .background(if (isSelected) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    }
-                }
+                    // International Market
+                    Text(text = "🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
+                    CuratedNewsCard(title = "Financial Times", url = "https://www.ft.com/", uriHandler = uriHandler)
+                    CuratedNewsCard(title = "The Economist", url = "https://www.economist.com/", uriHandler = uriHandler)
                 }
             }
 
@@ -324,39 +282,63 @@ fun RivavaPortfolioScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     SectionHeader(title = "My Portfolio")
 
-                    if (alphaIsLoading) {
-                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                        }
-                    } else if (alphaStockData.isEmpty()) {
-                        Text(text = "Data unavailable", color = MaterialTheme.colorScheme.error)
-                    } else {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            alphaStockData.forEach { stock ->
-                                val change = stock.changePercent?.let {
-                                    if (it.startsWith("-")) it else "+$it"
-                                } ?: "--"
-                                val isPositive = !(stock.changePercent?.startsWith("-") ?: false)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        val items = listOf(
+                            PortfolioItem(exchange = "NYSE", ticker = "RTX", companyName = "Raytheon Technologies", marketPrice = "$118.00"),
+                            PortfolioItem(exchange = "NSE", ticker = "IREDA", companyName = "IREDA", marketPrice = "₹248.50")
+                        )
 
-                                val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
-                                val resolvedExchange = if (isIndian) "NSE" else "NYSE"
-                                val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
+                        items.forEach { item ->
+                            val state = stockStates[item.ticker]
+                            val currency = if (item.exchange == "NSE") "₹" else "$"
 
-                                PortfolioStockCard(
-                                    exchange = resolvedExchange,
-                                    ticker = stock.symbol?.replace(".BSE", "")?.replace(".NS", "") ?: "N/A",
-                                    companyName = "",
-                                    marketPrice = priceFormatted,
-                                    isPositive = isPositive,
-                                    percentageChange = change,
-                                    onValueClick = { focus ->
-                                        stock.symbol?.let { onNavigateToDetail(it, focus) }
-                                    }
-                                )
+                            val displayPrice = state?.data?.let {
+                                currency + String.format(Locale.getDefault(), "%.2f", it.c)
+                            } ?: item.marketPrice
+
+                            val displayChange = state?.data?.let {
+                                val sign = if (it.dp >= 0) "+" else ""
+                                "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
+                            } ?: "+0.00%"
+
+                            val isPositive = state?.data?.let { it.dp >= 0 } ?: true
+
+                            var displayPriceFinal = displayPrice
+                            var displayChangeFinal = displayChange
+                            var isPositiveFinal = isPositive
+
+                            if (item.ticker == "IREDA") {
+                                if (isLoading) {
+                                    displayPriceFinal = "Loading..."
+                                    displayChangeFinal = "0.00%"
+                                    isPositiveFinal = true
+                                } else if (isError && iredaPrice == 0.0) {
+                                    displayPriceFinal = item.marketPrice
+                                    displayChangeFinal = "+0.00%"
+                                    isPositiveFinal = true
+                                } else {
+                                    displayPriceFinal = "₹%.2f".format(iredaPrice)
+                                    val change = iredaPrice - iredaPreviousClose
+                                    val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
+                                    isPositiveFinal = change >= 0
+                                    displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
+                                }
                             }
+
+                            PortfolioStockCard(
+                                exchange = item.exchange,
+                                ticker = item.ticker,
+                                companyName = item.companyName,
+                                marketPrice = displayPriceFinal,
+                                isPositive = isPositiveFinal,
+                                percentageChange = displayChangeFinal,
+                                onValueClick = { focus ->
+                                    onNavigateToDetail(item.ticker, focus)
+                                }
+                            )
                         }
                     }
                 }
@@ -482,6 +464,40 @@ fun CryptoCard(id: String, data: CryptoData) {
                 text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", data.change24h)}%",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = color
+            )
+        }
+    }
+}
+
+@Composable
+fun CuratedNewsCard(title: String, url: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(url)
+                } catch (e: Exception) {}
+            }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Read News",
+                tint = PrimarySky,
+                modifier = Modifier.size(20.dp)
             )
         }
     }

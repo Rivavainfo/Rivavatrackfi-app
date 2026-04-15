@@ -132,6 +132,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("io.coil-kt:coil:2.6.0")
 
+    // Razorpay Checkout
+    implementation("com.razorpay:checkout:1.6.41")
+
     // WorkManager
     val workVersion = "2.9.0"
     implementation("androidx.work:work-runtime-ktx:$workVersion")
