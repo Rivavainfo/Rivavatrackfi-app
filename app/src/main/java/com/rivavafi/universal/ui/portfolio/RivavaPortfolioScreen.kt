@@ -62,14 +62,11 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-val stocksToLoad = listOf("AAPL", "GOOGL", "TSLA", "RELIANCE.BSE")
-
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
-    alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
@@ -146,12 +143,7 @@ fun RivavaPortfolioScreen(
         return
     }
 
-    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
-    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
-    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
-    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
 
-    val stockStates by viewModel.stockStates.collectAsState()
 
 
 
@@ -162,7 +154,6 @@ fun RivavaPortfolioScreen(
 
     LaunchedEffect(Unit) {
         viewModel.startPolling(emptyList()) // maintain for other dependencies like news
-        alphaViewModel.startAutoRefresh(stocksToLoad)
         cryptoViewModel.startPolling(cryptoIds)
     }
 
@@ -275,10 +266,7 @@ fun RivavaPortfolioScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val items = listOf(
-                            PortfolioItem(exchange = "NYSE", ticker = "RTX", companyName = "Raytheon Technologies", marketPrice = "$118.00"),
-                            PortfolioItem(exchange = "NSE", ticker = "IREDA", companyName = "IREDA", marketPrice = "₹248.50")
-                        )
+
 
                         val liveStocks = portfolioViewModel.liveStocks.collectAsState().value
 
