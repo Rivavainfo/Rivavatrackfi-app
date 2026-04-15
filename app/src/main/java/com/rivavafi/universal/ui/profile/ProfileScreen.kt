@@ -500,42 +500,23 @@ fun ProfileScreen(
                     onClick = onNavigateToHelpCenter
                 )
 
-                Surface(
-                    onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/"))
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = androidx.compose.ui.Modifier
-                        .fillMaxWidth()
-                        .height(72.dp),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f),
-                ) {
-                    Row(
-                        modifier = androidx.compose.ui.Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        androidx.compose.foundation.Image(
-                            painter = androidx.compose.ui.res.painterResource(id = com.rivavafi.universal.R.drawable.rivava_logo),
-                            contentDescription = "Rivava Logo",
-                            modifier = androidx.compose.ui.Modifier.height(32.dp),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
-                        )
-                    }
-                }
 
                 QuickActionItem(
                     icon = Icons.Default.Logout,
                     title = "Logout",
                     tint = MaterialTheme.colorScheme.error,
-                    onClick = { viewModel.logout() }
+                    onClick = {
+                        viewModel.logout()
+                        var ctx = context
+                        while (ctx is android.content.ContextWrapper) {
+                            if (ctx is android.app.Activity) break
+                            ctx = ctx.baseContext
+                        }
+                        val intent = android.content.Intent(context, com.rivavafi.universal.ui.auth.AuthActivity::class.java)
+                        intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        context.startActivity(intent)
+                        (ctx as? android.app.Activity)?.finish()
+                    }
                 )
             }
 
