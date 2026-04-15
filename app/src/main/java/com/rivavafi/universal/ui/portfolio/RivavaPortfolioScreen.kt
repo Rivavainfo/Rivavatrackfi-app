@@ -206,75 +206,64 @@ fun RivavaPortfolioScreen(
                     )
                 }
 
-                // Total Valuation
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "TOTAL VALUATION",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    )
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "$142,850.42",
-                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
-                            color = Color.White
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .padding(bottom = 8.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(TertiaryEmerald.copy(alpha = 0.1f))
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                contentDescription = null,
-                                tint = TertiaryEmerald,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "+2.4%",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = TertiaryEmerald
-                            )
-                        }
-                    }
-                }
+
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionHeader(title = "Market News")
+                SectionHeader(title = "Market News")
+                Spacer(modifier = Modifier.height(16.dp))
+                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                val newsItems = viewModel.marketNews.collectAsState().value
 
-                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-
-                    // Indian Market
-                    Text(text = "🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
-                    CuratedNewsCard(title = "Business Standard", url = "https://www.business-standard.com/", uriHandler = uriHandler)
-                    CuratedNewsCard(title = "The Economic Times", url = "https://economictimes.indiatimes.com/", uriHandler = uriHandler)
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // US Market
-                    Text(text = "🇺🇸 US MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
-                    CuratedNewsCard(title = "The Wall Street Journal", url = "https://www.wsj.com/", uriHandler = uriHandler)
-                    CuratedNewsCard(title = "Bloomberg", url = "https://www.bloomberg.com/", uriHandler = uriHandler)
-                    CuratedNewsCard(title = "The New York Times", url = "https://www.nytimes.com/", uriHandler = uriHandler)
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // International Market
-                    Text(text = "🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.labelMedium, color = PrimarySky)
-                    CuratedNewsCard(title = "Financial Times", url = "https://www.ft.com/", uriHandler = uriHandler)
-                    CuratedNewsCard(title = "The Economist", url = "https://www.economist.com/", uriHandler = uriHandler)
+                if (newsItems.isEmpty()) {
+                    Text("Loading news...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(newsItems) { newsItem ->
+                            Card(
+                                modifier = Modifier
+                                    .width(280.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        try {
+                                            uriHandler.openUri(newsItem.url)
+                                        } catch (e: Exception) {}
+                                    }
+                                    .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    if (newsItem.image.isNotBlank()) {
+                                        coil.compose.AsyncImage(
+                                            model = newsItem.image,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(140.dp)
+                                                .clip(RoundedCornerShape(12.dp)),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                    Text(
+                                        text = newsItem.headline,
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = newsItem.source,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = PrimarySky
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -291,52 +280,28 @@ fun RivavaPortfolioScreen(
                             PortfolioItem(exchange = "NSE", ticker = "IREDA", companyName = "IREDA", marketPrice = "₹248.50")
                         )
 
-                        items.forEach { item ->
-                            val state = stockStates[item.ticker]
-                            val currency = if (item.exchange == "NSE") "₹" else "$"
+                        val liveStocks = portfolioViewModel.liveStocks.collectAsState().value
 
-                            val displayPrice = state?.data?.let {
-                                currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                            } ?: item.marketPrice
+                        liveStocks.forEach { stock ->
+                            val isIndian = stock.symbol == "IREDA"
+                            val currency = if (isIndian) "₹" else "$"
+                            val exchange = if (isIndian) "NSE" else "NYSE"
+                            val company = if (isIndian) "IREDA" else "Raytheon Technologies"
 
-                            val displayChange = state?.data?.let {
-                                val sign = if (it.dp >= 0) "+" else ""
-                                "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                            } ?: "+0.00%"
-
-                            val isPositive = state?.data?.let { it.dp >= 0 } ?: true
-
-                            var displayPriceFinal = displayPrice
-                            var displayChangeFinal = displayChange
-                            var isPositiveFinal = isPositive
-
-                            if (item.ticker == "IREDA") {
-                                if (isLoading) {
-                                    displayPriceFinal = "Loading..."
-                                    displayChangeFinal = "0.00%"
-                                    isPositiveFinal = true
-                                } else if (isError && iredaPrice == 0.0) {
-                                    displayPriceFinal = item.marketPrice
-                                    displayChangeFinal = "+0.00%"
-                                    isPositiveFinal = true
-                                } else {
-                                    displayPriceFinal = "₹%.2f".format(iredaPrice)
-                                    val change = iredaPrice - iredaPreviousClose
-                                    val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
-                                    isPositiveFinal = change >= 0
-                                    displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                                }
-                            }
+                            val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", stock.price)
+                            val isPos = stock.change >= 0
+                            val sign = if (isPos) "+" else ""
+                            val displayChange = "$sign${String.format(Locale.getDefault(), "%.2f", stock.change)}%"
 
                             PortfolioStockCard(
-                                exchange = item.exchange,
-                                ticker = item.ticker,
-                                companyName = item.companyName,
-                                marketPrice = displayPriceFinal,
-                                isPositive = isPositiveFinal,
-                                percentageChange = displayChangeFinal,
+                                exchange = exchange,
+                                ticker = stock.symbol,
+                                companyName = company,
+                                marketPrice = displayPrice,
+                                isPositive = isPos,
+                                percentageChange = displayChange,
                                 onValueClick = { focus ->
-                                    onNavigateToDetail(item.ticker, focus)
+                                    onNavigateToDetail(stock.symbol, focus)
                                 }
                             )
                         }
