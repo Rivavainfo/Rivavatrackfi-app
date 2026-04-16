@@ -3,9 +3,12 @@ import re
 with open("app/src/main/java/com/rivavafi/universal/ui/portfolio/RivavaPortfolioScreen.kt", "r") as f:
     content = f.read()
 
-# Let's change the early return to a proper if-else
-# The current file:
-search = """        Scaffold(
+# Let's fix the portfolio crash again properly from the beginning state.
+# We know the issue was an early `return` before `collectAsState`.
+# We need to wrap the Scaffold in `if (!isUnlocked) { ... } else { ... }` carefully.
+
+search = """    if (!isUnlocked) {
+        Scaffold(
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             Box(
@@ -35,10 +38,42 @@ search = """        Scaffold(
         return
     }
 
-    val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()"""
+    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
+    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
 
+    val stockStates by viewModel.stockStates.collectAsState()
 
-replace = """        Scaffold(
+    val marketNews by viewModel.marketNews.collectAsState()
+    val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+
+    val cryptoIds = listOf("bitcoin", "ethereum", "solana")
+
+    LaunchedEffect(Unit) {
+        viewModel.startPolling(emptyList()) // maintain for other dependencies like news
+        cryptoViewModel.startPolling(cryptoIds)
+    }"""
+
+replace = """    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
+    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
+
+    val stockStates by viewModel.stockStates.collectAsState()
+
+    val marketNews by viewModel.marketNews.collectAsState()
+    val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+
+    val cryptoIds = listOf("bitcoin", "ethereum", "solana")
+
+    LaunchedEffect(Unit) {
+        viewModel.startPolling(emptyList()) // maintain for other dependencies like news
+        cryptoViewModel.startPolling(cryptoIds)
+    }
+
+    if (!isUnlocked) {
+        Scaffold(
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
             Box(
@@ -65,17 +100,10 @@ replace = """        Scaffold(
                 }
             }
         }
-    } else {
-
-    val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()"""
-
+        return
+    }"""
 
 content = content.replace(search, replace)
-content += "\n}"
-
-# We must also make sure there's no unused viewmodels or collectAsState issues that might crash
-# In compose, using viewmodel instances in conditionals can crash if not careful, but the viewmodel is instantiated at the top.
-# Let's see if this compiles.
 
 with open("app/src/main/java/com/rivavafi/universal/ui/portfolio/RivavaPortfolioScreen.kt", "w") as f:
     f.write(content)

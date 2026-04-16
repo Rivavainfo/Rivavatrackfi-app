@@ -1,8 +1,5 @@
 package com.rivavafi.universal.ui.portfolio
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
@@ -43,8 +40,7 @@ import kotlinx.coroutines.delay
 fun PremiumUnlockDialog(
     userName: String,
     onDismiss: () -> Unit,
-    onUnlockSuccess: () -> Unit,
-    onPayClick: (() -> Unit)? = null
+    onUnlockSuccess: () -> Unit
 ) {
     var secretKeyInput by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
@@ -131,13 +127,9 @@ fun PremiumUnlockDialog(
 
                             Button(
                                 onClick = {
-                                    if (secretKeyInput == "RIVAVA_UNLOCK_2026" || secretKeyInput.equals(userName, ignoreCase = true)) {
-                                        val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
-                                        prefs.edit().putBoolean("portfolio_unlocked", true).apply()
-                                        android.widget.Toast.makeText(context, "Unlocked Successfully", android.widget.Toast.LENGTH_SHORT).show()
+                                    if (secretKeyInput.equals(userName, ignoreCase = true)) {
                                         currentStep = UnlockStep.Success
                                     } else {
-                                        android.widget.Toast.makeText(context, "Invalid Key", android.widget.Toast.LENGTH_SHORT).show()
                                         showError = true
                                     }
                                 },
@@ -156,7 +148,17 @@ fun PremiumUnlockDialog(
 
                             Button(
                                 onClick = {
-                                    onPayClick?.invoke()
+                                    try {
+                                        val encodedNote = java.net.URLEncoder.encode("Rivava Premium Unlock", "UTF-8")
+                                        val uriString = "upi://pay?pa=adityaz190zz@okicici&pn=Rivava&am=11&cu=INR&tn=$encodedNote"
+                                        val upiIntent = Intent(Intent.ACTION_VIEW, Uri.parse(uriString))
+                                        context.startActivity(Intent.createChooser(upiIntent, "Pay with..."))
+                                    } catch (e: android.content.ActivityNotFoundException) {
+                                        android.widget.Toast.makeText(context, "No UPI app found. Please install one to continue.", android.widget.Toast.LENGTH_LONG).show()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                    currentStep = UnlockStep.ConfirmPayment
                                 },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
@@ -164,7 +166,7 @@ fun PremiumUnlockDialog(
                             ) {
                                 Icon(Icons.Default.Payment, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Pay ₹11 via Razorpay", fontWeight = FontWeight.Bold)
+                                Text("Pay ₹11 via UPI", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
