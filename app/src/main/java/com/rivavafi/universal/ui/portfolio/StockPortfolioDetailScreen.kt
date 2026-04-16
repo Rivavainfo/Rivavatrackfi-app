@@ -50,7 +50,8 @@ fun StockPortfolioDetailScreen(
     initialFocus: String? = null,
     onBack: () -> Unit,
     onNavigateToPdfViewer: ((String) -> Unit)? = null,
-    viewModel: StockViewModel = hiltViewModel()
+    viewModel: StockViewModel = hiltViewModel(),
+    portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
     DisposableEffect(Unit) {
