@@ -1,68 +1,50 @@
 package com.rivavafi.universal.ui.portfolio
 
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.Intent
-import android.view.WindowManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.rivavafi.universal.ui.components.PortfolioStockCard
+import com.rivavafi.universal.ui.theme.PrimaryContainerSky
+import com.rivavafi.universal.ui.components.SectionHeader
+import com.rivavafi.universal.ui.theme.PremiumGradientStart
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import com.rivavafi.universal.R
-import com.rivavafi.universal.ui.components.PortfolioStockCard
-import com.rivavafi.universal.ui.components.SectionHeader
-import com.rivavafi.universal.ui.theme.EmeraldGreen
-import com.rivavafi.universal.ui.theme.PrimarySky
-import com.rivavafi.universal.ui.theme.VibrantRed
-import com.rivavafi.universal.ui.theme.glassMorphism
 import java.util.Locale
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
+import com.rivavafi.universal.ui.theme.glassMorphism
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import com.rivavafi.universal.ui.theme.AmoledBlack
+import com.rivavafi.universal.ui.theme.TertiaryEmerald
+import com.rivavafi.universal.ui.theme.SecondaryPink
+import com.rivavafi.universal.ui.theme.PrimarySky
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import android.view.WindowManager
+import android.content.ContextWrapper
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 
 data class PortfolioItem(
     val exchange: String,
@@ -73,64 +55,63 @@ data class PortfolioItem(
     val date: String = "—"
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+val stocksToLoad = listOf("AAPL", "GOOGL", "TSLA", "RELIANCE.BSE")
+
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
     alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
-    portfolioViewModel: PortfolioViewModel = hiltViewModel()
+    portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
     DisposableEffect(Unit) {
         var ctx = context
-        while (ctx is ContextWrapper && ctx !is Activity) {
+        while (ctx is ContextWrapper) {
+            if (ctx is android.app.Activity) break
             ctx = ctx.baseContext
         }
-
-        val window = (ctx as? Activity)?.window
+        val window = (ctx as? android.app.Activity)?.window
         window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-
         onDispose {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 
-    if (showUnlockDialog) {
-        PremiumUnlockDialog(
-            userName = "",
-            onDismiss = { showUnlockDialog = false },
-            onUnlockSuccess = {
-                prefs.edit().putBoolean("portfolio_unlocked", true).apply()
-                isUnlocked = true
-                showUnlockDialog = false
-            },
-            onPayClick = {
-                paymentLauncher.launch(Intent(context, PaymentActivity::class.java))
-                showUnlockDialog = false
-            }
-        )
-    }
+    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
+    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
+    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
+    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
+
+    val stockStates by viewModel.stockStates.collectAsState()
+    val alphaStockData by alphaViewModel.stockData.collectAsState()
+    val alphaIsLoading by alphaViewModel.isLoading.collectAsState()
 
     val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
+
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        viewModel.startPolling(emptyList())
+        viewModel.startPolling(emptyList()) // maintain for other dependencies like news
+        alphaViewModel.startAutoRefresh(stocksToLoad)
         cryptoViewModel.startPolling(cryptoIds)
     }
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 140.dp),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 140.dp), // Provide enough bottom padding for the floating nav bar
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             item {
+                // Custom Logo Header and Refresh
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -143,20 +124,63 @@ fun RivavaPortfolioScreen(
                         cryptoViewModel.refresh()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            androidx.compose.material.icons.Icons.Default.Refresh,
                             contentDescription = "Refresh",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Image(
-                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.rivava_logo),
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.rivavafi.universal.R.drawable.rivava_logo),
                         contentDescription = "Rivava Logo",
                         modifier = Modifier
                             .size(24.dp)
                             .clip(RoundedCornerShape(6.dp)),
-                        contentScale = ContentScale.Crop
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
+                }
+
+                // Total Valuation
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "TOTAL VALUATION",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.5.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "$142,850.42",
+                            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
+                            color = Color.White
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .padding(bottom = 8.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(TertiaryEmerald.copy(alpha = 0.1f))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = null,
+                                tint = TertiaryEmerald,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "+2.4%",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = TertiaryEmerald
+                            )
+                        }
+                    }
                 }
             }
 
@@ -166,28 +190,60 @@ fun RivavaPortfolioScreen(
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 } else {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        items(newsItems) { newsItem ->
-                            Card(
+                    val displayNews = marketNews.take(5)
+                    val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { displayNews.size })
+                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
+                    LaunchedEffect(pagerState.currentPage) {
+                        if (displayNews.size > 1) {
+                            delay(4000)
+                            val nextPage = (pagerState.currentPage + 1) % displayNews.size
+                            pagerState.animateScrollToPage(nextPage)
+                        }
+                    }
+
+                    androidx.compose.foundation.pager.HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        pageSpacing = 16.dp,
+                        beyondBoundsPageCount = 1
+                    ) { page ->
+                    Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(32.dp))) {
+                        val newsItem = displayNews[page]
+                        val newsUrl = newsItem.url.ifBlank { "https://www.google.com/search?q=${newsItem.headline}" }
+                        val newsImage = if (newsItem.image.isNotBlank()) newsItem.image else "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=60"
+                        val newsHeadline = newsItem.headline
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable {
+                                    try {
+                                        uriHandler.openUri(newsUrl)
+                                    } catch (e: Exception) {}
+                                }
+                        ) {
+                            coil.compose.AsyncImage(
+                                model = newsImage,
+                                contentDescription = "Abstract digital visualization",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                alpha = 0.4f
+                            )
+
+                            Box(
                                 modifier = Modifier
-                                    .width(280.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        runCatching { uriHandler.openUri(newsItem.url) }
-                                    }
-                                    .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    if (newsItem.image.isNotBlank()) {
-                                        AsyncImage(
-                                            model = newsItem.image,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(140.dp)
-                                                .clip(RoundedCornerShape(12.dp)),
-                                            contentScale = ContentScale.Crop
+                                    .fillMaxSize()
+                                    .background(
+                                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                MaterialTheme.colorScheme.background.copy(alpha = 0.4f),
+                                                MaterialTheme.colorScheme.background
+                                            )
                                         )
                                     )
                             )
@@ -268,41 +324,53 @@ fun RivavaPortfolioScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     SectionHeader(title = "My Portfolio")
 
-                    val liveStocks = portfolioViewModel.liveStocks.collectAsState().value
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        liveStocks.forEach { stock ->
-                            val isIndian = stock.symbol == "IREDA"
-                            val currency = if (isIndian) "₹" else "$"
-                            val exchange = if (isIndian) "NSE" else "NYSE"
-                            val company = if (isIndian) "IREDA" else "Raytheon Technologies"
+                    if (alphaIsLoading) {
+                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    } else if (alphaStockData.isEmpty()) {
+                        Text(text = "Data unavailable", color = MaterialTheme.colorScheme.error)
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            alphaStockData.forEach { stock ->
+                                val change = stock.changePercent?.let {
+                                    if (it.startsWith("-")) it else "+$it"
+                                } ?: "--"
+                                val isPositive = !(stock.changePercent?.startsWith("-") ?: false)
 
                                 val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
                                 val resolvedExchange = if (isIndian) "NSE" else "NYSE"
                                 val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
 
-                            PortfolioStockCard(
-                                exchange = exchange,
-                                ticker = stock.symbol,
-                                companyName = company,
-                                marketPrice = displayPrice,
-                                isPositive = isPos,
-                                percentageChange = displayChange,
-                                onValueClick = { focus -> onNavigateToDetail(stock.symbol, focus) }
-                            )
+                                PortfolioStockCard(
+                                    exchange = resolvedExchange,
+                                    ticker = stock.symbol?.replace(".BSE", "")?.replace(".NS", "") ?: "N/A",
+                                    companyName = "",
+                                    marketPrice = priceFormatted,
+                                    isPositive = isPositive,
+                                    percentageChange = change,
+                                    onValueClick = { focus ->
+                                        stock.symbol?.let { onNavigateToDetail(it, focus) }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
             item {
-                SectionHeader(title = "Crypto Assets")
+                SectionHeader(
+                    title = "Crypto Assets"
+                )
                 if (cryptoStates.isNotEmpty()) {
                     val availableCryptoIds = cryptoIds.filter { cryptoStates.containsKey(it) }
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                         items(availableCryptoIds) { id ->
                             cryptoStates[id]?.let { crypto ->
                                 CryptoCard(id = id, data = crypto)
@@ -319,13 +387,14 @@ fun RivavaPortfolioScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+
             item {
                 Text(
                     text = "Rates may not be updated, kindly check the redirect to see real prices.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -334,19 +403,64 @@ fun RivavaPortfolioScreen(
 }
 
 @Composable
+fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    Card(
+        modifier = Modifier
+            .width(260.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(news.url)
+                } catch (e: Exception) {}
+            }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            if (news.image.isNotBlank()) {
+                coil.compose.AsyncImage(
+                    model = news.image,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            Text(
+                text = news.headline,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = news.source,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
 fun CryptoCard(id: String, data: CryptoData) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val isPositive = data.change24h >= 0
-    val color = if (isPositive) EmeraldGreen else VibrantRed
-
+    val color = if (isPositive) com.rivavafi.universal.ui.theme.EmeraldGreen else com.rivavafi.universal.ui.theme.VibrantRed
     Card(
         modifier = Modifier
             .width(180.dp)
             .clip(RoundedCornerShape(16.dp))
             .clickable {
-                runCatching {
-                    uriHandler.openUri("https://www.google.com/search?q=$id+crypto+price")
-                }
+                val url = "https://www.google.com/search?q=$id+crypto+price"
+                try {
+                    uriHandler.openUri(url)
+                } catch(e: Exception) {}
             }
             .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
@@ -368,38 +482,6 @@ fun CryptoCard(id: String, data: CryptoData) {
                 text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", data.change24h)}%",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                 color = color
-            )
-        }
-    }
-}
-
-@Composable
-fun CuratedNewsCard(title: String, url: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { runCatching { uriHandler.openUri(url) } }
-            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Read News",
-                tint = PrimarySky,
-                modifier = Modifier.size(20.dp)
             )
         }
     }
