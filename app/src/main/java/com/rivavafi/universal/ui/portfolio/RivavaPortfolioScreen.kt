@@ -78,21 +78,11 @@ data class PortfolioItem(
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
+    alphaViewModel: AlphaVantageViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel(),
     portfolioViewModel: PortfolioViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
-    var isUnlocked by remember { mutableStateOf(prefs.getBoolean("portfolio_unlocked", false)) }
-    var showUnlockDialog by remember { mutableStateOf(false) }
-
-    val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            isUnlocked = true
-            showUnlockDialog = false
-        }
-    }
-
     DisposableEffect(Unit) {
         var ctx = context
         while (ctx is ContextWrapper && ctx !is Activity) {
@@ -123,6 +113,7 @@ fun RivavaPortfolioScreen(
         )
     }
 
+    val marketNews by viewModel.marketNews.collectAsState()
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
@@ -170,13 +161,10 @@ fun RivavaPortfolioScreen(
             }
 
             item {
-                SectionHeader(title = "Market News")
-                Spacer(modifier = Modifier.height(16.dp))
-                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                val newsItems = viewModel.marketNews.collectAsState().value
-
-                if (newsItems.isEmpty()) {
-                    Text("Loading news...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (marketNews.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 } else {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         items(newsItems) { newsItem ->
@@ -201,25 +189,78 @@ fun RivavaPortfolioScreen(
                                                 .clip(RoundedCornerShape(12.dp)),
                                             contentScale = ContentScale.Crop
                                         )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                    }
-                                    Text(
-                                        text = newsItem.headline,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                            )
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            Text(
+                                text = "MARKET NEWS",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp
+                                ),
+                                color = SecondaryPink
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = newsHeadline,
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                color = Color.White,
+                                lineHeight = 32.sp,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
                                     Text(
-                                        text = newsItem.source,
-                                        style = MaterialTheme.typography.labelMedium,
+                                        text = "READ ANALYSIS",
+                                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                         color = PrimarySky
                                     )
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null,
+                                        tint = PrimarySky,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+
+                                // Pager Indicators
+                                if (displayNews.size > 1) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        repeat(displayNews.size) { index ->
+                                            val isSelected = pagerState.currentPage == index
+                                            Box(
+                                                modifier = Modifier
+                                                    .height(6.dp)
+                                                    .width(if (isSelected) 16.dp else 6.dp)
+                                                    .clip(RoundedCornerShape(3.dp))
+                                                    .background(if (isSelected) PrimarySky else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                    }
+                }
                 }
             }
 
@@ -239,10 +280,9 @@ fun RivavaPortfolioScreen(
                             val exchange = if (isIndian) "NSE" else "NYSE"
                             val company = if (isIndian) "IREDA" else "Raytheon Technologies"
 
-                            val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", stock.price)
-                            val isPos = stock.change >= 0
-                            val sign = if (isPos) "+" else ""
-                            val displayChange = "$sign${String.format(Locale.getDefault(), "%.2f", stock.change)}%"
+                                val isIndian = stock.symbol?.contains(".BSE") == true || stock.symbol?.contains(".NS") == true
+                                val resolvedExchange = if (isIndian) "NSE" else "NYSE"
+                                val priceFormatted = stock.price?.let { if (isIndian) "₹$it" else "$$it" } ?: "Data unavailable"
 
                             PortfolioStockCard(
                                 exchange = exchange,
