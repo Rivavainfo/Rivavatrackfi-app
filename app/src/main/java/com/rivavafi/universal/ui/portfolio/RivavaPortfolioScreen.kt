@@ -112,42 +112,6 @@ fun RivavaPortfolioScreen(
         )
     }
 
-    if (!isUnlocked) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "🔒 Portfolio Locked",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Button(
-                        onClick = { showUnlockDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text("Unlock for ₹11 or Enter Key")
-                    }
-                }
-            }
-        }
-        return
-    }
-
-
-
-
-
-
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
@@ -156,6 +120,8 @@ fun RivavaPortfolioScreen(
         viewModel.startPolling(emptyList()) // maintain for other dependencies like news
         cryptoViewModel.startPolling(cryptoIds)
     }
+
+    // moved down
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -335,7 +301,6 @@ fun RivavaPortfolioScreen(
             }
         }
     }
-}
 
 @Composable
 fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
@@ -380,6 +345,51 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
             )
         }
     }
+@Composable
+fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    androidx.compose.material3.Card(
+        modifier = androidx.compose.ui.Modifier
+            .width(260.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(news.url)
+                } catch (e: Exception) {}
+            }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            if (news.image.isNotBlank()) {
+                coil.compose.AsyncImage(
+                    model = news.image,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            Text(
+                text = news.headline,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = news.source,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+}
 }
 
 @Composable
@@ -451,6 +461,51 @@ fun CuratedNewsCard(title: String, url: String, uriHandler: androidx.compose.ui.
                 contentDescription = "Read News",
                 tint = PrimarySky,
                 modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+
+}
+@Composable
+fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    androidx.compose.material3.Card(
+        modifier = androidx.compose.ui.Modifier
+            .width(260.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(news.url)
+                } catch (e: Exception) {}
+            }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            if (news.image.isNotBlank()) {
+                coil.compose.AsyncImage(
+                    model = news.image,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+            Text(
+                text = news.headline,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = news.source,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
