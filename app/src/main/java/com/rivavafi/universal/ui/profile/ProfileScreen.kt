@@ -499,11 +499,24 @@ fun ProfileScreen(
                     tint = MaterialTheme.colorScheme.tertiary,
                     onClick = onNavigateToHelpCenter
                 )
+
+
                 QuickActionItem(
                     icon = Icons.Default.Logout,
                     title = "Logout",
                     tint = MaterialTheme.colorScheme.error,
-                    onClick = { viewModel.logout() }
+                    onClick = {
+                        viewModel.logout()
+                        var ctx = context
+                        while (ctx is android.content.ContextWrapper) {
+                            if (ctx is android.app.Activity) break
+                            ctx = ctx.baseContext
+                        }
+                        val intent = android.content.Intent(context, com.rivavafi.universal.ui.auth.AuthActivity::class.java)
+                        intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        context.startActivity(intent)
+                        (ctx as? android.app.Activity)?.finish()
+                    }
                 )
             }
 
