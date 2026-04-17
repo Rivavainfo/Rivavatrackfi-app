@@ -74,7 +74,8 @@ class StockViewModel @Inject constructor(
 
             while (true) {
                 fetchQuotes(normalizedSymbols)
-                delay(10_000)
+                // Refresh every 10-15 seconds as per requirements
+                delay(12_000)
             }
         }
     }

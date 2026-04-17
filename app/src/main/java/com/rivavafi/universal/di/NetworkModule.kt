@@ -1,6 +1,5 @@
 package com.rivavafi.universal.di
 
-import com.rivavafi.universal.data.network.YahooFinanceApi
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockApiService
 import dagger.Module
@@ -30,17 +29,6 @@ object NetworkModule {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideYahooFinanceApi(client: OkHttpClient): YahooFinanceApi {
-        return Retrofit.Builder()
-            .baseUrl("https://query1.finance.yahoo.com/")
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(YahooFinanceApi::class.java)
     }
 
     @Provides
