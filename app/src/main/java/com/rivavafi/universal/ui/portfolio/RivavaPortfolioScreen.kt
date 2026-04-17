@@ -69,8 +69,7 @@ data class PortfolioItem(
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     viewModel: StockViewModel = hiltViewModel(),
-    cryptoViewModel: CryptoViewModel = hiltViewModel(),
-    portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    cryptoViewModel: CryptoViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
@@ -119,16 +118,12 @@ fun RivavaPortfolioScreen(
     }
 
     val stockStates by viewModel.stockStates.collectAsState()
-    val stocks by portfolioViewModel.stocks.collectAsState()
-    val isLoading by portfolioViewModel.isLoading.collectAsState()
-    val isError by portfolioViewModel.isError.collectAsState()
-
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
 
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        viewModel.startPolling(listOf("RTX")) // explicitly poll RTX
+        viewModel.startPolling(listOf("IREDA.NS", "RTX"))
         cryptoViewModel.startPolling(cryptoIds)
     }
 
@@ -215,28 +210,26 @@ fun RivavaPortfolioScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val requiredStocks = listOf("RTX", "IREDA.NS")
+                        val requiredStocks = listOf("IREDA.NS", "RTX")
                         requiredStocks.forEach { symbol ->
-                            val stock = stocks.find { it.symbol == symbol }
-                            val isIreda = symbol == "IREDA.NS"
+                            val normalizedSymbol = if (symbol == "IREDA") "IREDA.NS" else symbol
+                            val stockState = stockStates[normalizedSymbol]
+                            val quote = stockState?.data
+
+                            val isIreda = normalizedSymbol == "IREDA.NS"
                             val ticker = if (isIreda) "IREDA" else "RTX"
                             val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
                             val exchange = if (isIreda) "NSE" else "NYSE"
                             val currency = if (isIreda) "₹" else "$"
 
-                            var displayPrice = "Updating..."
-                            var displayChange = "0.00%"
-                            var isPositive = true
+                            val price = quote?.c ?: if (isIreda) 150.0 else 100.0
+                            val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
+                            val change = price - previousClose
+                            val changePercent = if (previousClose != 0.0) (change / previousClose) * 100 else 0.0
+                            val isPositive = change >= 0
 
-                            if (stock?.regularMarketPrice != null && stock.regularMarketChangePercent != null) {
-                                displayPrice = currency + String.format(Locale.getDefault(), "%.2f", stock.regularMarketPrice)
-                                val changePercent = stock.regularMarketChangePercent
-                                isPositive = changePercent >= 0
-                                displayChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                            } else if (!isLoading) {
-                                displayPrice = if (isIreda) "₹248.50" else "$118.00"
-                                displayChange = "+0.00%"
-                            }
+                            val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", price)
+                            val displayChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
 
                             PortfolioStockCard(
                                 exchange = exchange,

@@ -1,12 +1,15 @@
 package com.rivavafi.universal.ui.portfolio
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rivavafi.universal.domain.api.FinnhubCompanyProfileResponse
 import com.rivavafi.universal.domain.api.FinnhubNewsResponse
-import com.rivavafi.universal.domain.api.FinnhubQuoteResponse
+import com.rivavafi.universal.domain.api.StockResponse
+import com.rivavafi.universal.domain.repository.QuoteSource
 import com.rivavafi.universal.domain.repository.StockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +18,8 @@ import javax.inject.Inject
 
 data class StockState(
     val isLoading: Boolean = false,
-    val data: FinnhubQuoteResponse? = null,
-    val error: String? = null
+    val data: StockResponse,
+    val source: QuoteSource = QuoteSource.DEFAULT
 )
 
 data class CompanyProfileState(
@@ -29,7 +32,9 @@ class StockViewModel @Inject constructor(
     private val repository: StockRepository
 ) : ViewModel() {
 
-    private val _stockStates = MutableStateFlow<Map<String, StockState>>(emptyMap())
+    private val defaultSymbols = listOf("IREDA.NS", "RTX")
+
+    private val _stockStates = MutableStateFlow(defaultStockStateMap(defaultSymbols))
     val stockStates: StateFlow<Map<String, StockState>> = _stockStates
 
     private val _companyProfiles = MutableStateFlow<Map<String, CompanyProfileState>>(emptyMap())
@@ -41,30 +46,41 @@ class StockViewModel @Inject constructor(
     private val _companyNews = MutableStateFlow<Map<String, List<FinnhubNewsResponse>>>(emptyMap())
     val companyNews: StateFlow<Map<String, List<FinnhubNewsResponse>>> = _companyNews
 
-    private var currentSymbols: List<String> = emptyList()
-    private var pollingJob: kotlinx.coroutines.Job? = null
+    private var currentSymbols: List<String> = defaultSymbols
+    private var pollingJob: Job? = null
+
+    init {
+        startPolling(defaultSymbols)
+    }
 
     fun startPolling(symbols: List<String>) {
-        currentSymbols = symbols
+        val normalizedSymbols = symbols.map { normalizeSymbol(it) }.distinct()
+        currentSymbols = normalizedSymbols
+
+        // Ensure we always have a non-null state for every symbol that is being observed.
+        _stockStates.value = _stockStates.value.toMutableMap().apply {
+            normalizedSymbols.forEach { symbol ->
+                putIfAbsent(symbol, defaultStockState(symbol))
+            }
+        }
+
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
-            // Initial one-off fetches for profiles and general news
             fetchMarketNews()
-            symbols.forEach { symbol ->
+            normalizedSymbols.forEach { symbol ->
                 fetchCompanyProfile(symbol)
                 fetchCompanyNews(symbol)
             }
 
             while (true) {
-                fetchQuotes(symbols)
-                delay(15000) // Poll every 15 seconds
+                fetchQuotes(normalizedSymbols)
+                delay(10_000)
             }
         }
     }
 
     fun refresh() {
         if (currentSymbols.isNotEmpty()) {
-            _marketNews.value = emptyList() // Clear old data to trigger loading UI
             viewModelScope.launch {
                 fetchMarketNews()
                 currentSymbols.forEach { symbol ->
@@ -79,28 +95,13 @@ class StockViewModel @Inject constructor(
     private suspend fun fetchQuotes(symbols: List<String>) {
         symbols.forEach { symbol ->
             _stockStates.value = _stockStates.value.toMutableMap().apply {
-                put(symbol, get(symbol)?.copy(isLoading = true) ?: StockState(isLoading = true))
+                put(symbol, get(symbol)?.copy(isLoading = true) ?: defaultStockState(symbol).copy(isLoading = true))
             }
 
-            repository.getRealtimeQuote(symbol).collect { result ->
-                result.onSuccess { quote ->
-                    // Basic sanity check on Finnhub API rate limiting/empty responses (c == 0 usually means invalid symbol/key)
-                    if (quote.c != 0.0) {
-                        _stockStates.value = _stockStates.value.toMutableMap().apply {
-                            put(symbol, StockState(isLoading = false, data = quote, error = null))
-                        }
-                    } else {
-                        val mockData = generateMockData(symbol)
-                        _stockStates.value = _stockStates.value.toMutableMap().apply {
-                            put(symbol, StockState(isLoading = false, data = mockData, error = null))
-                        }
-                    }
-                }.onFailure {
-                    val mockData = generateMockData(symbol)
-                    _stockStates.value = _stockStates.value.toMutableMap().apply {
-                        put(symbol, StockState(isLoading = false, data = mockData, error = null))
-                    }
-                }
+            val resolved = repository.getGuaranteedQuote(symbol)
+            Log.d(TAG, "Stock state update for $symbol using ${resolved.source}")
+            _stockStates.value = _stockStates.value.toMutableMap().apply {
+                put(symbol, StockState(isLoading = false, data = resolved.quote, source = resolved.source))
             }
         }
     }
@@ -152,20 +153,6 @@ class StockViewModel @Inject constructor(
         }
     }
 
-    private fun generateMockData(symbol: String): FinnhubQuoteResponse {
-        val basePrice = if (symbol == "RTX") 205.00 else if (symbol == "WMT") 125.12 else if (symbol == "HAL") 3995.0 else if (symbol == "IREDA" || symbol == "IREDA.NS") 228.84 else 150.0
-        val fluctuation = (Math.random() - 0.5) * 2.0
-        return FinnhubQuoteResponse(
-            c = basePrice + fluctuation,
-            d = fluctuation,
-            dp = (fluctuation / basePrice) * 100,
-            h = basePrice + 5.0,
-            l = basePrice - 5.0,
-            o = basePrice,
-            pc = basePrice - fluctuation
-        )
-    }
-
     private fun generateMockNews(): List<FinnhubNewsResponse> {
         val now = System.currentTimeMillis() / 1000
         return listOf(
@@ -197,5 +184,23 @@ class StockViewModel @Inject constructor(
                 datetime = now - 14400
             )
         )
+    }
+
+    private fun defaultStockStateMap(symbols: List<String>): Map<String, StockState> =
+        symbols.associateWith { symbol -> defaultStockState(symbol) }
+
+    private fun defaultStockState(symbol: String): StockState {
+        val quote = if (symbol.equals("IREDA.NS", ignoreCase = true) || symbol.equals("IREDA", ignoreCase = true)) {
+            StockResponse(c = 150.0, h = 150.0, l = 150.0, o = 148.0, pc = 148.0)
+        } else {
+            StockResponse(c = 100.0, h = 100.0, l = 100.0, o = 99.0, pc = 99.0)
+        }
+        return StockState(isLoading = false, data = quote, source = QuoteSource.DEFAULT)
+    }
+
+    private fun normalizeSymbol(symbol: String): String = if (symbol.equals("IREDA", ignoreCase = true)) "IREDA.NS" else symbol
+
+    companion object {
+        private const val TAG = "StockViewModel"
     }
 }
