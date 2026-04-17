@@ -54,7 +54,18 @@ fun StockPortfolioDetailScreen(
     portfolioViewModel: PortfolioViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
     val context = LocalContext.current
-    // FLAG_SECURE removed from Compose to prevent crashes on unsupported devices
+    DisposableEffect(Unit) {
+        var ctx = context
+        while (ctx is ContextWrapper) {
+            if (ctx is android.app.Activity) break
+            ctx = ctx.baseContext
+        }
+        val window = (ctx as? android.app.Activity)?.window
+        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
 
