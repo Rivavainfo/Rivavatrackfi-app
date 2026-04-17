@@ -82,18 +82,7 @@ fun RivavaPortfolioScreen(
         }
     }
 
-    DisposableEffect(Unit) {
-        var ctx = context
-        while (ctx is ContextWrapper) {
-            if (ctx is android.app.Activity) break
-            ctx = ctx.baseContext
-        }
-        val window = (ctx as? android.app.Activity)?.window
-        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
+    // FLAG_SECURE removed from Compose to prevent crashes on unsupported devices
 
     if (showUnlockDialog) {
         PremiumUnlockDialog(
