@@ -1,6 +1,8 @@
 package com.rivavafi.universal.ui.portfolio
 
 import android.content.Context
+import android.content.Intent
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.OpenInNew
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.layout.ContentScale
@@ -46,7 +49,6 @@ import com.rivavafi.universal.ui.theme.PrimarySky
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import android.view.WindowManager
-import android.content.ContextWrapper
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -82,41 +84,44 @@ fun RivavaPortfolioScreen(
         }
     }
 
-    DisposableEffect(Unit) {
-        var ctx = context
-        while (ctx is ContextWrapper) {
-            if (ctx is android.app.Activity) break
-            ctx = ctx.baseContext
-        }
-        val window = (ctx as? android.app.Activity)?.window
-        window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
 
-    if (showUnlockDialog) {
-        PremiumUnlockDialog(
-            userName = "",
-            onDismiss = { showUnlockDialog = false },
-            onUnlockSuccess = {
-                prefs.edit().putBoolean("portfolio_unlocked", true).apply()
-                isUnlocked = true
-                showUnlockDialog = false
-            },
-            onPayClick = {
-                val intent = android.content.Intent(context, PaymentActivity::class.java)
-                paymentLauncher.launch(intent)
-                showUnlockDialog = false
+
+    if (!isUnlocked) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Text("🔒 Portfolio Locked", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Unlock for ₹11 or Enter Key", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(onClick = { showUnlockDialog = true }) {
+                    Text("Unlock Portfolio")
+                }
             }
-        )
+        }
+
+        if (showUnlockDialog) {
+            PremiumUnlockDialog(
+                userName = "",
+                onDismiss = { showUnlockDialog = false },
+                onUnlockSuccess = {
+                    prefs.edit().putBoolean("portfolio_unlocked", true).apply()
+                    isUnlocked = true
+                    showUnlockDialog = false
+                },
+                onPayClick = {
+                    val intent = Intent(context, PaymentActivity::class.java)
+                    paymentLauncher.launch(intent)
+                    showUnlockDialog = false
+                }
+            )
+        }
+        return
     }
 
     val stockStates by viewModel.stockStates.collectAsState()
-    val iredaPrice = portfolioViewModel.iredaPrice.collectAsState(initial = 0.0).value
-    val iredaPreviousClose = portfolioViewModel.iredaPreviousClose.collectAsState(initial = 0.0).value
-    val isLoading = portfolioViewModel.isLoading.collectAsState(initial = true).value
-    val isError = portfolioViewModel.isError.collectAsState(initial = false).value
+    val stocks by portfolioViewModel.stocks.collectAsState()
+    val isLoading by portfolioViewModel.isLoading.collectAsState()
+    val isError by portfolioViewModel.isError.collectAsState()
 
     val cryptoStates by cryptoViewModel.cryptoStates.collectAsState()
 
@@ -176,56 +181,28 @@ fun RivavaPortfolioScreen(
                 SectionHeader(title = "Market News")
                 Spacer(modifier = Modifier.height(16.dp))
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                val newsItems = viewModel.marketNews.collectAsState().value
 
-                if (newsItems.isEmpty()) {
-                    Text("Loading news...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(newsItems) { newsItem ->
-                            Card(
-                                modifier = Modifier
-                                    .width(280.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        try {
-                                            uriHandler.openUri(newsItem.url)
-                                        } catch (e: Exception) {}
-                                    }
-                                    .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    if (newsItem.image.isNotBlank()) {
-                                        coil.compose.AsyncImage(
-                                            model = newsItem.image,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(140.dp)
-                                                .clip(RoundedCornerShape(12.dp)),
-                                            contentScale = ContentScale.Crop
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                    }
-                                    Text(
-                                        text = newsItem.headline,
-                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = newsItem.source,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = PrimarySky
-                                    )
-                                }
-                            }
-                        }
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    // INDIAN MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
+                        StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", uriHandler)
+                        StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", uriHandler)
+                    }
+
+                    // US MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
+                        StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", uriHandler)
+                        StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", uriHandler)
+                        StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", uriHandler)
+                    }
+
+                    // INTERNATIONAL MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
+                        StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", uriHandler)
+                        StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", uriHandler)
                     }
                 }
             }
@@ -238,57 +215,38 @@ fun RivavaPortfolioScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        val items = listOf(
-                            PortfolioItem(exchange = "NYSE", ticker = "RTX", companyName = "Raytheon Technologies", marketPrice = "$118.00"),
-                            PortfolioItem(exchange = "NSE", ticker = "IREDA", companyName = "IREDA", marketPrice = "₹248.50")
-                        )
+                        val requiredStocks = listOf("RTX", "IREDA.NS")
+                        requiredStocks.forEach { symbol ->
+                            val stock = stocks.find { it.symbol == symbol }
+                            val isIreda = symbol == "IREDA.NS"
+                            val ticker = if (isIreda) "IREDA" else "RTX"
+                            val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
+                            val exchange = if (isIreda) "NSE" else "NYSE"
+                            val currency = if (isIreda) "₹" else "$"
 
-                        items.forEach { item ->
-                            val state = stockStates[item.ticker]
-                            val currency = if (item.exchange == "NSE") "₹" else "$"
+                            var displayPrice = "Updating..."
+                            var displayChange = "0.00%"
+                            var isPositive = true
 
-                            val displayPrice = state?.data?.let {
-                                currency + String.format(Locale.getDefault(), "%.2f", it.c)
-                            } ?: item.marketPrice
-
-                            val displayChange = state?.data?.let {
-                                val sign = if (it.dp >= 0) "+" else ""
-                                "$sign${String.format(Locale.getDefault(), "%.2f", it.dp)}%"
-                            } ?: "+0.00%"
-
-                            val isPositive = state?.data?.let { it.dp >= 0 } ?: true
-
-                            var displayPriceFinal = displayPrice
-                            var displayChangeFinal = displayChange
-                            var isPositiveFinal = isPositive
-
-                            if (item.ticker == "IREDA") {
-                                if (isLoading) {
-                                    displayPriceFinal = "Loading..."
-                                    displayChangeFinal = "0.00%"
-                                    isPositiveFinal = true
-                                } else if (isError && iredaPrice == 0.0) {
-                                    displayPriceFinal = item.marketPrice
-                                    displayChangeFinal = "+0.00%"
-                                    isPositiveFinal = true
-                                } else {
-                                    displayPriceFinal = "₹%.2f".format(iredaPrice)
-                                    val change = iredaPrice - iredaPreviousClose
-                                    val changePercent = if (iredaPreviousClose > 0) (change / iredaPreviousClose) * 100 else 0.0
-                                    isPositiveFinal = change >= 0
-                                    displayChangeFinal = "${if (isPositiveFinal) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
-                                }
+                            if (stock?.regularMarketPrice != null && stock.regularMarketChangePercent != null) {
+                                displayPrice = currency + String.format(Locale.getDefault(), "%.2f", stock.regularMarketPrice)
+                                val changePercent = stock.regularMarketChangePercent
+                                isPositive = changePercent >= 0
+                                displayChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
+                            } else if (!isLoading) {
+                                displayPrice = if (isIreda) "₹248.50" else "$118.00"
+                                displayChange = "+0.00%"
                             }
 
                             PortfolioStockCard(
-                                exchange = item.exchange,
-                                ticker = item.ticker,
-                                companyName = item.companyName,
-                                marketPrice = displayPriceFinal,
-                                isPositive = isPositiveFinal,
-                                percentageChange = displayChangeFinal,
+                                exchange = exchange,
+                                ticker = ticker,
+                                companyName = companyName,
+                                marketPrice = displayPrice,
+                                isPositive = isPositive,
+                                percentageChange = displayChange,
                                 onValueClick = { focus ->
-                                    onNavigateToDetail(item.ticker, focus)
+                                    onNavigateToDetail(ticker, focus)
                                 }
                             )
                         }
@@ -454,6 +412,57 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
+        }
+    }
+}
+@Composable
+fun StaticNewsCard(source: String, title: String, url: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable {
+                try {
+                    uriHandler.openUri(url)
+                } catch (e: Exception) {}
+            }
+            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = source,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = PrimarySky
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.OpenInNew,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

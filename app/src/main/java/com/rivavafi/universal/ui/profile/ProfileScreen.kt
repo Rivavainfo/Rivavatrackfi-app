@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -498,6 +499,19 @@ fun ProfileScreen(
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary,
                     onClick = onNavigateToHelpCenter
+                )
+                QuickActionItem(
+                    icon = Icons.Default.OpenInNew,
+                    title = "Rivava.in",
+                    tint = MaterialTheme.colorScheme.primary,
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
 
 

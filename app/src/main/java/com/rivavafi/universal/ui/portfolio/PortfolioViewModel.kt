@@ -2,8 +2,10 @@ package com.rivavafi.universal.ui.portfolio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rivavafi.universal.data.network.YahooFinanceApi
+import com.rivavafi.universal.data.network.YahooStock
+import com.rivavafi.universal.data.repository.YahooStockRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +15,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PortfolioViewModel @Inject constructor(
-    private val yahooFinanceApi: YahooFinanceApi
+    private val repository: YahooStockRepository
 ) : ViewModel() {
 
-    private val _iredaPrice = MutableStateFlow(0.0)
-    val iredaPrice: StateFlow<Double> = _iredaPrice
-
-    private val _iredaPreviousClose = MutableStateFlow(0.0)
-    val iredaPreviousClose: StateFlow<Double> = _iredaPreviousClose
+    private val _stocks = MutableStateFlow<List<YahooStock>>(emptyList())
+    val stocks: StateFlow<List<YahooStock>> = _stocks
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -32,26 +31,23 @@ class PortfolioViewModel @Inject constructor(
         startPolling()
     }
 
-    private fun startPolling() {
-        viewModelScope.launch {
+    fun startPolling() {
+        viewModelScope.launch(Dispatchers.IO) {
             // Do an immediate fetch so the screen does not remain in loading state on first open.
-            fetchIredaData()
+            fetchData()
 
             while (isActive) {
                 delay(20 * 60 * 1000L) // Poll every 20 minutes
-                fetchIredaData()
+                fetchData()
             }
         }
     }
 
-    private suspend fun fetchIredaData() {
+    private suspend fun fetchData() {
         try {
-            val response = yahooFinanceApi.getIredaStockData()
-            val meta = response.chart?.result?.firstOrNull()?.meta
-
-            if (meta?.regularMarketPrice != null && meta.previousClose != null) {
-                _iredaPrice.value = meta.regularMarketPrice
-                _iredaPreviousClose.value = meta.previousClose
+            val result = repository.getStocks()
+            if (result.isNotEmpty()) {
+                _stocks.value = result
                 _isError.value = false
             } else {
                 _isError.value = true
