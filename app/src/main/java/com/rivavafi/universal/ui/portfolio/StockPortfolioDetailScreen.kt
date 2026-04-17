@@ -64,16 +64,18 @@ fun StockPortfolioDetailScreen(
         viewModel.startPolling(listOf(ticker))
     }
 
-    val stockData = stockStates[ticker]?.data
+    val symbolKey = if (ticker == "IREDA") "IREDA.NS" else ticker
+    val stockData = stockStates[symbolKey]?.data
 
     val uriHandler = LocalUriHandler.current
 
-    val lastPrice = stockData?.c ?: (if (ticker == "RTX") 205.00 else 150.00)
-    val changeValue = stockData?.d ?: (if (ticker == "RTX") 1.96 else -1.20)
-    val pnlPercent = stockData?.dp ?: (if (ticker == "RTX") 0.95 else -0.40)
+    val lastPrice = stockData?.c ?: (if (ticker == "RTX") 100.00 else 150.00)
+    val previousClose = stockData?.pc ?: (if (ticker == "RTX") 99.00 else 148.00)
+    val changeValue = lastPrice - previousClose
+    val pnlPercent = if (previousClose != 0.0) (changeValue / previousClose) * 100 else 0.0
     val dayHigh = stockData?.h ?: (lastPrice + 5.0)
     val dayLow = stockData?.l ?: (lastPrice - 5.0)
-    val openPrice = stockData?.o ?: lastPrice
+    val openPrice = stockData?.o ?: previousClose
 
     val isPositive = changeValue >= 0
     val pnl = changeValue * 2.99 // Simulated position P&L
@@ -83,8 +85,8 @@ fun StockPortfolioDetailScreen(
     val companyProfiles by viewModel.companyProfiles.collectAsState()
     val companyNews by viewModel.companyNews.collectAsState()
 
-    val profile = companyProfiles[ticker]?.profile
-    val newsList = companyNews[ticker] ?: emptyList()
+    val profile = companyProfiles[symbolKey]?.profile
+    val newsList = companyNews[symbolKey] ?: emptyList()
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
 

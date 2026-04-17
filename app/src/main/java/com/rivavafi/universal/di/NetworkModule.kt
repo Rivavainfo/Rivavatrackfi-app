@@ -48,7 +48,7 @@ object NetworkModule {
     @Named("finnhub")
     fun provideFinnhubRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://finnhub.io/")
+            .baseUrl("https://finnhub.io/api/v1/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

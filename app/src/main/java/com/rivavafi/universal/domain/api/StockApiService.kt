@@ -1,16 +1,15 @@
 package com.rivavafi.universal.domain.api
 
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-data class FinnhubQuoteResponse(
-    val c: Double, // Current price
-    val d: Double, // Change
-    val dp: Double, // Percent change
-    val h: Double, // High price of the day
-    val l: Double, // Low price of the day
-    val o: Double, // Open price of the day
-    val pc: Double // Previous close price
+data class StockResponse(
+    val c: Double,
+    val h: Double,
+    val l: Double,
+    val o: Double,
+    val pc: Double
 )
 
 data class FinnhubCompanyProfileResponse(
@@ -32,25 +31,25 @@ data class FinnhubNewsResponse(
 )
 
 interface StockApiService {
-    @GET("api/v1/quote")
+    @GET("quote")
     suspend fun getQuote(
         @Query("symbol") symbol: String,
-        @Query("token") apiKey: String
-    ): FinnhubQuoteResponse
+        @Query("token") token: String
+    ): Response<StockResponse>
 
-    @GET("api/v1/stock/profile2")
+    @GET("stock/profile2")
     suspend fun getCompanyProfile(
         @Query("symbol") symbol: String,
         @Query("token") apiKey: String
     ): FinnhubCompanyProfileResponse
 
-    @GET("api/v1/news")
+    @GET("news")
     suspend fun getMarketNews(
         @Query("category") category: String = "general",
         @Query("token") apiKey: String
     ): List<FinnhubNewsResponse>
 
-    @GET("api/v1/company-news")
+    @GET("company-news")
     suspend fun getCompanyNews(
         @Query("symbol") symbol: String,
         @Query("from") fromDate: String,
