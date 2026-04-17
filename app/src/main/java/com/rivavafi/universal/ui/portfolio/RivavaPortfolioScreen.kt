@@ -229,7 +229,8 @@ fun RivavaPortfolioScreen(
                             val isPositive = change >= 0
 
                             val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", price)
-                            val displayChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
+                            val displayAbsChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", change)}"
+                            val displayPctChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
 
                             PortfolioStockCard(
                                 exchange = exchange,
@@ -237,7 +238,8 @@ fun RivavaPortfolioScreen(
                                 companyName = companyName,
                                 marketPrice = displayPrice,
                                 isPositive = isPositive,
-                                percentageChange = displayChange,
+                                absoluteChange = displayAbsChange,
+                                percentageChange = displayPctChange,
                                 onValueClick = { focus ->
                                     onNavigateToDetail(ticker, focus)
                                 }

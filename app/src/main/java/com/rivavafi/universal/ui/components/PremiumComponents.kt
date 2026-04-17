@@ -146,6 +146,7 @@ fun PortfolioStockCard(
     isPremium: Boolean = true,
     modifier: Modifier = Modifier,
     isPositive: Boolean = true,
+    absoluteChange: String = "+0.00",
     percentageChange: String = "+2.4%",
     latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
     onValueClick: ((String) -> Unit)? = null
@@ -245,7 +246,7 @@ fun PortfolioStockCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = percentageChange.replace("+", "").replace("-", ""),
+                            text = "$absoluteChange (${percentageChange})",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = priceColor
                         )
