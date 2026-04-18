@@ -105,6 +105,8 @@ fun HomeScreen(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val activity = context as? android.app.Activity
+    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
+    val isPremiumPref = prefs.getBoolean("isPremium", false)
 
     Scaffold(
         floatingActionButton = {
@@ -332,39 +334,74 @@ fun HomeScreen(
                     )
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    com.rivavafi.universal.ui.components.PremiumButton(
-                        text = "Schedule a Call",
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
-                            context.startActivity(intent)
-                        },
-                        icon = Icons.Default.Call,
-                        modifier = Modifier.bounceClick {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
-                            context.startActivity(intent)
-                        },
-                        colors = listOf(Color(0xFF00A3FF), Color(0xFF004A77))
-                    )
-                    com.rivavafi.universal.ui.components.PremiumButton(
-                        text = "Schedule a Video Call",
-                        onClick = { showVideoCallDialog = true },
-                        icon = Icons.Default.VideoCall,
-                        modifier = Modifier.bounceClick { showVideoCallDialog = true },
-                        colors = listOf(Color(0xFF00E471), Color(0xFF003D19))
-                    )
-                    com.rivavafi.universal.ui.components.PremiumButton(
-                        text = "Chat with Rivava",
-                        onClick = { showChatDialog = true },
-                        icon = Icons.Default.Chat,
-                        modifier = Modifier.bounceClick { showChatDialog = true },
-                        colors = listOf(Color(0xFFFFAEDB), Color(0xFF55003F))
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                                context.startActivity(intent)
+                            },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Call", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { showVideoCallDialog = true },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.VideoCall, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Video Call", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { showChatDialog = true },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Chat", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            if (!isPremiumUser) {
+            if (!isPremiumUser && !isPremiumPref) {
                 item {
                     PremiumCard(
                         modifier = Modifier
