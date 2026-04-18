@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import javax.inject.Singleton
+import android.util.Log
 
 @Singleton
 class ChatRepository @Inject constructor(
@@ -13,9 +14,12 @@ class ChatRepository @Inject constructor(
 ) {
     fun sendMessage(message: String): Flow<Result<String>> = flow {
         try {
+            Log.d("ChatbotAPI", "Request: $message")
             val response = apiService.sendMessage(ChatRequest(message))
+            Log.d("ChatbotAPI", "Response: ${response.reply}")
             emit(Result.success(response.reply))
         } catch (e: Exception) {
+            Log.e("ChatbotAPI", "Error: ${e.message}")
             emit(Result.failure(e))
         }
     }
