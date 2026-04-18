@@ -46,6 +46,9 @@ import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.TertiaryEmerald
 import com.rivavafi.universal.ui.theme.SecondaryPink
 import com.rivavafi.universal.ui.theme.PrimarySky
+import com.rivavafi.universal.ui.theme.EmeraldGreen
+import com.rivavafi.universal.ui.theme.VibrantRed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import android.view.WindowManager
@@ -204,7 +207,59 @@ fun RivavaPortfolioScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionHeader(title = "My Portfolio")
+                    var showLogsDialog by remember { mutableStateOf(false) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionHeader(title = "My Portfolio")
+
+                        val hasErrors = stockStates.values.any { it.error != null }
+                        val statusColor = if (hasErrors) VibrantRed else EmeraldGreen
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { showLogsDialog = true }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (hasErrors) "Degraded" else "Live",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = statusColor
+                            )
+                        }
+                    }
+
+                    if (showLogsDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showLogsDialog = false },
+                            title = { Text("API Diagnostic Logs") },
+                            text = {
+                                LazyColumn {
+                                    items(stockStates.entries.toList()) { (symbol, state) ->
+                                        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                                            Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
+                                            Text(text = "Source: ${state.source.name}")
+                                            Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showLogsDialog = false }) {
+                                    Text("Close")
+                                }
+                            }
+                        )
+                    }
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
