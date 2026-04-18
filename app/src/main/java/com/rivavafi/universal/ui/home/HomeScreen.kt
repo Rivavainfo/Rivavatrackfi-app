@@ -338,80 +338,30 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
-                                context.startActivity(intent)
-                            }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFFFFAEDB).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Call", style = MaterialTheme.typography.labelMedium, color = Color.White)
-                            }
+                    TalkActionGlassCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Call",
+                        icon = Icons.Default.Call,
+                        color = Color(0xFFFF4FA3),
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                            context.startActivity(intent)
                         }
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable { showVideoCallDialog = true }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00E471).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.VideoCall, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Video Call", style = MaterialTheme.typography.labelMedium, color = Color.White)
-                            }
-                        }
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable { showChatDialog = true }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00A3FF).copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Chat", style = MaterialTheme.typography.labelMedium, color = Color.White)
-                            }
-                        }
-                    }
+                    )
+                    TalkActionGlassCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Video Call",
+                        icon = Icons.Default.VideoCall,
+                        color = Color(0xFF00C16A),
+                        onClick = { showVideoCallDialog = true }
+                    )
+                    TalkActionGlassCard(
+                        modifier = Modifier.weight(1f),
+                        label = "Chat",
+                        icon = Icons.Default.Chat,
+                        color = Color(0xFF2D8BFF),
+                        onClick = { showChatDialog = true }
+                    )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -1130,6 +1080,55 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TalkActionGlassCard(
+    modifier: Modifier = Modifier,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .glassMorphism(cornerRadius = 16f, alpha = 0.22f),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.35f),
+                            color.copy(alpha = 0.15f)
+                        )
+                    )
+                )
+                .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White
+                )
             }
         }
     }
