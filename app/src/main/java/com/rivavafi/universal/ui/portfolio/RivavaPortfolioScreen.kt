@@ -46,7 +46,14 @@ import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.TertiaryEmerald
 import com.rivavafi.universal.ui.theme.SecondaryPink
 import com.rivavafi.universal.ui.theme.PrimarySky
+import com.rivavafi.universal.ui.theme.EmeraldGreen
+import com.rivavafi.universal.ui.theme.VibrantRed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import kotlinx.coroutines.delay
 import android.view.WindowManager
 import androidx.compose.runtime.DisposableEffect
@@ -181,37 +188,95 @@ fun RivavaPortfolioScreen(
                     // INDIAN MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", uriHandler)
-                        StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", uriHandler)
+                        StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80", uriHandler)
+                        StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", uriHandler)
                     }
 
                     // US MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", uriHandler)
-                        StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", uriHandler)
-                        StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", uriHandler)
+                        StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1642543492481-44e81e3914a2?w=400&q=80", uriHandler)
+                        StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80", uriHandler)
+                        StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80", uriHandler)
                     }
 
                     // INTERNATIONAL MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", uriHandler)
-                        StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", uriHandler)
+                        StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80", uriHandler)
+                        StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80", uriHandler)
                     }
                 }
             }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SectionHeader(title = "My Portfolio")
+                    var showLogsDialog by remember { mutableStateOf(false) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionHeader(title = "My Portfolio")
+
+                        val hasErrors = stockStates.values.any { it.error != null }
+                        val statusColor = if (hasErrors) VibrantRed else EmeraldGreen
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { showLogsDialog = true }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (hasErrors) "Degraded" else "Live",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = statusColor
+                            )
+                        }
+                    }
+
+                    if (showLogsDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showLogsDialog = false },
+                            title = { Text("API Diagnostic Logs") },
+                            text = {
+                                LazyColumn {
+                                    items(stockStates.entries.toList()) { (symbol, state) ->
+                                        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                                            Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
+                                            Text(text = "Source: ${state.source.name}")
+                                            Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showLogsDialog = false }) {
+                                    Text("Close")
+                                }
+                            }
+                        )
+                    }
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        var visible by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            delay(100)
+                            visible = true
+                        }
+
                         val requiredStocks = listOf("IREDA.NS", "RTX")
-                        requiredStocks.forEach { symbol ->
+                        requiredStocks.forEachIndexed { index, symbol ->
                             val normalizedSymbol = if (symbol == "IREDA") "IREDA.NS" else symbol
                             val stockState = stockStates[normalizedSymbol]
                             val quote = stockState?.data
@@ -232,18 +297,26 @@ fun RivavaPortfolioScreen(
                             val displayAbsChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", change)}"
                             val displayPctChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
 
-                            PortfolioStockCard(
-                                exchange = exchange,
-                                ticker = ticker,
-                                companyName = companyName,
-                                marketPrice = displayPrice,
-                                isPositive = isPositive,
-                                absoluteChange = displayAbsChange,
-                                percentageChange = displayPctChange,
-                                onValueClick = { focus ->
-                                    onNavigateToDetail(ticker, focus)
-                                }
-                            )
+                            AnimatedVisibility(
+                                visible = visible,
+                                enter = slideInVertically(
+                                    initialOffsetY = { 50 },
+                                    animationSpec = tween(durationMillis = 400, delayMillis = index * 100)
+                                ) + fadeIn(animationSpec = tween(durationMillis = 400, delayMillis = index * 100))
+                            ) {
+                                PortfolioStockCard(
+                                    exchange = exchange,
+                                    ticker = ticker,
+                                    companyName = companyName,
+                                    marketPrice = displayPrice,
+                                    isPositive = isPositive,
+                                    absoluteChange = displayAbsChange,
+                                    percentageChange = displayPctChange,
+                                    onValueClick = { focus ->
+                                        onNavigateToDetail(ticker, focus)
+                                    }
+                                )
+                            }
                         }
 
                     }
@@ -411,7 +484,7 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
     }
 }
 @Composable
-fun StaticNewsCard(source: String, title: String, url: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
+fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -447,15 +520,16 @@ fun StaticNewsCard(source: String, title: String, url: String, uriHandler: andro
             Spacer(modifier = Modifier.width(16.dp))
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(80.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.OpenInNew,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                coil.compose.AsyncImage(
+                    model = imageUrl,
+                    contentDescription = source,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
         }

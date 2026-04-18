@@ -19,7 +19,8 @@ import javax.inject.Inject
 data class StockState(
     val isLoading: Boolean = false,
     val data: StockResponse,
-    val source: QuoteSource = QuoteSource.DEFAULT
+    val source: QuoteSource = QuoteSource.DEFAULT,
+    val error: String? = null
 )
 
 data class CompanyProfileState(
@@ -101,8 +102,9 @@ class StockViewModel @Inject constructor(
 
             val resolved = repository.getGuaranteedQuote(symbol)
             Log.d(TAG, "Stock state update for $symbol using ${resolved.source}")
+            val errorString = if (resolved.source != QuoteSource.LIVE && resolved.source != QuoteSource.SCRAPE) "API Failed - showing ${resolved.source}" else null
             _stockStates.value = _stockStates.value.toMutableMap().apply {
-                put(symbol, StockState(isLoading = false, data = resolved.quote, source = resolved.source))
+                put(symbol, StockState(isLoading = false, data = resolved.quote, source = resolved.source, error = errorString))
             }
         }
     }

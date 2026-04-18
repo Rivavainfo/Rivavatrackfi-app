@@ -18,15 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-data class Message(val text: String, val isUser: Boolean)
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.animation.AnimatedVisibility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpCenterScreen(onBack: () -> Unit) {
-    val messages = remember { mutableStateListOf(Message("Hello! How can I help you today?", false)) }
+fun HelpCenterScreen(
+    onBack: () -> Unit,
+    viewModel: HelpChatViewModel = hiltViewModel()
+) {
+    val messages by viewModel.messages.collectAsState()
+    val isTyping by viewModel.isTyping.collectAsState()
     var inputText by remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -59,6 +62,19 @@ fun HelpCenterScreen(onBack: () -> Unit) {
                 items(messages) { message ->
                     ChatBubble(message)
                 }
+
+                item {
+                    AnimatedVisibility(visible = isTyping) {
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp))
+                                .padding(12.dp)
+                        ) {
+                            Text("AI is typing...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
 
             // Input field
@@ -78,14 +94,9 @@ fun HelpCenterScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
-                        if (inputText.isNotBlank()) {
-                            val userMsg = inputText
-                            messages.add(Message(userMsg, true))
+                        if (inputText.isNotBlank() && !isTyping) {
+                            viewModel.sendMessage(inputText)
                             inputText = ""
-                            coroutineScope.launch {
-                                delay(500)
-                                messages.add(Message(getBotResponse(userMsg), false))
-                            }
                         }
                     },
                     modifier = Modifier
@@ -123,18 +134,5 @@ fun ChatBubble(message: Message) {
         ) {
             Text(text = message.text, color = textColor)
         }
-    }
-}
-
-fun getBotResponse(query: String): String {
-    val q = query.lowercase()
-    return when {
-        q.contains("hello") || q.contains("hi") -> "Hello there! How can I assist you with TrackFi today?"
-        q.contains("app") -> "TrackFi helps you manage your finances, track stocks, and review transactions."
-        q.contains("help") -> "I am your AI assistant! Ask me about features or settings."
-        q.contains("stock") || q.contains("portfolio") -> "You can view your stock portfolio in the 'Rivava Portfolio' screen and check your returns."
-        q.contains("security") || q.contains("privacy") -> "Your privacy and security are our top priority. Check our Privacy Policy from the settings!"
-        q.contains("transaction") -> "Your transactions are listed in the 'History' screen, where you can view detailed analytics."
-        else -> "That's an interesting question! I am still learning, but you can always check our Help Center website for more details."
     }
 }

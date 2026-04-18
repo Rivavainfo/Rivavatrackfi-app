@@ -2,6 +2,7 @@ package com.rivavafi.universal.di
 
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockApiService
+import com.rivavafi.universal.domain.api.ChatApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -44,6 +45,18 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("chat")
+    fun provideChatRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            // Placeholder base URL for the chatbot API as requested
+            .baseUrl("https://api.rivava.in/v1/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
     @Named("coingecko")
     fun provideCoinGeckoRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -63,6 +76,12 @@ object NetworkModule {
     @Singleton
     fun provideCryptoApiService(@Named("coingecko") retrofit: Retrofit): CryptoApiService {
         return retrofit.create(CryptoApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideChatApiService(@Named("chat") retrofit: Retrofit): ChatApiService {
+        return retrofit.create(ChatApiService::class.java)
     }
 
 }

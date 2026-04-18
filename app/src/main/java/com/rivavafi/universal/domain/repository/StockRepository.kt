@@ -10,12 +10,15 @@ import com.rivavafi.universal.domain.api.StockResponse
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.jsoup.Jsoup
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Singleton
 class StockRepository @Inject constructor(
@@ -46,12 +49,47 @@ class StockRepository @Inject constructor(
                         source = QuoteSource.LIVE
                     )
                 } else {
-                    resolveFromCacheOrDefault(normalizedSymbol, prefix, "api_failed_or_invalid")
+                    val errorMsg = "api_failed_or_invalid: ${response.code()}"
+                    tryScrapeFallback(normalizedSymbol, prefix, errorMsg)
                 }
             }
         } catch (exception: Exception) {
-            Log.e(TAG, "Quote fetch failed for $normalizedSymbol, using fallback", exception)
-            resolveFromCacheOrDefault(normalizedSymbol, prefix, "exception")
+            Log.e(TAG, "Quote fetch failed for $normalizedSymbol, attempting scrape fallback", exception)
+            tryScrapeFallback(normalizedSymbol, prefix, "exception: ${exception.message}")
+        }
+    }
+
+    private suspend fun tryScrapeFallback(symbol: String, prefix: String, reason: String): StockQuoteWithSource {
+        return withContext(Dispatchers.IO) {
+            try {
+                val scrapeUrl = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) {
+                    "https://www.google.com/finance/quote/IREDA:NSE"
+                } else {
+                    "https://www.google.com/finance/quote/RTX:NYSE"
+                }
+                val doc = Jsoup.connect(scrapeUrl).get()
+                val priceStr = doc.select("div.YMlKec.fxKbKc").first()?.text()?.replace(Regex("[^0-9.]"), "")
+                val prevCloseDiv = doc.select("div.P6K39c").find { it.text().contains("Previous close", ignoreCase = true) }
+                val prevCloseStr = (prevCloseDiv?.nextElementSibling()?.text() ?: doc.select("div.gyFHrc:contains(Previous close) > div.P6K39c").first()?.text())?.replace(Regex("[^0-9.]"), "")
+
+                val price = priceStr?.toDoubleOrNull()
+                val prevClose = prevCloseStr?.toDoubleOrNull() ?: price
+
+                if (price != null && price > 0.0 && prevClose != null) {
+                    Log.d(TAG, "Scraped fallback succeeded for $symbol -> price=$price, pc=$prevClose")
+                    saveQuote(prefix, price, prevClose)
+                    StockQuoteWithSource(
+                        symbol = symbol,
+                        quote = StockResponse(c = price, h = price, l = price, o = prevClose, pc = prevClose),
+                        source = QuoteSource.SCRAPE
+                    )
+                } else {
+                    resolveFromCacheOrDefault(symbol, prefix, reason)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Scrape fallback failed for $symbol", e)
+                resolveFromCacheOrDefault(symbol, prefix, reason)
+            }
         }
     }
 
@@ -145,7 +183,7 @@ class StockRepository @Inject constructor(
     }
 }
 
-enum class QuoteSource { LIVE, CACHE, DEFAULT }
+enum class QuoteSource { LIVE, SCRAPE, CACHE, DEFAULT }
 
 data class StockQuoteWithSource(
     val symbol: String,
