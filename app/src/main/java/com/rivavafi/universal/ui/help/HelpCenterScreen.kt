@@ -18,15 +18,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-data class Message(val text: String, val isUser: Boolean)
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.animation.AnimatedVisibility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpCenterScreen(onBack: () -> Unit) {
-    val messages = remember { mutableStateListOf(Message("Hello! How can I help you today?", false)) }
+fun HelpCenterScreen(
+    onBack: () -> Unit,
+    viewModel: HelpChatViewModel = hiltViewModel()
+) {
+    val messages by viewModel.messages.collectAsState()
+    val isTyping by viewModel.isTyping.collectAsState()
     var inputText by remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -59,6 +62,19 @@ fun HelpCenterScreen(onBack: () -> Unit) {
                 items(messages) { message ->
                     ChatBubble(message)
                 }
+
+                item {
+                    AnimatedVisibility(visible = isTyping) {
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp))
+                                .padding(12.dp)
+                        ) {
+                            Text("AI is typing...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
             }
 
             // Input field
@@ -78,14 +94,9 @@ fun HelpCenterScreen(onBack: () -> Unit) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
-                        if (inputText.isNotBlank()) {
-                            val userMsg = inputText
-                            messages.add(Message(userMsg, true))
+                        if (inputText.isNotBlank() && !isTyping) {
+                            viewModel.sendMessage(inputText)
                             inputText = ""
-                            coroutineScope.launch {
-                                delay(500)
-                                messages.add(Message(getBotResponse(userMsg), false))
-                            }
                         }
                     },
                     modifier = Modifier
@@ -123,24 +134,5 @@ fun ChatBubble(message: Message) {
         ) {
             Text(text = message.text, color = textColor)
         }
-    }
-}
-
-fun getBotResponse(query: String): String {
-    val q = query.lowercase()
-    return when {
-        q.contains("hello") || q.contains("hi") -> "Hello there! I am your AI Assistant. How can I help you navigate Rivava/TrackFi today?"
-        q.contains("app") -> "Rivava Universal is your all-in-one platform for managing personal finances, tracking real-time stock/crypto portfolios, and reviewing deep analytics."
-        q.contains("help") -> "I am your built-in AI assistant! Ask me about adding transactions, tracking your portfolio, upgrading to premium, or managing your profile settings."
-        q.contains("stock") || q.contains("portfolio") || q.contains("market") -> "You can access live stock and crypto data in the 'Rivava Portfolio' tab. Just tap the chart icon on the bottom navigation bar!"
-        q.contains("security") || q.contains("privacy") -> "Your security is paramount to us. All sensitive actions are authenticated via Firebase, and screen capture is strictly disabled across the app for your safety."
-        q.contains("transaction") || q.contains("expense") || q.contains("income") -> "You can manage and view all your transactions in the 'History' screen. Tap the '+' button to add new income or expenses!"
-        q.contains("crypto") || q.contains("bitcoin") -> "Yes, we support live crypto tracking! Head over to the Portfolio tab and scroll down to the 'Crypto Assets' section to view live prices."
-        q.contains("premium") || q.contains("unlock") || q.contains("pay") -> "The Rivava Portfolio screen is a premium feature. You can easily unlock it using Razorpay checkout directly in the app, or by entering a valid promo key."
-        q.contains("password") || q.contains("login") || q.contains("auth") -> "If you are having trouble logging in, use the 'Forgot Password' option on the login screen to receive a secure reset link via email."
-        q.contains("contact") || q.contains("support") || q.contains("human") -> "For complex issues, please email our support team at support@rivava.in or visit our website directly from the settings menu."
-        q.contains("export") || q.contains("pdf") || q.contains("report") -> "You can view detailed investment thesis reports natively in the app! Simply click 'Read Detailed PDF' on any supported stock card."
-        q.contains("news") || q.contains("article") -> "Stay updated with global financial news in the Portfolio tab! We aggregate top articles from major financial outlets like Bloomberg and WSJ."
-        else -> "I'm still learning and might not have the exact answer to that. Please check our official website or ask about transactions, portfolios, premium access, or account settings!"
     }
 }
