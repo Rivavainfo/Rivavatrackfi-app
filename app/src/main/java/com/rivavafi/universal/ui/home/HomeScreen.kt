@@ -346,17 +346,22 @@ fun HomeScreen(
                             .clickable {
                                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
                                 context.startActivity(intent)
-                            },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            }
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color(0xFFFFAEDB).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Call", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Call", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                            }
                         }
                     }
 
@@ -365,17 +370,22 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { showVideoCallDialog = true },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            .clickable { showVideoCallDialog = true }
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF00E471).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.VideoCall, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Video Call", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.VideoCall, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Video Call", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                            }
                         }
                     }
 
@@ -384,17 +394,22 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { showChatDialog = true },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            .clickable { showChatDialog = true }
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Box(
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF00A3FF).copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Chat", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(24.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Chat", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                            }
                         }
                     }
                 }

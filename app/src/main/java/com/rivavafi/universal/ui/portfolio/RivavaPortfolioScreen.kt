@@ -259,8 +259,20 @@ fun RivavaPortfolioScreen(
                             },
                             confirmButton = {
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    val view = androidx.compose.ui.platform.LocalView.current
                                     TextButton(onClick = {
-                                        android.widget.Toast.makeText(context, "Screenshot Captured", android.widget.Toast.LENGTH_SHORT).show()
+                                        try {
+                                            val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+                                            val canvas = android.graphics.Canvas(bitmap)
+                                            view.draw(canvas)
+                                            val file = java.io.File(context.cacheDir, "screenshot_${System.currentTimeMillis()}.png")
+                                            val fos = java.io.FileOutputStream(file)
+                                            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos)
+                                            fos.close()
+                                            android.widget.Toast.makeText(context, "Saved to ${file.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
+                                        } catch (e: Exception) {
+                                            android.widget.Toast.makeText(context, "Capture failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
                                     }) {
                                         Text("Capture Screenshot")
                                     }

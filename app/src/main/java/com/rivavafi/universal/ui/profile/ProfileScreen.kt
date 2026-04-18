@@ -87,6 +87,10 @@ fun ProfileScreen(
     var showLogsDialog by remember { mutableStateOf(false) }
     val stockStates by stockViewModel.stockStates.collectAsState()
 
+    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
+    val isPremiumPref = prefs.getBoolean("isPremium", false)
+    val finalIsPremium = isPremiumUser || isPremiumPref
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
@@ -279,7 +283,7 @@ fun ProfileScreen(
                             ),
                             label = "pulseAlpha"
                         )
-                        val statusColor = if (isPremiumUser) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                        val statusColor = if (finalIsPremium) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
 
                         Box(
                             modifier = Modifier
@@ -289,7 +293,7 @@ fun ProfileScreen(
                         )
 
                         Text(
-                            text = if (isPremiumUser) "Premium" else "Free",
+                            text = if (finalIsPremium) "Premium" else "Free",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = statusColor
                         )
@@ -547,8 +551,20 @@ fun ProfileScreen(
                 },
                 confirmButton = {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        val view = androidx.compose.ui.platform.LocalView.current
                         TextButton(onClick = {
-                            android.widget.Toast.makeText(context, "Screenshot Captured", android.widget.Toast.LENGTH_SHORT).show()
+                            try {
+                                val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                view.draw(canvas)
+                                val file = java.io.File(context.cacheDir, "screenshot_${System.currentTimeMillis()}.png")
+                                val fos = java.io.FileOutputStream(file)
+                                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos)
+                                fos.close()
+                                android.widget.Toast.makeText(context, "Saved to ${file.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
+                            } catch (e: Exception) {
+                                android.widget.Toast.makeText(context, "Capture failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                            }
                         }) {
                             Text("Capture Screenshot")
                         }
