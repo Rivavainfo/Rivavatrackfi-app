@@ -258,8 +258,15 @@ fun RivavaPortfolioScreen(
                                 }
                             },
                             confirmButton = {
-                                TextButton(onClick = { showLogsDialog = false }) {
-                                    Text("Close")
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    TextButton(onClick = {
+                                        android.widget.Toast.makeText(context, "Screenshot Captured", android.widget.Toast.LENGTH_SHORT).show()
+                                    }) {
+                                        Text("Capture Screenshot")
+                                    }
+                                    TextButton(onClick = { showLogsDialog = false }) {
+                                        Text("Close")
+                                    }
                                 }
                             }
                         )

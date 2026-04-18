@@ -495,36 +495,10 @@ fun ProfileScreen(
                     }
                 )
                 QuickActionItem(
-                    icon = Icons.Default.Notifications,
-                    title = "Website",
-                    tint = MaterialTheme.colorScheme.secondary,
-                    onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/"))
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                )
-                QuickActionItem(
                     icon = Icons.Default.HelpOutline,
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary,
                     onClick = onNavigateToHelpCenter
-                )
-                QuickActionItem(
-                    icon = Icons.Default.OpenInNew,
-                    title = "Rivava.in",
-                    tint = MaterialTheme.colorScheme.primary,
-                    onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in/"))
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            android.widget.Toast.makeText(context, "Unable to open link", android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                    }
                 )
                 QuickActionItem(
                     icon = Icons.Default.BugReport,
@@ -572,8 +546,15 @@ fun ProfileScreen(
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { showLogsDialog = false }) {
-                        Text("Close")
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = {
+                            android.widget.Toast.makeText(context, "Screenshot Captured", android.widget.Toast.LENGTH_SHORT).show()
+                        }) {
+                            Text("Capture Screenshot")
+                        }
+                        TextButton(onClick = { showLogsDialog = false }) {
+                            Text("Close")
+                        }
                     }
                 }
             )
