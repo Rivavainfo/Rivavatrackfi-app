@@ -57,6 +57,16 @@ import androidx.compose.foundation.border
 import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.Locale
+import com.rivavafi.universal.ui.portfolio.StockViewModel
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import com.rivavafi.universal.ui.theme.VibrantRed
+import com.rivavafi.universal.ui.theme.PrimarySky
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +74,8 @@ fun ProfileScreen(
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHelpCenter: () -> Unit = {},
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    stockViewModel: StockViewModel = hiltViewModel()
 ) {
     val userName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
@@ -73,6 +84,8 @@ fun ProfileScreen(
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var showLogsDialog by remember { mutableStateOf(false) }
+    val stockStates by stockViewModel.stockStates.collectAsState()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -513,6 +526,12 @@ fun ProfileScreen(
                         }
                     }
                 )
+                QuickActionItem(
+                    icon = Icons.Default.BugReport,
+                    title = "API Diagnostic Logs",
+                    tint = MaterialTheme.colorScheme.error,
+                    onClick = { showLogsDialog = true }
+                )
 
 
                 QuickActionItem(
@@ -535,6 +554,29 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showLogsDialog) {
+            AlertDialog(
+                onDismissRequest = { showLogsDialog = false },
+                title = { Text("API Diagnostic Logs") },
+                text = {
+                    LazyColumn {
+                        items(stockStates.entries.toList()) { (symbol, state) ->
+                            Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                                Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
+                                Text(text = "Source: ${state.source.name}")
+                                Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showLogsDialog = false }) {
+                        Text("Close")
+                    }
+                }
+            )
         }
     }
 }
