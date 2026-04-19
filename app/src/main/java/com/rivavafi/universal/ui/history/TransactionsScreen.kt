@@ -39,7 +39,8 @@ import com.rivavafi.universal.data.local.TransactionEntity
 import com.rivavafi.universal.ui.theme.bounceClick
 import com.rivavafi.universal.ui.home.TransactionDetailsBottomSheet
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.Security
 import com.rivavafi.universal.ui.theme.glassMorphism
@@ -55,7 +56,6 @@ fun TransactionsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
-    val sortOrder by viewModel.sortOrder.collectAsState()
     var sortMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -118,7 +118,7 @@ fun TransactionsScreen(
                         Box {
                             IconButton(onClick = { sortMenuExpanded = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.Sort,
+                                    imageVector = Icons.AutoMirrored.Filled.Sort,
                                     contentDescription = "Sort",
                                     tint = MaterialTheme.colorScheme.onBackground
                                 )
@@ -174,8 +174,9 @@ fun TransactionsScreen(
                     }
                 },
                 shape = RoundedCornerShape(24.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = MaterialTheme.colorScheme.primary
                 ),
@@ -217,7 +218,6 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
     var transactionToView by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val haptic = LocalHapticFeedback.current
-    val coroutineScope = rememberCoroutineScope()
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -419,7 +419,7 @@ fun TransactionsEmptyState() {
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ReceiptLong,
+                            imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                             modifier = Modifier.size(48.dp)
