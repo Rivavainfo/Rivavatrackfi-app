@@ -82,7 +82,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToProfile: () -> Unit = {},
-    onNavigateToTransactionDetail: (Long) -> Unit = {}
+    onNavigateToTransactionDetail: (Long) -> Unit = {},
+    onNavigateToRivavaPortfolio: () -> Unit = {}
 ) {
     val summary by viewModel.summary.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
@@ -238,17 +239,10 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color(0xFF161616),
-                                        Color(0xFF121212)
-                                    )
-                                )
-                            )
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.05f),
+                                color = Color.White.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(24.dp)
                             ),
                         shape = RoundedCornerShape(24.dp),
@@ -267,9 +261,9 @@ fun HomeScreen(
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Text(
-                                    text = "About Rivava",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        color = Color(0xFF98CBFF),
+                                    text = "Your next step to independence",
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        color = Color.White,
                                         fontWeight = FontWeight.Bold,
                                         letterSpacing = (-0.5).sp
                                     )
@@ -277,23 +271,38 @@ fun HomeScreen(
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Rivava is your high-fidelity financial ecosystem designed for the modern investor. We blend institutional-grade security with a curator's eye for detail, giving you the clarity needed to scale your wealth through intelligent automation and real-time portfolio analytics.",
+                                text = "Take control of your financial future with clarity and confidence.",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = Color.White.copy(alpha = 0.85f),
+                                    color = Color.White.copy(alpha = 0.7f),
                                     lineHeight = 24.sp,
-                                    fontWeight = FontWeight.Normal,
+                                    fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp
                                 )
                             )
                             Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = "PRECISION MEET PERFORMANCE",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color(0xFFFFAEDB),
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = 1.5.sp
+                            Button(
+                                onClick = { onNavigateToRivavaPortfolio() },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
+                                    ),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                shape = RoundedCornerShape(24.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Take a step",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
@@ -338,16 +347,17 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                             .clickable {
                                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
                                 context.startActivity(intent)
-                            }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                            },
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFFFFAEDB).copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFFFFAEDB).copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -365,13 +375,14 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { showVideoCallDialog = true }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                            .clickable { showVideoCallDialog = true },
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00E471).copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF00E471).copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -389,13 +400,14 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .clickable { showChatDialog = true }
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
+                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
+                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
+                            .clickable { showChatDialog = true },
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00A3FF).copy(alpha = 0.2f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF00A3FF).copy(alpha = 0.1f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
