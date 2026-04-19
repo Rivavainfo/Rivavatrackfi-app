@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +66,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import com.rivavafi.universal.ui.theme.VibrantRed
 import com.rivavafi.universal.ui.theme.PrimarySky
 
@@ -87,12 +87,13 @@ fun ProfileScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
-    var screenshotCaptureEnabled by remember { mutableStateOf(false) }
+    var screenshotsAllowed by remember { mutableStateOf(false) }
+    var showEditNameDialog by remember { mutableStateOf(false) }
     val stockStates by stockViewModel.stockStates.collectAsState()
 
-    val isPremiumPref by rememberPreferenceFlag("RivavaPortfolioPrefs", "isPremium")
-    val isPortfolioUnlockedPref by rememberPreferenceFlag("RivavaPortfolioPrefs", "portfolio_unlocked")
-    val finalIsPremium = isPremiumUser || isPremiumPref || isPortfolioUnlockedPref
+    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
+    val isPremiumPref = prefs.getBoolean("isPremium", false)
+    val finalIsPremium = isPremiumUser || isPremiumPref
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -577,57 +578,34 @@ fun ProfileScreen(
                 onDismissRequest = { showLogsDialog = false },
                 title = { Text("API Diagnostic Logs") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Enable screenshot capture",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                            )
-                            Switch(
-                                checked = screenshotCaptureEnabled,
-                                onCheckedChange = { screenshotCaptureEnabled = it }
-                            )
-                        }
-                        LazyColumn {
-                            items(stockStates.entries.toList()) { (symbol, state) ->
-                                Column(modifier = Modifier.padding(bottom = 12.dp)) {
-                                    Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
-                                    Text(text = "Source: ${state.source.name}")
-                                    Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
-                                }
+                    LazyColumn {
+                        items(stockStates.entries.toList()) { (symbol, state) ->
+                            Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                                Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
+                                Text(text = "Source: ${state.source.name}")
+                                Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
                             }
                         }
                     }
                 },
                 confirmButton = {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        if (screenshotCaptureEnabled) {
-                            TextButton(onClick = {
-                                try {
-                                    val activity = context as? android.app.Activity
-                                    val view = activity?.window?.decorView?.rootView
-                                    if (view == null || view.width <= 0 || view.height <= 0) {
-                                        android.widget.Toast.makeText(context, "Capture unavailable on this screen", android.widget.Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
-                                        val canvas = android.graphics.Canvas(bitmap)
-                                        view.draw(canvas)
-                                        val file = java.io.File(context.cacheDir, "screenshot_${System.currentTimeMillis()}.png")
-                                        java.io.FileOutputStream(file).use { fos ->
-                                            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos)
-                                        }
-                                        android.widget.Toast.makeText(context, "Saved to ${file.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
-                                    }
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Capture failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }) {
-                                Text("Capture Screenshot")
+                        val view = androidx.compose.ui.platform.LocalView.current
+                        TextButton(onClick = {
+                            try {
+                                val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+                                val canvas = android.graphics.Canvas(bitmap)
+                                view.draw(canvas)
+                                val file = java.io.File(context.cacheDir, "screenshot_${System.currentTimeMillis()}.png")
+                                val fos = java.io.FileOutputStream(file)
+                                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos)
+                                fos.close()
+                                android.widget.Toast.makeText(context, "Saved to ${file.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
+                            } catch (e: Exception) {
+                                android.widget.Toast.makeText(context, "Capture failed: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                             }
+                        }) {
+                            Text("Capture Screenshot")
                         }
 
                         val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
@@ -707,28 +685,4 @@ fun QuickActionItem(
             )
         }
     }
-}
-
-@Composable
-private fun rememberPreferenceFlag(prefName: String, key: String): androidx.compose.runtime.State<Boolean> {
-    val context = LocalContext.current
-    val sharedPreferences = remember(prefName) {
-        context.getSharedPreferences(prefName, android.content.Context.MODE_PRIVATE)
-    }
-    val state = remember(key) {
-        mutableStateOf(sharedPreferences.getBoolean(key, false))
-    }
-
-    DisposableEffect(sharedPreferences, key) {
-        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { prefs, changedKey ->
-            if (changedKey == key) {
-                state.value = prefs.getBoolean(key, false)
-            }
-        }
-        sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-        onDispose {
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
-        }
-    }
-    return state
 }
