@@ -88,6 +88,7 @@ fun ProfileScreen(
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
     var screenshotsAllowed by remember { mutableStateOf(false) }
+    var showEditNameDialog by remember { mutableStateOf(false) }
     val stockStates by stockViewModel.stockStates.collectAsState()
 
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
@@ -234,6 +235,7 @@ fun ProfileScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { showEditNameDialog = true }
                         .padding(horizontal = 24.dp, vertical = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -244,11 +246,14 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         letterSpacing = 1.5.sp
                     )
-                    Text(
-                        text = userName ?: "Unknown",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = userName ?: "Unknown",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Name", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
 
                 // Divider
@@ -535,6 +540,37 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showEditNameDialog) {
+            var newName by remember { mutableStateOf(userName ?: "") }
+            AlertDialog(
+                onDismissRequest = { showEditNameDialog = false },
+                title = { Text("Edit Name") },
+                text = {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        singleLine = true,
+                        label = { Text("Your Name") }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (newName.isNotBlank()) {
+                            viewModel.updateUserName(newName.trim())
+                        }
+                        showEditNameDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditNameDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         if (showLogsDialog) {
