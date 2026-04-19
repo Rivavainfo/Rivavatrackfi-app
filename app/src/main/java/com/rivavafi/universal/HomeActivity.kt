@@ -322,7 +322,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.RivavaPortfolio.route) {
-                RivavaPortfolioScreen(onNavigateToDetail = { ticker, focus ->
+                RivavaPortfolioScreen(onBack = { navController.popBackStack() }, onNavigateToDetail = { ticker, focus ->
                     val focusParam = focus ?: "none"
                     navController.navigate("${Screen.StockDetail.route}/$ticker?focus=$focusParam")
                 })

@@ -287,7 +287,7 @@ fun HomeScreen(
                                     .height(50.dp)
                                     .background(
                                         brush = Brush.linearGradient(
-                                            colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                            colors = listOf(Color(0xFFFFAEDB), Color(0xFF00E471))
                                         ),
                                         shape = RoundedCornerShape(24.dp)
                                     ),
