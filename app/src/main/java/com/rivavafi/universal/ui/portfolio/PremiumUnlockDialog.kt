@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.*
@@ -92,79 +93,64 @@ fun PremiumUnlockDialog(
                             }
 
                             Text(
-                                "Unlock Rivava Portfolio",
+                                "Upgrade to Rivava Premium",
                                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
 
-                            Text(
-                                "Enter your secret key or make a quick payment to permanently unlock all premium portfolio insights.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    "Advanced analytics",
+                                    "Real-time tracking",
+                                    "Smart insights"
+                                ).forEach { benefit ->
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = Color(0xFF00E471),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = benefit,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(8.dp))
-
-                            OutlinedTextField(
-                                value = secretKeyInput,
-                                onValueChange = {
-                                    secretKeyInput = it
-                                    showError = false
-                                },
-                                label = { Text("Secret Key") },
-                                isError = showError,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    errorBorderColor = MaterialTheme.colorScheme.error
-                                ),
-                                singleLine = true
-                            )
-
-                            if (showError) {
-                                Text("Invalid secret key.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
-                            }
-
-                            Button(
-                                onClick = {
-                                    if (secretKeyInput == "RIVAVA_UNLOCK_2026" || secretKeyInput.equals(userName, ignoreCase = true)) {
-                                        val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
-                                        prefs.edit().putBoolean("portfolio_unlocked", true).apply()
-                                        android.widget.Toast.makeText(context, "Unlocked Successfully", android.widget.Toast.LENGTH_SHORT).show()
-                                        currentStep = UnlockStep.Success
-                                    } else {
-                                        android.widget.Toast.makeText(context, "Invalid Key", android.widget.Toast.LENGTH_SHORT).show()
-                                        showError = true
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                            ) {
-                                Text("Unlock with Key", fontWeight = FontWeight.Bold)
-                            }
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Divider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
-                                Text(" OR ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Divider(Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurface.copy(0.1f))
-                            }
 
                             Button(
                                 onClick = {
                                     onPayClick?.invoke()
                                 },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
+                                modifier = Modifier.fillMaxWidth().height(56.dp)
+                                    .background(
+                                        brush = Brush.linearGradient(listOf(Color(0xFF00E471), Color(0xFF00A3FF))),
+                                        shape = RoundedCornerShape(28.dp)
+                                    ),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                shape = RoundedCornerShape(28.dp)
                             ) {
-                                Icon(Icons.Default.Payment, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Pay ₹11 via Razorpay", fontWeight = FontWeight.Bold)
+                                Text("Upgrade Now", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                            }
+
+                            TextButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    "Maybe Later",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }

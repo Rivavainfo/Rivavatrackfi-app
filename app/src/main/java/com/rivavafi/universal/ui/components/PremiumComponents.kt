@@ -2,6 +2,7 @@ package com.rivavafi.universal.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -180,8 +181,9 @@ fun PortfolioStockCard(
     androidx.compose.material3.Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .glassMorphism(cornerRadius = 24f, alpha = 0.6f, strokeAlpha = 0.0f, color = Color(0xFF1B1B1B))
+            .clip(RoundedCornerShape(20.dp))
+            .glassMorphism(cornerRadius = 20f, alpha = 0.1f)
+            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
             .clickable {
                 onValueClick?.invoke("market_price")
             },

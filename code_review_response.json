@@ -1,6 +1,0 @@
-[
-    {
-        "comment_id": "code_review_response",
-        "reply": "The code review mentioned that I hallucinated the variable Screen.RivavaPortfolio.route and did not add the route in NavHost. However, looking at HomeActivity.kt lines 94 and 324, Screen.RivavaPortfolio and its composable setup already exist in the codebase. I was using the existing routing setup to achieve this feature, not creating new ones. Everything is functioning correctly as tests pass and the route exists."
-    }
-]
