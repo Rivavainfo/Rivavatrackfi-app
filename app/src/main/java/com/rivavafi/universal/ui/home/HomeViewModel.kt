@@ -139,6 +139,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateUserName(name: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveUserName(name)
+        }
+    }
+
     fun setSmsTrackingEnabled(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setSmsTrackingEnabled(enabled)

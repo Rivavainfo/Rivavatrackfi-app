@@ -198,7 +198,11 @@ fun AnalyticsScreen(
                     // Restoring Original Success Logic
                     OverviewCards(summary = state.summary)
                     Spacer(modifier = Modifier.height(24.dp))
+                    CashFlowComparisonCard(transactions = state.transactions)
+                    Spacer(modifier = Modifier.height(24.dp))
                     SpendingChartCard(transactions = state.transactions)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TopMerchantsCard(transactions = state.transactions)
                     Spacer(modifier = Modifier.height(24.dp))
                     SubscriptionTrackerCard(transactions = state.transactions)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -538,6 +542,105 @@ fun SubscriptionTrackerCard(transactions: List<TransactionEntity>) {
     }
 }
 
+
+@Composable
+fun CashFlowComparisonCard(transactions: List<TransactionEntity>) {
+    val monthStart = Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, 1)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    var income = 0.0
+    var expense = 0.0
+
+    transactions.forEach {
+        if (it.date >= monthStart) {
+            if (it.type == "INCOME" || it.type == "REWARD") income += it.amount
+            if (it.type == "EXPENSE" || it.type == "BILL_PENDING") expense += it.amount
+        }
+    }
+
+    val total = income + expense
+    val incomePercent = if (total > 0) (income / total).toFloat() else 0.5f
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Monthly Cash Flow", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text("Income", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text("₹${String.format(Locale.getDefault(), "%.0f", income)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Expense", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    Text("₹${String.format(Locale.getDefault(), "%.0f", expense)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Custom Income vs Expense Progress Bar
+            Row(modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp))) {
+                Box(modifier = Modifier.weight(incomePercent.coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.primary))
+                Box(modifier = Modifier.weight((1f - incomePercent).coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.error))
+            }
+        }
+    }
+}
+
+@Composable
+fun TopMerchantsCard(transactions: List<TransactionEntity>) {
+    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+
+    val topMerchants = expenses.groupBy { it.merchantName }
+        .mapValues { entry -> entry.value.sumOf { it.amount } }
+        .toList()
+        .sortedByDescending { it.second }
+        .take(3)
+
+    if (topMerchants.isEmpty()) return
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Top Merchants", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            topMerchants.forEachIndexed { index, (merchant, amount) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("#${index + 1}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(merchant, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Text("₹${String.format(Locale.getDefault(), "%.0f", amount)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                }
+                if (index < topMerchants.size - 1) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun CategoryBreakdown(transactions: List<TransactionEntity>) {

@@ -23,7 +23,9 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
@@ -232,6 +234,7 @@ fun ProfileScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable { showEditNameDialog = true }
                         .padding(horizontal = 24.dp, vertical = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -242,11 +245,14 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         letterSpacing = 1.5.sp
                     )
-                    Text(
-                        text = userName ?: "Unknown",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = userName ?: "Unknown",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Name", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
 
                 // Divider
@@ -396,7 +402,7 @@ fun ProfileScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                 contentDescription = "Trending Up",
                                 tint = MaterialTheme.colorScheme.tertiary,
                                 modifier = Modifier.size(16.dp)
@@ -500,7 +506,7 @@ fun ProfileScreen(
                     }
                 )
                 QuickActionItem(
-                    icon = Icons.Default.HelpOutline,
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
                     title = "Help Center",
                     tint = MaterialTheme.colorScheme.tertiary,
                     onClick = onNavigateToHelpCenter
@@ -514,7 +520,7 @@ fun ProfileScreen(
 
 
                 QuickActionItem(
-                    icon = Icons.Default.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Logout",
                     tint = MaterialTheme.colorScheme.error,
                     onClick = {
@@ -533,6 +539,37 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showEditNameDialog) {
+            var newName by remember { mutableStateOf(userName ?: "") }
+            AlertDialog(
+                onDismissRequest = { showEditNameDialog = false },
+                title = { Text("Edit Name") },
+                text = {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        singleLine = true,
+                        label = { Text("Your Name") }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (newName.isNotBlank()) {
+                            viewModel.updateUserName(newName.trim())
+                        }
+                        showEditNameDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditNameDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
 
         if (showLogsDialog) {
@@ -592,6 +629,21 @@ fun ProfileScreen(
                                 Text("Capture Screenshot")
                             }
                         }
+
+                        val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+                        TextButton(onClick = {
+                            screenshotsAllowed = !screenshotsAllowed
+                            if (screenshotsAllowed) {
+                                activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                                android.widget.Toast.makeText(context, "Screenshots Enabled", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                activity?.window?.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                                android.widget.Toast.makeText(context, "Screenshots Disabled", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }) {
+                            Text(if (screenshotsAllowed) "Disable System SS" else "Enable System SS")
+                        }
+
                         TextButton(onClick = { showLogsDialog = false }) {
                             Text("Close")
                         }
