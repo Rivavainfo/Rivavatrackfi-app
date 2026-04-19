@@ -34,11 +34,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.OpenInNew
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.border
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
@@ -93,14 +96,79 @@ fun RivavaPortfolioScreen(
 
 
     if (!isUnlocked) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Text("🔒 Portfolio Locked", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Unlock for ₹11 or Enter Key", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(onClick = { showUnlockDialog = true }) {
-                    Text("Unlock Portfolio")
+        Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
+                    .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            ) {
+                Column(
+                    modifier = Modifier.padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                    colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Locked",
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        "Rivava Portfolio Locked",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        ),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "Unlock premium insights and advanced portfolio tracking.",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = Color.White.copy(alpha = 0.7f)
+                        ),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+                    Button(
+                        onClick = { showUnlockDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .background(
+                                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                    colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                ),
+                                shape = RoundedCornerShape(28.dp)
+                            ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RoundedCornerShape(28.dp)
+                    ) {
+                        Text(
+                            "Unlock Premium",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -300,60 +368,103 @@ fun RivavaPortfolioScreen(
                         )
                     }
 
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .glassMorphism(cornerRadius = 24f, alpha = 0.1f)
+                            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp)),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
-                        var visible by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) {
-                            delay(100)
-                            visible = true
-                        }
+                        Column(
+                            modifier = Modifier.padding(vertical = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            var visible by remember { mutableStateOf(false) }
+                            LaunchedEffect(Unit) {
+                                delay(100)
+                                visible = true
+                            }
 
-                        val requiredStocks = listOf("IREDA.NS", "RTX")
-                        requiredStocks.forEachIndexed { index, symbol ->
-                            val normalizedSymbol = if (symbol == "IREDA") "IREDA.NS" else symbol
-                            val stockState = stockStates[normalizedSymbol]
-                            val quote = stockState?.data
+                            val nseStocks = listOf("IREDA.NS")
+                            val nyseStocks = listOf("RTX")
 
-                            val isIreda = normalizedSymbol == "IREDA.NS"
-                            val ticker = if (isIreda) "IREDA" else "RTX"
-                            val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
-                            val exchange = if (isIreda) "NSE" else "NYSE"
-                            val currency = if (isIreda) "₹" else "$"
+                            // Helper to render a stock card
+                            @Composable
+                            fun RenderStockCard(symbol: String, index: Int) {
+                                val normalizedSymbol = if (symbol == "IREDA") "IREDA.NS" else symbol
+                                val stockState = stockStates[normalizedSymbol]
+                                val quote = stockState?.data
 
-                            val price = quote?.c ?: if (isIreda) 150.0 else 100.0
-                            val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
-                            val change = price - previousClose
-                            val changePercent = if (previousClose != 0.0) (change / previousClose) * 100 else 0.0
-                            val isPositive = change >= 0
+                                val isIreda = normalizedSymbol == "IREDA.NS"
+                                val ticker = if (isIreda) "IREDA" else "RTX"
+                                val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
+                                val exchange = if (isIreda) "NSE" else "NYSE"
+                                val currency = if (isIreda) "₹" else "$"
 
-                            val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", price)
-                            val displayAbsChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", change)}"
-                            val displayPctChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
+                                val price = quote?.c ?: if (isIreda) 150.0 else 100.0
+                                val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
+                                val change = price - previousClose
+                                val changePercent = if (previousClose != 0.0) (change / previousClose) * 100 else 0.0
+                                val isPositive = change >= 0
 
-                            AnimatedVisibility(
-                                visible = visible,
-                                enter = slideInVertically(
-                                    initialOffsetY = { 50 },
-                                    animationSpec = tween(durationMillis = 400, delayMillis = index * 100)
-                                ) + fadeIn(animationSpec = tween(durationMillis = 400, delayMillis = index * 100))
-                            ) {
-                                PortfolioStockCard(
-                                    exchange = exchange,
-                                    ticker = ticker,
-                                    companyName = companyName,
-                                    marketPrice = displayPrice,
-                                    isPositive = isPositive,
-                                    absoluteChange = displayAbsChange,
-                                    percentageChange = displayPctChange,
-                                    onValueClick = { focus ->
-                                        onNavigateToDetail(ticker, focus)
-                                    }
+                                val displayPrice = currency + String.format(Locale.getDefault(), "%.2f", price)
+                                val displayAbsChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", change)}"
+                                val displayPctChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
+
+                                AnimatedVisibility(
+                                    visible = visible,
+                                    enter = slideInVertically(
+                                        initialOffsetY = { 50 },
+                                        animationSpec = tween(durationMillis = 400, delayMillis = index * 100)
+                                    ) + fadeIn(animationSpec = tween(durationMillis = 400, delayMillis = index * 100))
+                                ) {
+                                    PortfolioStockCard(
+                                        exchange = exchange,
+                                        ticker = ticker,
+                                        companyName = companyName,
+                                        marketPrice = displayPrice,
+                                        isPositive = isPositive,
+                                        absoluteChange = displayAbsChange,
+                                        percentageChange = displayPctChange,
+                                        onValueClick = { focus ->
+                                            onNavigateToDetail(ticker, focus)
+                                        },
+                                        modifier = Modifier.width(280.dp).padding(end = 16.dp)
+                                    )
+                                }
+                            }
+
+                            // NSE Section
+                            Column {
+                                Text(
+                                    "NSE Stocks",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
+                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp)) {
+                                    items(nseStocks.size) { index ->
+                                        RenderStockCard(nseStocks[index], index)
+                                    }
+                                }
+                            }
+
+                            // NYSE Section
+                            Column {
+                                Text(
+                                    "NYSE Stocks",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                                )
+                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp)) {
+                                    items(nyseStocks.size) { index ->
+                                        RenderStockCard(nyseStocks[index], index + nseStocks.size)
+                                    }
+                                }
                             }
                         }
-
                     }
                 }
             }
