@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.border
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.TertiaryEmerald
@@ -78,6 +79,7 @@ data class PortfolioItem(
 @Composable
 fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
+    onBack: () -> Unit = {},
     viewModel: StockViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel()
 ) {
@@ -97,6 +99,16 @@ fun RivavaPortfolioScreen(
 
     if (!isUnlocked) {
         Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -116,7 +128,7 @@ fun RivavaPortfolioScreen(
                             .size(80.dp)
                             .background(
                                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                    colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                    colors = listOf(Color(0xFFFFAEDB), Color(0xFF00E471))
                                 ),
                                 shape = CircleShape
                             ),
@@ -154,7 +166,7 @@ fun RivavaPortfolioScreen(
                             .height(56.dp)
                             .background(
                                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                    colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                                    colors = listOf(Color(0xFFFFAEDB), Color(0xFF00E471))
                                 ),
                                 shape = RoundedCornerShape(28.dp)
                             ),
@@ -430,7 +442,7 @@ fun RivavaPortfolioScreen(
                                         onValueClick = { focus ->
                                             onNavigateToDetail(ticker, focus)
                                         },
-                                        modifier = Modifier.width(280.dp).padding(end = 16.dp)
+                                        modifier = Modifier.width(300.dp)
                                     )
                                 }
                             }
@@ -440,10 +452,10 @@ fun RivavaPortfolioScreen(
                                 Text(
                                     "NSE Stocks",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = Color(0xFF98CBFF),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
-                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp)) {
+                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                     items(nseStocks.size) { index ->
                                         RenderStockCard(nseStocks[index], index)
                                     }
@@ -455,10 +467,10 @@ fun RivavaPortfolioScreen(
                                 Text(
                                     "NYSE Stocks",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = Color(0xFF98CBFF),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
-                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp)) {
+                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                     items(nyseStocks.size) { index ->
                                         RenderStockCard(nyseStocks[index], index + nseStocks.size)
                                     }
