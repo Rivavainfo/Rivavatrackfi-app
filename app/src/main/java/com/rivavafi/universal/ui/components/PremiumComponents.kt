@@ -149,16 +149,16 @@ fun PortfolioStockCard(
     isPositive: Boolean = true,
     absoluteChange: String = "+0.00",
     percentageChange: String = "+2.4%",
-    latestNews: FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
+    latestNews: com.rivavafi.universal.domain.api.FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
     onValueClick: ((String) -> Unit)? = null
 ) {
     val isNyse = exchange.equals("NYSE", ignoreCase = true)
 
-    val primaryColor = if (isNyse) com.rivavafi.universal.ui.theme.NyseGold else com.rivavafi.universal.ui.theme.PrimaryContainerSky
+    val primaryColor = if (isNyse) Color(0xFF3B82F6) else Color(0xFF34D399)
     val badgeBgColor = primaryColor.copy(alpha = 0.1f)
 
     val priceColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isPositive) com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.VibrantRed,
+        targetValue = if (isPositive) Color(0xFF34D399) else Color(0xFFFF4C91),
         animationSpec = androidx.compose.animation.core.tween(durationMillis = 500),
         label = "priceColor"
     )
@@ -176,35 +176,33 @@ fun PortfolioStockCard(
         } catch (e: Exception) {}
     }
 
-    val arrowIcon = if (isPositive) Icons.Default.NorthEast else Icons.Default.SouthEast
-
     androidx.compose.material3.Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .glassMorphism(cornerRadius = 20f, alpha = 0.1f)
-            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+            .height(90.dp)
+            .clip(RoundedCornerShape(16.dp))
             .clickable {
                 onValueClick?.invoke("market_price")
             },
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFF111111)),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // LEFT: Logo + Names
                 Row(
+                    modifier = Modifier.weight(1.5f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(40.dp)
                             .clip(androidx.compose.foundation.shape.CircleShape)
                             .background(badgeBgColor)
                             .clickable { openUrl() },
@@ -212,7 +210,7 @@ fun PortfolioStockCard(
                     ) {
                         Text(
                             text = if (ticker.length > 4) ticker.take(4).uppercase() else ticker.uppercase(),
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = primaryColor
                         )
                     }
@@ -228,46 +226,56 @@ fun PortfolioStockCard(
                         Text(
                             text = companyName,
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = Color(0xFFAAAAAA),
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
 
-                Column(horizontalAlignment = Alignment.End, modifier = Modifier.wrapContentWidth()) {
+                // CENTER: Price
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = marketPrice,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Icon(
-                            imageVector = arrowIcon,
-                            contentDescription = null,
-                            tint = priceColor,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "$absoluteChange (${percentageChange})",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = priceColor
-                        )
-                    }
+                }
+
+                // RIGHT: % Change
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = percentageChange,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = priceColor
+                    )
+                    Text(
+                        text = absoluteChange,
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                        color = priceColor.copy(alpha = 0.8f)
+                    )
                 }
             }
 
+            // TOP-RIGHT: Link Icon
             androidx.compose.material3.IconButton(
                 onClick = { openUrl() },
-                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(32.dp)
+                    .padding(4.dp)
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.OpenInNew,
-                    contentDescription = "Search Ticker",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.OpenInNew,
+                    contentDescription = "Open",
+                    tint = Color.White.copy(alpha = 0.3f),
                     modifier = Modifier.size(16.dp)
                 )
             }
