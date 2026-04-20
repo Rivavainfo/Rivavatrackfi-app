@@ -352,17 +352,10 @@ fun RivavaPortfolioScreen(
                         )
                     }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.1f)
-                            .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp)),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        shape = RoundedCornerShape(24.dp)
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         Column(
-                            modifier = Modifier.padding(vertical = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(32.dp)
                         ) {
                             var visible by remember { mutableStateOf(false) }
                             LaunchedEffect(Unit) {
@@ -424,7 +417,7 @@ fun RivavaPortfolioScreen(
                                 Text(
                                     "NSE Stocks",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color(0xFF98CBFF),
+                                    color = Color(0xFF34D399),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
                                 LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -439,7 +432,7 @@ fun RivavaPortfolioScreen(
                                 Text(
                                     "NYSE Stocks",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = Color(0xFF98CBFF),
+                                    color = Color(0xFF3B82F6),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
                                 LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -485,7 +478,7 @@ fun RivavaPortfolioScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     // INDIAN MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFFFF4C91))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             item { StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80", uriHandler) }
                             item { StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", uriHandler) }
@@ -494,7 +487,7 @@ fun RivavaPortfolioScreen(
 
                     // US MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF3B82F6))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             item { StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1642543492481-44e81e3914a2?w=400&q=80", uriHandler) }
                             item { StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80", uriHandler) }
@@ -504,7 +497,7 @@ fun RivavaPortfolioScreen(
 
                     // INTERNATIONAL MARKET
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF34D399))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             item { StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80", uriHandler) }
                             item { StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80", uriHandler) }
@@ -659,9 +652,9 @@ fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String,
                 try {
                     uriHandler.openUri(url)
                 } catch (e: Exception) {}
-            }
-            .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             coil.compose.AsyncImage(
