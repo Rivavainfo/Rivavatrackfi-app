@@ -259,35 +259,7 @@ fun RivavaPortfolioScreen(
 
             }
 
-            item {
-                SectionHeader(title = "Market News")
-                Spacer(modifier = Modifier.height(16.dp))
-                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
 
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    // INDIAN MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80", uriHandler)
-                        StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", uriHandler)
-                    }
-
-                    // US MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1642543492481-44e81e3914a2?w=400&q=80", uriHandler)
-                        StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80", uriHandler)
-                        StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80", uriHandler)
-                    }
-
-                    // INTERNATIONAL MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = PrimarySky)
-                        StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80", uriHandler)
-                        StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80", uriHandler)
-                    }
-                }
-            }
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -505,6 +477,41 @@ fun RivavaPortfolioScreen(
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
+            item {
+                SectionHeader(title = "Market News")
+                Spacer(modifier = Modifier.height(16.dp))
+                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    // INDIAN MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            item { StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80", uriHandler) }
+                            item { StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", uriHandler) }
+                        }
+                    }
+
+                    // US MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            item { StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1642543492481-44e81e3914a2?w=400&q=80", uriHandler) }
+                            item { StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80", uriHandler) }
+                            item { StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80", uriHandler) }
+                        }
+                    }
+
+                    // INTERNATIONAL MARKET
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF98CBFF))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            item { StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80", uriHandler) }
+                            item { StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80", uriHandler) }
+                        }
+                    }
+                }
+            }
 
 
             item {
@@ -645,7 +652,8 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
 fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(200.dp)
+            .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .clickable {
                 try {
@@ -655,39 +663,40 @@ fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String,
             .glassMorphism(cornerRadius = 16f, alpha = 0.15f),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            coil.compose.AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.9f)),
+                            startY = 100f
+                        )
+                    )
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+            ) {
                 Text(
                     text = source,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = PrimarySky
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    color = Color(0xFF00E471) // Green accent
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                coil.compose.AsyncImage(
-                    model = imageUrl,
-                    contentDescription = source,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
                 )
             }
         }

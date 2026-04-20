@@ -273,7 +273,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             composable(Screen.Home.route) {
                 HomeScreen(
                     onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                    onNavigateToRivavaPortfolio = { navController.navigate(Screen.RivavaPortfolio.route) },
+                    onNavigateToRivavaPortfolio = { navController.navigate(Screen.RivavaPortfolio.route) { popUpTo(navController.graph.startDestinationId) { saveState = true } ; launchSingleTop = true ; restoreState = true } },
                     onNavigateToTransactionDetail = { transactionId ->
                         navController.navigate("${Screen.TransactionDetail.route}/$transactionId")
                     }
