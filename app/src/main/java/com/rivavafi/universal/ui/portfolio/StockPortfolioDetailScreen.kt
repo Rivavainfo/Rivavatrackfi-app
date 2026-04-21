@@ -266,12 +266,12 @@ fun StockPortfolioDetailScreen(
                                     Text(if (ticker == "IREDA") "₹32" else "$74.00", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
-                                    Text("Selling Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "₹228.84" else "$120.50", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text("Status", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text("Active", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "715%" else "62.8%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(if (ticker == "IREDA") "715%" else "138.64%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
                             Spacer(modifier = Modifier.height(24.dp))

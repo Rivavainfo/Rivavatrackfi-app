@@ -239,69 +239,80 @@ fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(24.dp))
-                            .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
-                            .border(
-                                width = 1.dp,
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(24.dp)
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(Color(0xFF0D0D0D), Color(0xFF161616))
+                                )
                             ),
                         shape = RoundedCornerShape(24.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = Color(0xFF98CBFF),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Text(
-                                    text = "Your next step to independence",
-                                    style = MaterialTheme.typography.headlineSmall.copy(
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = (-0.5).sp
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = "Take control of your financial future with clarity and confidence.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = Color.White.copy(alpha = 0.7f),
-                                    lineHeight = 24.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 15.sp
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = { onNavigateToRivavaPortfolio() },
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(50.dp)
+                                    .fillMaxSize()
                                     .background(
                                         brush = Brush.linearGradient(
-                                            colors = listOf(Color(0xFFFFAEDB), Color(0xFF00E471))
-                                        ),
-                                        shape = RoundedCornerShape(24.dp)
-                                    ),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                shape = RoundedCornerShape(24.dp),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                            ) {
+                                            colors = listOf(Color(0xFFFF4C91).copy(alpha = 0.1f), Color(0xFF3B82F6).copy(alpha = 0.1f))
+                                        )
+                                    )
+                            )
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color(0xFF3B82F6),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Text(
+                                        text = "Your next step to independence",
+                                        style = MaterialTheme.typography.headlineSmall.copy(
+                                            color = Color.White,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            letterSpacing = (-0.5).sp
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Take a step",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
+                                    text = "Take control of your financial future with clarity and confidence.",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = Color.White.copy(alpha = 0.8f),
+                                        lineHeight = 24.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 15.sp
                                     )
                                 )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Button(
+                                    onClick = { onNavigateToRivavaPortfolio() },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp)
+                                        .background(
+                                            brush = Brush.linearGradient(
+                                                colors = listOf(Color(0xFFFF4C91), Color(0xFF3B82F6))
+                                            ),
+                                            shape = RoundedCornerShape(20.dp)
+                                        )
+                                        ,
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                    shape = RoundedCornerShape(20.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                                ) {
+                                    Text(
+                                        text = "Take a step",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
