@@ -377,7 +377,7 @@ fun RivavaPortfolioScreen(
                                 val ticker = if (isIreda) "IREDA" else "RTX"
                                 val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
                                 val exchange = if (isIreda) "NSE" else "NYSE"
-                                val currency = if (isIreda) "₹" else "$"
+                                val currency = "₹"
 
                                 val price = quote?.c ?: if (isIreda) 150.0 else 100.0
                                 val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
@@ -474,36 +474,25 @@ fun RivavaPortfolioScreen(
                 SectionHeader(title = "Market News")
                 Spacer(modifier = Modifier.height(16.dp))
                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                val indianMarket = listOf(
+                    NewsItem("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&q=80"),
+                    NewsItem("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80")
+                )
+                val usMarket = listOf(
+                    NewsItem("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80"),
+                    NewsItem("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&q=80"),
+                    NewsItem("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?w=600&q=80")
+                )
+                val internationalMarket = listOf(
+                    NewsItem("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=600&q=80"),
+                    NewsItem("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&q=80")
+                )
 
-                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    // INDIAN MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇮🇳 INDIAN MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFFFF4C91))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            item { StaticNewsCard("Business Standard", "Latest Financial News from India", "https://www.business-standard.com/", "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=400&q=80", uriHandler) }
-                            item { StaticNewsCard("The Economic Times", "Market Updates and Business News", "https://economictimes.indiatimes.com/", "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=80", uriHandler) }
-                        }
-                    }
-
-                    // US MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🇺🇸 US MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF3B82F6))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            item { StaticNewsCard("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1642543492481-44e81e3914a2?w=400&q=80", uriHandler) }
-                            item { StaticNewsCard("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=80", uriHandler) }
-                            item { StaticNewsCard("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&q=80", uriHandler) }
-                        }
-                    }
-
-                    // INTERNATIONAL MARKET
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("🌍 INTERNATIONAL MARKET", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF34D399))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            item { StaticNewsCard("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=400&q=80", uriHandler) }
-                            item { StaticNewsCard("The Economist", "World News, Politics, Economics", "https://www.economist.com/", "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80", uriHandler) }
-                        }
-                    }
-                }
+                MarketNewsSection("🇮🇳 INDIAN MARKET", Color(0xFFFF4C91), indianMarket, uriHandler)
+                Spacer(modifier = Modifier.height(24.dp))
+                MarketNewsSection("🇺🇸 US MARKET", Color(0xFF3B82F6), usMarket, uriHandler)
+                Spacer(modifier = Modifier.height(24.dp))
+                MarketNewsSection("🌍 INTERNATIONAL MARKET", Color(0xFF34D399), internationalMarket, uriHandler)
             }
 
 
@@ -549,7 +538,7 @@ fun CryptoCard(id: String, data: CryptoData) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "$${String.format(Locale.getDefault(), "%.2f", data.price)}",
+                text = "₹${String.format(Locale.getDefault(), "%.2f", data.price)}",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -613,18 +602,16 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            if (news.image.isNotBlank()) {
-                coil.compose.AsyncImage(
-                    model = news.image,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-            }
+            coil.compose.AsyncImage(
+                model = if (news.image.isBlank()) "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80" else news.image,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = news.headline,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -641,11 +628,50 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
         }
     }
 }
+
+data class NewsItem(
+    val source: String,
+    val title: String,
+    val url: String,
+    val imageUrl: String
+)
+
+@Composable
+fun MarketNewsSection(
+    heading: String,
+    headingColor: Color,
+    items: List<NewsItem>,
+    uriHandler: androidx.compose.ui.platform.UriHandler
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            heading,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = headingColor
+        )
+        items.chunked(2).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowItems.forEach { news ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        StaticNewsCard(news.source, news.title, news.url, news.imageUrl, uriHandler)
+                    }
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String, uriHandler: androidx.compose.ui.platform.UriHandler) {
     Card(
         modifier = Modifier
-            .width(200.dp)
+            .fillMaxWidth()
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
             .clickable {

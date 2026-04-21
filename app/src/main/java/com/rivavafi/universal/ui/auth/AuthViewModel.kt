@@ -84,12 +84,13 @@ class AuthViewModel @Inject constructor(
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                val isNew = repository.saveUserToFirestore(
+                val firestoreNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
                     email = email
                 )
-                _isNewUser.value = isNew
+                val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
+                _isNewUser.value = firebaseNew || firestoreNew
                 authResult.user?.let { repository.sendUserToSheet(it, "Google") }
 
                 userPreferencesRepository.saveUserName(name)
@@ -132,7 +133,9 @@ class AuthViewModel @Inject constructor(
 
                 if (repository.auth.currentUser?.isEmailVerified == true) {
                     val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
-                    val isNew = repository.saveUserToFirestore(uid, "Email User", email)
+                    val firestoreNew = repository.saveUserToFirestore(uid, "Email User", email)
+                    val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                    val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
                     if (isNew) {
                         repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
@@ -252,11 +255,13 @@ class AuthViewModel @Inject constructor(
             try {
                 repository.auth.currentUser?.reload()?.await()
                 if (repository.auth.currentUser?.isEmailVerified == true) {
-                    val isNew = repository.saveUserToFirestore(
+                    val firestoreNew = repository.saveUserToFirestore(
                         uid = repository.auth.currentUser?.uid ?: "",
                         name = "Email User",
                         email = repository.auth.currentUser?.email ?: ""
                     )
+                    val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                    val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
                     if (isNew) {
                         repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
@@ -285,11 +290,13 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                    val isNew = repository.saveUserToFirestore(
+                    val firestoreNew = repository.saveUserToFirestore(
                         uid = uid,
                         name = "Phone User",
                         email = ""
                     )
+                    val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
+                    val isNew = firebaseNew || firestoreNew
                     _isNewUser.value = isNew
                     if (isNew) {
                         authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
@@ -370,11 +377,13 @@ class AuthViewModel @Inject constructor(
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val isNew = repository.saveUserToFirestore(
+                val firestoreNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = "Phone User",
                     email = ""
                 )
+                val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
+                val isNew = firebaseNew || firestoreNew
                 _isNewUser.value = isNew
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Phone") }

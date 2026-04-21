@@ -162,8 +162,8 @@ fun StockPortfolioDetailScreen(
             )
 
             CashBalanceSection(
-                usdCash = "8.90",
-                totalCash = "8.90"
+                usdCash = "₹8.90",
+                totalCash = "₹8.90"
             )
 
             if (ticker == "IREDA" || ticker == "IREDA.NS") {
@@ -213,7 +213,7 @@ fun StockPortfolioDetailScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
                             }
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("$${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            Text("₹${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("09:30:01 EST", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -263,7 +263,7 @@ fun StockPortfolioDetailScreen(
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column {
                                     Text(if (ticker == "IREDA") "IPO Price" else "Buy Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "₹32" else "$74.00", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(if (ticker == "IREDA") "₹32" else "82.22 USD", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
                                     Text("Status", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
