@@ -43,11 +43,11 @@ fun PremiumCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .glassMorphism(cornerRadius = 24f, alpha = 0.15f),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp)),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -86,21 +86,16 @@ fun PremiumButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    colors: List<Color> = listOf(Color(0xFF1E293B), Color(0xFF0F172A)) // Dark blue-grey gradient default
+    colors: List<Color> = listOf(Color(0xFF3B82F6))
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .background(
-                brush = Brush.linearGradient(
-                    colors = colors
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(16.dp),
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = colors.first(), contentColor = Color.White),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
         contentPadding = PaddingValues(horizontal = 24.dp)
     ) {
         if (icon != null) {

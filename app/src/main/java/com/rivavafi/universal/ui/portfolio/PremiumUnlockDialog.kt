@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -83,10 +82,7 @@ fun PremiumUnlockDialog(
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
-                                    .background(
-                                        Brush.linearGradient(listOf(Color(0xFF00A3FF), Color(0xFF00E471))),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ),
+                                    .background(Color(0xFF3B82F6), shape = RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(Icons.Default.VpnKey, contentDescription = null, tint = Color.White, modifier = Modifier.size(32.dp))
@@ -131,13 +127,10 @@ fun PremiumUnlockDialog(
                                 onClick = {
                                     onPayClick?.invoke()
                                 },
-                                modifier = Modifier.fillMaxWidth().height(56.dp)
-                                    .background(
-                                        brush = Brush.linearGradient(listOf(Color(0xFF00E471), Color(0xFF00A3FF))),
-                                        shape = RoundedCornerShape(28.dp)
-                                    ),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                shape = RoundedCornerShape(28.dp)
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                                shape = RoundedCornerShape(20.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                             ) {
                                 Text("Upgrade Now", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
                             }
@@ -149,7 +142,7 @@ fun PremiumUnlockDialog(
                                 Text(
                                     "Maybe Later",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color(0xFF9CA3AF)
                                 )
                             }
                         }
@@ -207,14 +200,19 @@ fun PremiumUnlockDialog(
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen)
+                                shape = RoundedCornerShape(20.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                             ) {
                                 Text("Verify & Unlock", fontWeight = FontWeight.Bold)
                             }
 
-                            TextButton(onClick = { currentStep = UnlockStep.Main }) {
-                                Text("Go Back", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            OutlinedButton(
+                                onClick = { currentStep = UnlockStep.Main },
+                                shape = RoundedCornerShape(20.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6B7280))
+                            ) {
+                                Text("Go Back", color = Color(0xFF9CA3AF), fontWeight = FontWeight.Medium)
                             }
                         }
                     }
