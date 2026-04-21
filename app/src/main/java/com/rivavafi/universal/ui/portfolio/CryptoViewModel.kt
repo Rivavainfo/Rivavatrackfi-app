@@ -19,6 +19,11 @@ data class CryptoData(
 class CryptoViewModel @Inject constructor(
     private val repository: CryptoRepository
 ) : ViewModel() {
+    private val dummyCryptoData = mapOf(
+        "bitcoin" to CryptoData(price = 65000.0, change24h = 2.5),
+        "ethereum" to CryptoData(price = 3200.0, change24h = -1.2),
+        "solana" to CryptoData(price = 145.0, change24h = 1.1)
+    )
 
     private val _cryptoStates = MutableStateFlow<Map<String, CryptoData>>(emptyMap())
     val cryptoStates: StateFlow<Map<String, CryptoData>> = _cryptoStates
@@ -48,37 +53,40 @@ class CryptoViewModel @Inject constructor(
     private suspend fun fetchCrypto(ids: List<String>) {
         val updated = _cryptoStates.value.toMutableMap()
         val defaultCryptoData = CryptoData(price = 0.0, change24h = 0.0)
-        val fallback = mapOf(
-            "bitcoin" to CryptoData(price = 65000.0, change24h = 2.5),
-            "ethereum" to CryptoData(price = 3200.0, change24h = -1.2),
-            "solana" to CryptoData(price = 145.0, change24h = 1.1)
-        )
         ids.forEach { id ->
             repository.getCryptoQuote(id).collect { result ->
                 result.onSuccess { quote ->
-                    val changePercent = if (quote.pc != 0.0) ((quote.c - quote.pc) / quote.pc) * 100 else 0.0
-                    updated[id] = CryptoData(
-                        price = quote.c,
-                        change24h = changePercent
-                    )
+                    if (quote.c > 0.0) {
+                        val changePercent = if (quote.pc != 0.0) ((quote.c - quote.pc) / quote.pc) * 100 else 0.0
+                        updated[id] = CryptoData(
+                            price = quote.c,
+                            change24h = changePercent
+                        )
+                    } else {
+                        updated[id] = dummyCryptoData[id] ?: defaultCryptoData
+                    }
                 }.onFailure {
                     if (updated[id] == null) {
-                        updated[id] = fallback[id] ?: defaultCryptoData
-                        updated[id] = fallback[id]
+                        updated[id] = dummyCryptoData[id] ?: defaultCryptoData
                     }
                 }
             }
         }
-        if (updated.isEmpty()) {
-            _cryptoStates.value = fallback
+
+        if (updated.isEmpty() || updated.values.all { it.price <= 0.0 }) {
+            _cryptoStates.value = showDummyCryptoData(ids)
             return
         }
+
         ids.forEach { id ->
             if (updated[id] == null) {
-                updated[id] = fallback[id] ?: defaultCryptoData
-                updated[id] = fallback[id]
+                updated[id] = dummyCryptoData[id] ?: defaultCryptoData
             }
         }
         _cryptoStates.value = updated
+    }
+
+    private fun showDummyCryptoData(ids: List<String>): Map<String, CryptoData> {
+        return ids.associateWith { id -> dummyCryptoData[id] ?: CryptoData(price = 0.0, change24h = 0.0) }
     }
 }

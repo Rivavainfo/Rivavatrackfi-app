@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -275,14 +274,7 @@ fun HomeScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(1.dp)
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                        Color.Transparent
-                                    )
-                                )
-                            )
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     )
                 }
 
@@ -295,17 +287,16 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
                             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                             .clickable {
                                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
                                 context.startActivity(intent)
                             },
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFFFFAEDB).copy(alpha = 0.1f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF111111)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -323,14 +314,13 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
                             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                             .clickable { showVideoCallDialog = true },
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00E471).copy(alpha = 0.1f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF111111)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -348,14 +338,13 @@ fun HomeScreen(
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .glassMorphism(cornerRadius = 16f, alpha = 0.15f)
                             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                             .clickable { showChatDialog = true },
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Box(
-                            modifier = Modifier.fillMaxSize().background(Color(0xFF00A3FF).copy(alpha = 0.1f)),
+                            modifier = Modifier.fillMaxSize().background(Color(0xFF111111)),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
