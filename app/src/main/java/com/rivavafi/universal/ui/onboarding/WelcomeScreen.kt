@@ -55,317 +55,75 @@ fun WelcomeScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
             .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // Verified Secure Portal Badge
-        Surface(
-            color = WelcomeSurfaceContainerLow,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.padding(bottom = 24.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.VerifiedUser,
-                    contentDescription = null,
-                    tint = WelcomePrimaryLightBlue,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "VERIFIED SECURE PORTAL",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp
-                    )
-                )
-            }
-        }
-
         // Title
         Text(
-            text = buildAnnotatedString {
-                append("Welcome to\n")
-                withStyle(style = SpanStyle(color = WelcomePrimaryLightBlue)) {
-                    append("Rivava+")
-                }
-            },
-            style = MaterialTheme.typography.displayMedium.copy(
+            text = "Welcome to Rivava",
+            style = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White,
-                lineHeight = 56.sp
+                color = Color.White
             ),
             textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
-            modifier = Modifier
-                .size(112.dp)
-                .clip(RoundedCornerShape(40.dp))
-                .background(Color.White.copy(alpha = 0.03f))
-                .glassMorphism(cornerRadius = 40f, alpha = 0.1f)
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.rivava_logo),
-                contentDescription = "Rivava Logo",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(36.dp)),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "EXPERIENCE EXCELLENCE",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            letterSpacing = 4.sp
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Welcome to",
-            style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
-            color = MaterialTheme.colorScheme.onBackground,
-            letterSpacing = (-1).sp
-        )
-        Text(
-            text = "Rivava+",
-            style = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Black, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
-            color = MaterialTheme.colorScheme.primary,
-            letterSpacing = (-2).sp
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Subtitle
-        Text(
-            text = "Private. Offline. Secure. Let's organize your finances the smart way.",
+            text = "Let’s get to know you",
             style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 24.sp
+                color = Color.White.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Medium
             ),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            textAlign = TextAlign.Center
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "PRIVATE • OFFLINE • SECURE",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            letterSpacing = 2.sp
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Full Privacy Card
-        Surface(
-            color = WelcomeSurfaceContainerLow,
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LockOpen,
-                    contentDescription = null,
-                    tint = WelcomeSecondaryPink,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .padding(bottom = 16.dp)
-                )
-                Text(
-                    text = "Full Privacy",
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Your data never leaves your device.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Image Card
-        Surface(
-            color = WelcomeSurfaceContainerLow,
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.welcome_bg_nodes),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-                alpha = 0.5f
-            )
-        }
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Form Section
-        Surface(
-            color = WelcomeSurfaceContainerLow,
-            shape = RoundedCornerShape(32.dp),
-            modifier = Modifier.fillMaxWidth()
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Enter your name", color = Color.White.copy(0.7f)) },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A3FF),
+                unfocusedBorderColor = Color.White.copy(0.2f),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = {
+                if (name.isNotBlank()) {
+                    viewModel.saveName(name)
+                    onNavigateNext()
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                ),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            shape = RoundedCornerShape(20.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(32.dp)
-            ) {
-                Text(
-                    text = "WHAT SHOULD WE CALL YOU?",
-                    color = WelcomePrimaryLightBlue,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.5.sp
-                    ),
-                    modifier = Modifier.padding(bottom = 16.dp)
+            Text(
+                "Continue",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    placeholder = { Text("Enter your name", color = Color.Gray) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = WelcomeSurfaceContainerHighest,
-                        unfocusedContainerColor = WelcomeSurfaceContainerHighest,
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = WelcomePrimaryLightBlue
-                    ),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Fingerprint,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        val finalName = if (name.isNotBlank()) name else "User"
-                        viewModel.saveName(finalName)
-                        onNavigateNext()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    contentPadding = PaddingValues()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        WelcomePrimaryLightBlue,
-                                        WelcomePrimaryContainer
-                                    )
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "Get Started",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.Black
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Outlined.ArrowForward,
-                                contentDescription = null,
-                                tint = Color.Black
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Bottom Icons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Outlined.Shield,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "AES-256",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Outlined.CloudOff,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "100% OFFLINE",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Outlined.VisibilityOff,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "NO TRACKING",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
-                        )
-                    }
-                }
-            }
+            )
         }
     }
 }
