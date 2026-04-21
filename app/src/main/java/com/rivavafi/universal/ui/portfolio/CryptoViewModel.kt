@@ -62,7 +62,7 @@ class CryptoViewModel @Inject constructor(
                     )
                 }.onFailure {
                     if (updated[id] == null) {
-                        updated[id] = fallback[id] ?: CryptoData(0.0, 0.0)
+                        updated[id] = fallback[id]
                     }
                 }
             }
@@ -73,7 +73,7 @@ class CryptoViewModel @Inject constructor(
         }
         ids.forEach { id ->
             if (updated[id] == null) {
-                updated[id] = fallback[id] ?: CryptoData(0.0, 0.0)
+                updated[id] = fallback[id]
             }
         }
         _cryptoStates.value = updated
