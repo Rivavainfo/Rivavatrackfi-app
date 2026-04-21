@@ -1,8 +1,9 @@
 package com.rivavafi.universal.domain.repository
 
 import com.rivavafi.universal.BuildConfig
-import com.rivavafi.universal.domain.api.StockResponse
 import com.rivavafi.universal.domain.api.CryptoApiService
+import com.rivavafi.universal.domain.api.StockResponse
+import com.rivavafi.universal.domain.api.YahooCryptoApiService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -10,28 +11,75 @@ import javax.inject.Singleton
 
 @Singleton
 class CryptoRepository @Inject constructor(
-    private val apiService: CryptoApiService
+    private val finnhubApiService: CryptoApiService,
+    private val yahooApiService: YahooCryptoApiService
 ) {
     private val apiKey = BuildConfig.FINNHUB_API_KEY
 
     fun getCryptoQuote(cryptoId: String): Flow<Result<StockResponse>> = flow {
-        if (apiKey.isBlank()) {
-            emit(Result.failure(Exception("Missing API Key")))
+        val symbols = resolveSymbols(cryptoId)
+
+        val finnhubQuote = fetchFromFinnhub(symbols.finnhubSymbol)
+        if (finnhubQuote != null) {
+            emit(Result.success(finnhubQuote))
             return@flow
         }
 
-        val symbol = when (cryptoId.lowercase()) {
-            "bitcoin" -> "BINANCE:BTCUSDT"
-            "ethereum" -> "BINANCE:ETHUSDT"
-            "solana" -> "BINANCE:SOLUSDT"
-            else -> "BINANCE:BTCUSDT"
+        val yahooQuote = fetchFromYahoo(symbols.yahooSymbol)
+        if (yahooQuote != null) {
+            emit(Result.success(yahooQuote))
+            return@flow
         }
 
-        try {
-            val response = apiService.getCryptoQuote(symbol, apiKey)
-            emit(Result.success(response))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+        emit(Result.failure(Exception("Unable to load crypto quote from Finnhub or Yahoo.")))
+    }
+
+    private suspend fun fetchFromFinnhub(symbol: String): StockResponse? {
+        if (apiKey.isBlank()) return null
+
+        return try {
+            val response = finnhubApiService.getCryptoQuote(symbol, apiKey)
+            if (response.c > 0) response else null
+        } catch (_: Exception) {
+            null
         }
     }
+
+    private suspend fun fetchFromYahoo(symbol: String): StockResponse? {
+        return try {
+            val response = yahooApiService.getCryptoChart(symbol = symbol)
+            val result = response.chart?.result?.firstOrNull() ?: return null
+            val meta = result.meta ?: return null
+
+            val price = meta.regularMarketPrice ?: meta.previousClose ?: return null
+            val previousClose = meta.previousClose ?: meta.chartPreviousClose ?: price
+            val open = meta.regularMarketOpen ?: previousClose
+            val dayHigh = meta.regularMarketDayHigh ?: price
+            val dayLow = meta.regularMarketDayLow ?: price
+
+            StockResponse(
+                c = price,
+                h = dayHigh,
+                l = dayLow,
+                o = open,
+                pc = previousClose
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun resolveSymbols(cryptoId: String): CryptoSymbols {
+        return when (cryptoId.lowercase()) {
+            "bitcoin" -> CryptoSymbols("BINANCE:BTCUSDT", "BTC-USD")
+            "ethereum" -> CryptoSymbols("BINANCE:ETHUSDT", "ETH-USD")
+            "solana" -> CryptoSymbols("BINANCE:SOLUSDT", "SOL-USD")
+            else -> CryptoSymbols("BINANCE:BTCUSDT", "BTC-USD")
+        }
+    }
+
+    private data class CryptoSymbols(
+        val finnhubSymbol: String,
+        val yahooSymbol: String
+    )
 }

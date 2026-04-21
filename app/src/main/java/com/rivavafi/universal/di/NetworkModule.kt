@@ -3,6 +3,7 @@ package com.rivavafi.universal.di
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockApiService
 import com.rivavafi.universal.domain.api.ChatApiService
+import com.rivavafi.universal.domain.api.YahooCryptoApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +44,18 @@ object NetworkModule {
             .build()
     }
 
+
+    @Provides
+    @Singleton
+    @Named("yahoo")
+    fun provideYahooRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://query1.finance.yahoo.com/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     @Provides
     @Singleton
     @Named("chat")
@@ -65,6 +78,13 @@ object NetworkModule {
     @Singleton
     fun provideCryptoApiService(@Named("finnhub") retrofit: Retrofit): CryptoApiService {
         return retrofit.create(CryptoApiService::class.java)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideYahooCryptoApiService(@Named("yahoo") retrofit: Retrofit): YahooCryptoApiService {
+        return retrofit.create(YahooCryptoApiService::class.java)
     }
 
     @Provides
