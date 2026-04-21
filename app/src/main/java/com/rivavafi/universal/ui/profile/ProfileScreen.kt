@@ -83,7 +83,7 @@ fun ProfileScreen(
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val profileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale.US)
+    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }

@@ -241,7 +241,7 @@ fun HomeScreen(
                             .clip(RoundedCornerShape(24.dp))
                             .background(
                                 brush = Brush.linearGradient(
-                                    colors = listOf(Color(0xFF0D0D0D), Color(0xFF161616))
+                                    colors = listOf(Color(0xFF0A0F1F), Color(0xFF111827), Color(0xFF1F2937))
                                 )
                             ),
                         shape = RoundedCornerShape(24.dp),
@@ -254,8 +254,26 @@ fun HomeScreen(
                                     .fillMaxSize()
                                     .background(
                                         brush = Brush.linearGradient(
-                                            colors = listOf(Color(0xFFFF4C91).copy(alpha = 0.1f), Color(0xFF3B82F6).copy(alpha = 0.1f))
+                                            colors = listOf(
+                                                Color(0xFF8B5CF6).copy(alpha = 0.24f),
+                                                Color(0xFF06B6D4).copy(alpha = 0.16f),
+                                                Color(0xFF0EA5E9).copy(alpha = 0.22f)
+                                            )
                                         )
+                                    )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(1.dp)
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.White.copy(alpha = 0.08f),
+                                                Color.Transparent
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(24.dp)
                                     )
                             )
                             Column(modifier = Modifier.padding(24.dp)) {
@@ -266,11 +284,11 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
                                         contentDescription = null,
-                                        tint = Color(0xFF3B82F6),
+                                        tint = Color(0xFFC4B5FD),
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Text(
-                                        text = "Your next step to independence",
+                                        text = "Find your financial independence",
                                         style = MaterialTheme.typography.headlineSmall.copy(
                                             color = Color.White,
                                             fontWeight = FontWeight.ExtraBold,
@@ -280,9 +298,9 @@ fun HomeScreen(
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = "Take control of your financial future with clarity and confidence.",
+                                    text = "A premium portfolio experience built to turn market data into confident long-term moves.",
                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = Color.White.copy(alpha = 0.8f),
+                                        color = Color.White.copy(alpha = 0.88f),
                                         lineHeight = 24.sp,
                                         fontWeight = FontWeight.Medium,
                                         fontSize = 15.sp
@@ -296,7 +314,7 @@ fun HomeScreen(
                                         .height(50.dp)
                                         .background(
                                             brush = Brush.linearGradient(
-                                                colors = listOf(Color(0xFFFF4C91), Color(0xFF3B82F6))
+                                                colors = listOf(Color(0xFF7C3AED), Color(0xFF2563EB))
                                             ),
                                             shape = RoundedCornerShape(20.dp)
                                         )

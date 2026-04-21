@@ -1,6 +1,7 @@
 package com.rivavafi.universal.domain.repository
 
 import com.rivavafi.universal.BuildConfig
+import com.rivavafi.universal.domain.api.CoinGeckoApiService
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockResponse
 import com.rivavafi.universal.domain.api.YahooCryptoApiService
@@ -11,12 +12,19 @@ import javax.inject.Singleton
 
 @Singleton
 class CryptoRepository @Inject constructor(
+    private val coinGeckoApiService: CoinGeckoApiService,
     private val finnhubApiService: CryptoApiService,
     private val yahooApiService: YahooCryptoApiService
 ) {
     private val apiKey = BuildConfig.FINNHUB_API_KEY
 
     fun getCryptoQuote(cryptoId: String): Flow<Result<StockResponse>> = flow {
+        val coinGeckoQuote = fetchFromCoinGecko(cryptoId)
+        if (coinGeckoQuote != null) {
+            emit(Result.success(coinGeckoQuote))
+            return@flow
+        }
+
         val symbols = resolveSymbols(cryptoId)
 
         val finnhubQuote = fetchFromFinnhub(symbols.finnhubSymbol)
@@ -31,7 +39,31 @@ class CryptoRepository @Inject constructor(
             return@flow
         }
 
-        emit(Result.failure(Exception("Unable to load crypto quote from Finnhub or Yahoo.")))
+        emit(Result.failure(Exception("Unable to load crypto quote from CoinGecko, Finnhub or Yahoo.")))
+    }
+
+    private suspend fun fetchFromCoinGecko(cryptoId: String): StockResponse? {
+        return try {
+            val response = coinGeckoApiService.getSimplePrice(ids = cryptoId.lowercase())
+            val quote = response[cryptoId.lowercase()] ?: return null
+            val currentPrice = quote.inrPrice ?: return null
+            val changePercent = quote.inr24hChange ?: 0.0
+            val previousClose = if (changePercent == 0.0) {
+                currentPrice
+            } else {
+                currentPrice / (1 + (changePercent / 100))
+            }
+
+            StockResponse(
+                c = currentPrice,
+                h = currentPrice,
+                l = currentPrice,
+                o = previousClose,
+                pc = previousClose
+            )
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private suspend fun fetchFromFinnhub(symbol: String): StockResponse? {
