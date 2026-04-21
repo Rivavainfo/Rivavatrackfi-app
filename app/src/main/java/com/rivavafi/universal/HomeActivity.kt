@@ -91,7 +91,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object AiReview : Screen("ai_review", "AI Review", Icons.Outlined.AutoAwesome)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings)
     object Profile : Screen("profile", "Profile", Icons.Outlined.Person)
-    object RivavaPortfolio : Screen("rivava_portfolio", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
+    object RivavaPortfolio : Screen("portfolio_screen", "Rivava Portfolio", Icons.Outlined.AccountBalanceWallet)
     object HelpCenter : Screen("help_center", "Help Center", Icons.Outlined.Info)
     object StockDetail : Screen("stock_detail", "Stock Detail", Icons.Outlined.AccountBalanceWallet)
     object TransactionDetail : Screen("transaction_detail", "Transaction Detail", Icons.AutoMirrored.Outlined.ListAlt)
@@ -275,7 +275,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             composable(Screen.Home.route) {
                 HomeScreen(
                     onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
-                    onNavigateToRivavaPortfolio = { navController.navigate(Screen.RivavaPortfolio.route) { popUpTo(navController.graph.startDestinationId) { saveState = true } ; launchSingleTop = true ; restoreState = true } },
+                    onNavigateToRivavaPortfolio = { navController.navigate("portfolio_screen") },
                     onNavigateToTransactionDetail = { transactionId ->
                         navController.navigate("${Screen.TransactionDetail.route}/$transactionId")
                     }

@@ -216,121 +216,40 @@ fun HomeScreen(
 
             item {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
-                                    )
-                                ),
-                                shape = RoundedCornerShape(24.dp)
-                            )
-                            .glowEffect(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                radius = 20f,
-                                isSelected = true
-                            )
-                    )
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(Color(0xFF0A0F1F), Color(0xFF111827), Color(0xFF1F2937))
-                                )
-                            ),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp)),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        brush = Brush.linearGradient(
-                                            colors = listOf(
-                                                Color(0xFF8B5CF6).copy(alpha = 0.24f),
-                                                Color(0xFF06B6D4).copy(alpha = 0.16f),
-                                                Color(0xFF0EA5E9).copy(alpha = 0.22f)
-                                            )
-                                        )
-                                    )
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(1.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.White.copy(alpha = 0.08f),
-                                                Color.Transparent
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(24.dp)
-                                    )
-                            )
-                            Column(modifier = Modifier.padding(24.dp)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color(0xFFC4B5FD),
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Text(
-                                        text = "Find your financial independence",
-                                        style = MaterialTheme.typography.headlineSmall.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            letterSpacing = (-0.5).sp
-                                        )
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "A premium portfolio experience built to turn market data into confident long-term moves.",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = Color.White.copy(alpha = 0.88f),
-                                        lineHeight = 24.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 15.sp
-                                    )
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Text(
+                                text = "Your next step to independence",
+                                style = MaterialTheme.typography.headlineSmall.copy(
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
                                 )
-                                Spacer(modifier = Modifier.height(24.dp))
-                                Button(
-                                    onClick = { onNavigateToRivavaPortfolio() },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(50.dp)
-                                        .background(
-                                            brush = Brush.linearGradient(
-                                                colors = listOf(Color(0xFF7C3AED), Color(0xFF2563EB))
-                                            ),
-                                            shape = RoundedCornerShape(20.dp)
-                                        )
-                                        ,
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                                    shape = RoundedCornerShape(20.dp),
-                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
-                                ) {
-                                    Text(
-                                        text = "Take a step",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            color = Color.White,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                }
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Take control of your financial future with clarity.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = Color.White.copy(alpha = 0.86f),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Button(
+                                onClick = { onNavigateToRivavaPortfolio() },
+                                modifier = Modifier.fillMaxWidth().height(52.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text("Take a step", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -478,10 +397,11 @@ fun HomeScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Button(
                                     onClick = { showPremiumUnlockDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), contentColor = MaterialTheme.colorScheme.primary),
-                                    shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(36.dp)
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4C91), contentColor = Color.White),
+                                    shape = RoundedCornerShape(20.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                                    modifier = Modifier.height(48.dp)
                                 ) {
                                     Text(
                                         text = "Unlock Premium",
