@@ -49,24 +49,23 @@ class CryptoViewModel @Inject constructor(
     }
 
     private suspend fun fetchCrypto(ids: List<String>) {
-        val idsString = ids.joinToString(",")
-        repository.getSimplePrices(idsString).collect { result ->
-            result.onSuccess { data ->
-                if (data.isNotEmpty()) {
-                    val newState = mutableMapOf<String, CryptoData>()
-                    data.forEach { (id, metrics) ->
-                        val price = metrics["usd"] ?: 0.0
-                        val change = metrics["usd_24h_change"] ?: 0.0
-                        newState[id] = CryptoData(price, change)
+        val updated = _cryptoStates.value.toMutableMap()
+        ids.forEach { id ->
+            repository.getCryptoQuote(id).collect { result ->
+                result.onSuccess { quote ->
+                    val changePercent = if (quote.pc != 0.0) ((quote.c - quote.pc) / quote.pc) * 100 else 0.0
+                    updated[id] = CryptoData(
+                        price = quote.c,
+                        change24h = changePercent
+                    )
+                }.onFailure {
+                    if (!updated.containsKey(id)) {
+                        updated[id] = generateMockCryptoData(listOf(id))[id] ?: CryptoData(0.0, 0.0)
                     }
-                    _cryptoStates.value = newState
-                } else {
-                    _cryptoStates.value = generateMockCryptoData(ids)
                 }
-            }.onFailure {
-                _cryptoStates.value = generateMockCryptoData(ids)
             }
         }
+        _cryptoStates.value = updated
     }
 
     private fun generateMockCryptoData(ids: List<String>): Map<String, CryptoData> {

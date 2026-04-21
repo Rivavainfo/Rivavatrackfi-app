@@ -55,9 +55,10 @@ class AuthActivity : ComponentActivity() {
             val providerId = user.providerData.firstOrNull()?.providerId
             val isPhoneAuth = providerId == "phone" || user.phoneNumber != null
             val isGoogleAuth = providerId == "google.com"
+            val profileNameMissing = user.displayName.isNullOrBlank()
 
             if (isPhoneAuth || isGoogleAuth || user.isEmailVerified) {
-                goToHome(false)
+                goToHome(profileNameMissing)
                 return
             }
         }
