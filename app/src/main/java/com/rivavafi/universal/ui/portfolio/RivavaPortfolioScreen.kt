@@ -163,21 +163,17 @@ fun RivavaPortfolioScreen(
                         onClick = { showUnlockDialog = true },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .background(
-                                brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                    colors = listOf(Color(0xFFFFAEDB), Color(0xFF00E471))
-                                ),
-                                shape = RoundedCornerShape(28.dp)
-                            ),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF00E471),
+                            contentColor = Color(0xFF04120A)
+                        ),
                         shape = RoundedCornerShape(28.dp)
                     ) {
                         Text(
                             "Unlock Premium",
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                fontWeight = FontWeight.Bold
                             )
                         )
                     }
@@ -517,6 +513,12 @@ fun CryptoCard(id: String, data: CryptoData) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val isPositive = data.change24h >= 0
     val color = if (isPositive) com.rivavafi.universal.ui.theme.EmeraldGreen else com.rivavafi.universal.ui.theme.VibrantRed
+    val symbol = when (id.lowercase()) {
+        "bitcoin" -> "BTC"
+        "ethereum" -> "ETH"
+        "solana" -> "SOL"
+        else -> id.uppercase(Locale.getDefault())
+    }
     Card(
         modifier = Modifier
             .width(180.dp)
@@ -532,13 +534,13 @@ fun CryptoCard(id: String, data: CryptoData) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = id.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                text = "${id.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }} · $symbol",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "₹${String.format(Locale.getDefault(), "%.2f", data.price)}",
+                text = "$${String.format(Locale.getDefault(), "%.2f", data.price)}",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.onSurface
             )
