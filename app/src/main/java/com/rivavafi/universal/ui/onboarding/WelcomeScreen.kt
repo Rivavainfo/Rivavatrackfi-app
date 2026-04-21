@@ -107,20 +107,19 @@ fun WelcomeScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .background(
-                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
-                        colors = listOf(Color(0xFF00E471), Color(0xFF00A3FF))
-                    ),
-                    shape = RoundedCornerShape(20.dp)
-                ),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF00A3FF),
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFF005D8A),
+                disabledContentColor = Color.White.copy(alpha = 0.75f)
+            ),
+            enabled = name.isNotBlank(),
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
                 "Continue",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
             )
