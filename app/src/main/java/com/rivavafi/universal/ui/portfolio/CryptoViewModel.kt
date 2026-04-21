@@ -47,6 +47,7 @@ class CryptoViewModel @Inject constructor(
 
     private suspend fun fetchCrypto(ids: List<String>) {
         val updated = _cryptoStates.value.toMutableMap()
+        val defaultCryptoData = CryptoData(price = 0.0, change24h = 0.0)
         val fallback = mapOf(
             "bitcoin" to CryptoData(price = 65000.0, change24h = 2.5),
             "ethereum" to CryptoData(price = 3200.0, change24h = -1.2),
@@ -62,6 +63,7 @@ class CryptoViewModel @Inject constructor(
                     )
                 }.onFailure {
                     if (updated[id] == null) {
+                        updated[id] = fallback[id] ?: defaultCryptoData
                         updated[id] = fallback[id]
                     }
                 }
@@ -73,6 +75,7 @@ class CryptoViewModel @Inject constructor(
         }
         ids.forEach { id ->
             if (updated[id] == null) {
+                updated[id] = fallback[id] ?: defaultCryptoData
                 updated[id] = fallback[id]
             }
         }
