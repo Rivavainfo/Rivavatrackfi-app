@@ -3,6 +3,7 @@ package com.rivavafi.universal.di
 import com.rivavafi.universal.domain.api.CryptoApiService
 import com.rivavafi.universal.domain.api.StockApiService
 import com.rivavafi.universal.domain.api.ChatApiService
+import com.rivavafi.universal.domain.api.CoinGeckoApiService
 import com.rivavafi.universal.domain.api.YahooCryptoApiService
 import dagger.Module
 import dagger.Provides
@@ -58,6 +59,17 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("coingecko")
+    fun provideCoinGeckoRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.coingecko.com/api/v3/")
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    @Provides
+    @Singleton
     @Named("chat")
     fun provideChatRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -85,6 +97,12 @@ object NetworkModule {
     @Singleton
     fun provideYahooCryptoApiService(@Named("yahoo") retrofit: Retrofit): YahooCryptoApiService {
         return retrofit.create(YahooCryptoApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCoinGeckoApiService(@Named("coingecko") retrofit: Retrofit): CoinGeckoApiService {
+        return retrofit.create(CoinGeckoApiService::class.java)
     }
 
     @Provides

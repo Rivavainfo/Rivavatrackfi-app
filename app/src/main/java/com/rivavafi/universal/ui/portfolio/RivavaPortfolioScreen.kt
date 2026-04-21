@@ -494,7 +494,7 @@ fun RivavaPortfolioScreen(
 
             item {
                 Text(
-                    text = "Rates may not be updated, kindly check the redirect to see real prices.",
+                    text = "Live prices refresh every 30 seconds. Tap a card to cross-check on market sources.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth(),
@@ -513,6 +513,7 @@ fun CryptoCard(id: String, data: CryptoData) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val isPositive = data.change24h >= 0
     val color = if (isPositive) com.rivavafi.universal.ui.theme.EmeraldGreen else com.rivavafi.universal.ui.theme.VibrantRed
+    val inrFormatter = java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val symbol = when (id.lowercase()) {
         "bitcoin" -> "BTC"
         "ethereum" -> "ETH"
@@ -540,7 +541,7 @@ fun CryptoCard(id: String, data: CryptoData) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "$${String.format(Locale.getDefault(), "%.2f", data.price)}",
+                text = inrFormatter.format(data.price),
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
                 color = MaterialTheme.colorScheme.onSurface
             )

@@ -30,9 +30,6 @@ class CryptoViewModel @Inject constructor(
         currentIds = ids
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
-            // Immediately initialize state so it never displays a hanging "Loading" message.
-            _cryptoStates.value = generateMockCryptoData(ids)
-
             while (true) {
                 fetchCrypto(ids)
                 delay(30000) // Poll crypto every 30 seconds
@@ -58,30 +55,9 @@ class CryptoViewModel @Inject constructor(
                         price = quote.c,
                         change24h = changePercent
                     )
-                }.onFailure {
-                    if (!updated.containsKey(id)) {
-                        updated[id] = generateMockCryptoData(listOf(id))[id] ?: CryptoData(0.0, 0.0)
-                    }
-                }
+                }.onFailure { }
             }
         }
         _cryptoStates.value = updated
-    }
-
-    private fun generateMockCryptoData(ids: List<String>): Map<String, CryptoData> {
-        val mockData = mutableMapOf<String, CryptoData>()
-        ids.forEach { id ->
-            val basePrice = when (id) {
-                "bitcoin" -> 64500.0
-                "ethereum" -> 3400.0
-                "solana" -> 145.0
-                else -> 100.0
-            }
-            val fluctuation = (Math.random() - 0.5) * (basePrice * 0.05) // 5% max fluctuation
-            val price = basePrice + fluctuation
-            val change24h = (fluctuation / basePrice) * 100
-            mockData[id] = CryptoData(price, change24h)
-        }
-        return mockData
     }
 }
