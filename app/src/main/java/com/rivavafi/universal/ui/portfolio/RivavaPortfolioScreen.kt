@@ -446,7 +446,11 @@ fun RivavaPortfolioScreen(
                     "ethereum" to CryptoData(price = 3200.0, change24h = -1.2),
                     "solana" to CryptoData(price = 145.0, change24h = 1.1)
                 )
-                val cryptoToDisplay = if (cryptoStates.isEmpty()) fallbackCryptoData else fallbackCryptoData + cryptoStates
+                val cryptoToDisplay = if (cryptoStates.isEmpty() || cryptoStates.values.all { it.price <= 0.0 }) {
+                    fallbackCryptoData
+                } else {
+                    fallbackCryptoData + cryptoStates
+                }
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(cryptoIds) { id ->
                         CryptoCard(id = id, data = cryptoToDisplay[id] ?: fallbackCryptoData.getValue(id))

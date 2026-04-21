@@ -34,8 +34,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rivavafi.universal.ui.theme.EmeraldGreen
-import com.rivavafi.universal.ui.theme.PrimaryContainerSky
-import com.rivavafi.universal.ui.theme.glassMorphism
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,13 +133,15 @@ fun PremiumUnlockDialog(
                                 Text("Upgrade Now", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
                             }
 
-                            TextButton(
+                            OutlinedButton(
                                 onClick = onDismiss,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth().height(50.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6B7280))
                             ) {
                                 Text(
                                     "Maybe Later",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                                     color = Color(0xFF9CA3AF)
                                 )
                             }
