@@ -152,6 +152,8 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val coroutineScope = rememberCoroutineScope()
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
     val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
+    val isPortfolioUnlocked = prefs.getBoolean("portfolio_unlocked", false)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -176,7 +178,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
-                            val isLocked = false
+                            val isLocked = screen.route == Screen.RivavaPortfolio.route && !isPortfolioUnlocked
 
                             CustomBottomNavItem(
                                 screen = screen,
