@@ -247,11 +247,7 @@ fun AuthScreenContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0A0A0A), Color(0xFF0F172A))
-                )
-            )
+            .background(Color(0xFF0A0A0A))
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -323,10 +319,9 @@ fun AuthScreenContent(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .glassMorphism(cornerRadius = 24f, alpha = 0.15f)
                     .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
-                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.Transparent),
-                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 0.dp)
+                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -342,7 +337,8 @@ fun AuthScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(Icons.Outlined.Email, contentDescription = null, tint = Color.White)
@@ -366,6 +362,7 @@ fun AuthScreenContent(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(
@@ -383,12 +380,9 @@ fun AuthScreenContent(
                             onClick = { authMethod = "PHONE" },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .background(
-                                    brush = Brush.linearGradient(listOf(Color(0xFF00E471), Color(0xFF00A3FF))),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(Icons.Outlined.Phone, contentDescription = null, tint = Color.White)
@@ -415,7 +409,7 @@ fun AuthScreenContent(
                                 label = { Text("Full Name", color = Color.White.copy(0.7f)) },
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF00A3FF),
+                                    focusedBorderColor = Color(0xFF3B82F6),
                                     unfocusedBorderColor = Color.White.copy(0.2f),
                                     focusedTextColor = Color.White,
                                     unfocusedTextColor = Color.White
@@ -432,7 +426,7 @@ fun AuthScreenContent(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00A3FF),
+                                focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = Color.White.copy(0.2f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
@@ -449,7 +443,7 @@ fun AuthScreenContent(
                             visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00A3FF),
+                                focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = Color.White.copy(0.2f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
@@ -480,12 +474,9 @@ fun AuthScreenContent(
                             enabled = authState != AuthState.LOADING,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .background(
-                                    brush = Brush.linearGradient(listOf(Color(0xFF00E471), Color(0xFF00A3FF))),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             if (authState == AuthState.LOADING) {
@@ -515,7 +506,7 @@ fun AuthScreenContent(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF00A3FF),
+                                focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = Color.White.copy(0.2f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
@@ -545,12 +536,9 @@ fun AuthScreenContent(
                             enabled = authState != AuthState.LOADING,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .background(
-                                    brush = Brush.linearGradient(listOf(Color(0xFF00E471), Color(0xFF00A3FF))),
-                                    shape = RoundedCornerShape(20.dp)
-                                ),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             if (authState == AuthState.LOADING) {
