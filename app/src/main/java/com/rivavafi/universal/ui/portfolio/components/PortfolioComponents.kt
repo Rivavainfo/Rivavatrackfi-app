@@ -201,7 +201,7 @@ fun CashBalanceSection(usdCash: String, totalCash: String) {
                 .glassMorphism(cornerRadius = 16f, alpha = 0.1f)
                 .padding(16.dp)
         ) {
-            BalanceRow("USD Cash", usdCash, Icons.Default.AttachMoney, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), "CURRENCY BALANCE")
+            BalanceRow("INR Cash", usdCash, Icons.Default.AttachMoney, MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), "CURRENCY BALANCE")
             BalanceRow("Total Cash", totalCash, Icons.Default.Savings, MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f), "AGGREGATE", showDivider = false)
         }
     }

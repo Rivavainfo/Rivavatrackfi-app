@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 import okhttp3.Call
 import okhttp3.Callback
@@ -67,9 +69,11 @@ class AuthRepository @Inject constructor() {
         return runCatching {
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
+            val existingName = docSnap.getString("name").orEmpty()
+            val authProfileName = Firebase.auth.currentUser?.displayName.orEmpty()
 
-            val isNewUser = !docSnap.exists()
-            if (isNewUser) {
+            val isNewUser = !docSnap.exists() || existingName.isBlank() || authProfileName.isBlank()
+            if (!docSnap.exists()) {
                 userData["timestamp"] = System.currentTimeMillis().toString()
                 docRef.set(userData).await()
             } else {

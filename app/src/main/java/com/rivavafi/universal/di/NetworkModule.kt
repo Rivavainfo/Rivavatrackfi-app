@@ -57,24 +57,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    @Named("coingecko")
-    fun provideCoinGeckoRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://api.coingecko.com/")
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
-
-    @Provides
-    @Singleton
     fun provideStockApiService(@Named("finnhub") retrofit: Retrofit): StockApiService {
         return retrofit.create(StockApiService::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideCryptoApiService(@Named("coingecko") retrofit: Retrofit): CryptoApiService {
+    fun provideCryptoApiService(@Named("finnhub") retrofit: Retrofit): CryptoApiService {
         return retrofit.create(CryptoApiService::class.java)
     }
 
