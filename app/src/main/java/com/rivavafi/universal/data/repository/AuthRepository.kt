@@ -7,6 +7,8 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.rivavafi.universal.domain.api.AuthApiService
+import com.rivavafi.universal.domain.api.SendVerificationRequest
 import kotlinx.coroutines.tasks.await
 import okhttp3.Call
 import okhttp3.Callback
@@ -19,7 +21,9 @@ import org.json.JSONObject
 import java.io.IOException
 import javax.inject.Inject
 
-class AuthRepository @Inject constructor() {
+class AuthRepository @Inject constructor(
+    private val authApiService: AuthApiService
+) {
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
@@ -59,11 +63,12 @@ class AuthRepository @Inject constructor() {
         })
     }
 
-    suspend fun saveUserToFirestore(uid: String, name: String, email: String): Boolean {
+    suspend fun saveUserToFirestore(uid: String, name: String, email: String, isVerified: Boolean = false): Boolean {
         val userData = hashMapOf<String, Any>(
             "uid" to uid,
             "name" to name,
-            "email" to email
+            "email" to email,
+            "isVerified" to isVerified
         )
 
         return runCatching {
@@ -83,6 +88,36 @@ class AuthRepository @Inject constructor() {
         }.getOrElse { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
             false // Default to treating them as returning if Firestore fails, to not force onboarding
+        }
+    }
+
+    suspend fun sendVerificationEmail(email: String, uid: String): Boolean {
+        return try {
+            val response = authApiService.sendVerificationEmail(SendVerificationRequest(email, uid))
+            response.isSuccessful
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Failed to send verification email via API", e)
+            false
+        }
+    }
+
+    suspend fun checkVerificationStatus(uid: String): Boolean {
+        return try {
+            val response = authApiService.checkVerification(uid)
+            response.body()?.isVerified ?: false
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Failed to check verification status via API", e)
+            false
+        }
+    }
+
+    suspend fun checkEmailExists(email: String): Boolean {
+        return try {
+            val result = auth.fetchSignInMethodsForEmail(email).await()
+            !result.signInMethods.isNullOrEmpty()
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Failed to check if email exists", e)
+            false
         }
     }
 }
