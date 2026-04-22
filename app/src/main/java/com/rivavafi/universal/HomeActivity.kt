@@ -153,7 +153,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
-    val isPortfolioUnlocked = prefs.getBoolean("portfolio_unlocked", false)
+    val isPortfolioUnlocked = isPremiumUser || prefs.getBoolean("portfolio_unlocked", false)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

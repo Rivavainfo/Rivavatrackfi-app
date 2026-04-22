@@ -367,7 +367,7 @@ fun HomeScreen(
                             .heightIn(min = 120.dp)
                             .bounceClick {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                showPremiumUnlockDialog = true
+                                onNavigateToRivavaPortfolio()
                             }
                     ) {
                         Row(
@@ -385,7 +385,7 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Button(
-                                    onClick = { showPremiumUnlockDialog = true },
+                                    onClick = { onNavigateToRivavaPortfolio() },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4C91), contentColor = Color.White),
                                     shape = RoundedCornerShape(20.dp),
                                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),

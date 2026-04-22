@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -168,6 +169,10 @@ fun AuthScreenContent(
     val isNewUser by viewModel.isNewUser.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+
+    BackHandler(enabled = authState == AuthState.LOADING) {
+        viewModel.resetState()
+    }
 
     LaunchedEffect(authState) {
         if (authState == AuthState.SUCCESS) {
@@ -464,9 +469,8 @@ fun AuthScreenContent(
                                 if (!isRegister) {
                                     viewModel.onEmailLogin(email, password)
                                 } else {
-                                    viewModel.onEmailRegister(email, password) {
+                                    viewModel.onEmailRegister(email, password, name) {
                                         showEmailVerificationUI = true
-                                        // Update name in local preferences if required, currently not explicitly handled in original save logic unless returning from verify
                                     }
                                 }
                             },
