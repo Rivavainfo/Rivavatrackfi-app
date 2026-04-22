@@ -446,14 +446,15 @@ fun RivavaPortfolioScreen(
                     "ethereum" to CryptoData(price = 224359.0, change24h = 3.77),
                     "solana" to CryptoData(price = 8252.12, change24h = 3.11)
                 )
-                val cryptoToDisplay = if (cryptoStates.isNotEmpty() && !cryptoStates.values.all { it.price <= 0.0 }) {
+                val isApiWorking = cryptoStates.isNotEmpty() && !cryptoStates.values.all { it.price <= 0.0 }
+                val cryptoToDisplay = if (isApiWorking) {
                     fallbackCryptoData + cryptoStates
                 } else {
                     fallbackCryptoData
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     cryptoIds.forEach { id ->
-                        CryptoCard(id = id, data = cryptoToDisplay[id] ?: fallbackCryptoData.getValue(id))
+                        CryptoCard(id = id, data = cryptoToDisplay[id] ?: fallbackCryptoData.getValue(id), isApiWorking = isApiWorking)
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -501,7 +502,7 @@ fun RivavaPortfolioScreen(
 }
 
 @Composable
-fun CryptoCard(id: String, data: CryptoData) {
+fun CryptoCard(id: String, data: CryptoData, isApiWorking: Boolean = true) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val isPositive = data.change24h >= 0
     val color = if (isPositive) Color(0xFF34D399) else Color(0xFFFF4C91)
@@ -543,17 +544,27 @@ fun CryptoCard(id: String, data: CryptoData) {
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
+                if (isApiWorking) {
+                    Text(
+                        text = inrFormatter.format(data.price),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                } else {
+                    Text(
+                        text = "Click to see rate ->",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = com.rivavafi.universal.ui.theme.PrimarySky
+                    )
+                }
+            }
+            if (isApiWorking) {
                 Text(
-                    text = inrFormatter.format(data.price),
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                    color = Color.White.copy(alpha = 0.9f)
+                    text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", data.change24h)}%",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    color = color
                 )
             }
-            Text(
-                text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", data.change24h)}%",
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = color
-            )
         }
     }
 }
