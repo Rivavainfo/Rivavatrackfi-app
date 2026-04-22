@@ -451,8 +451,8 @@ fun RivavaPortfolioScreen(
                 } else {
                     fallbackCryptoData + cryptoStates
                 }
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(cryptoIds) { id ->
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    cryptoIds.forEach { id ->
                         CryptoCard(id = id, data = cryptoToDisplay[id] ?: fallbackCryptoData.getValue(id))
                     }
                 }
