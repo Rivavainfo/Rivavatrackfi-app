@@ -20,9 +20,9 @@ class CryptoViewModel @Inject constructor(
     private val repository: CryptoRepository
 ) : ViewModel() {
     private val dummyCryptoData = mapOf(
-        "bitcoin" to CryptoData(price = 65000.0, change24h = 2.5),
-        "ethereum" to CryptoData(price = 3200.0, change24h = -1.2),
-        "solana" to CryptoData(price = 145.0, change24h = 1.1)
+        "bitcoin" to CryptoData(price = 7330590.0, change24h = 3.47),
+        "ethereum" to CryptoData(price = 224359.0, change24h = 3.77),
+        "solana" to CryptoData(price = 8252.12, change24h = 3.11)
     )
 
     private val _cryptoStates = MutableStateFlow<Map<String, CryptoData>>(emptyMap())
