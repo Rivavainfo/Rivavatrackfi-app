@@ -446,10 +446,10 @@ fun RivavaPortfolioScreen(
                     "ethereum" to CryptoData(price = 224359.0, change24h = 3.77),
                     "solana" to CryptoData(price = 8252.12, change24h = 3.11)
                 )
-                val cryptoToDisplay = if (cryptoStates.isEmpty() || cryptoStates.values.all { it.price <= 0.0 }) {
-                    fallbackCryptoData
-                } else {
+                val cryptoToDisplay = if (cryptoStates.isNotEmpty() && !cryptoStates.values.all { it.price <= 0.0 }) {
                     fallbackCryptoData + cryptoStates
+                } else {
+                    fallbackCryptoData
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     cryptoIds.forEach { id ->
