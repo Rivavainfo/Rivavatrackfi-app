@@ -174,7 +174,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun onEmailRegister(email: String, pass: String, onVerificationSent: () -> Unit) {
+    fun onEmailRegister(email: String, pass: String, name: String, onVerificationSent: () -> Unit) {
         if (email.isBlank() || pass.isBlank()) {
             Log.w("AuthViewModel", "Email register rejected: Email or password was blank")
             _errorMessage.value = "Email and Password cannot be empty."
@@ -197,9 +197,10 @@ class AuthViewModel @Inject constructor(
                 Log.d("AuthViewModel", "Registration successful. Saving to Firestore and Sheets...")
                 repository.saveUserToFirestore(
                     uid = uid,
-                    name = "Email User",
+                    name = name.ifBlank { "Email User" },
                     email = email
                 )
+                userPreferencesRepository.saveUserName(name)
 
                 val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
                     .setUrl("https://rivava.in/verify")
