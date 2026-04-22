@@ -161,9 +161,12 @@ fun StockPortfolioDetailScreen(
                 focusedMetric = initialFocus
             )
 
+            val cashBalanceValue = lastPrice * 2.99
+            val cashBalanceText = if (exchange == "NYSE") String.format("%.2f USD", cashBalanceValue) else String.format("₹%.2f", cashBalanceValue)
+
             CashBalanceSection(
-                usdCash = "₹8.90",
-                totalCash = "₹8.90"
+                usdCash = cashBalanceText,
+                totalCash = cashBalanceText
             )
 
             if (ticker == "IREDA" || ticker == "IREDA.NS") {
@@ -213,7 +216,8 @@ fun StockPortfolioDetailScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
                             }
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("₹${String.format("%.2f", lastPrice - 12.15)}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
+                            val marketOpenText = if (exchange == "NYSE") String.format("%.2f USD", openPrice) else String.format("₹%.2f", openPrice)
+                            Text(marketOpenText, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black))
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("09:30:01 EST", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -229,7 +233,10 @@ fun StockPortfolioDetailScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(12.dp))
                             }
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("+284.15%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black), color = com.rivavafi.universal.ui.theme.EmeraldGreen)
+                            val simulated52wChange = pnlPercent * 2.5
+                            val is52wPositive = simulated52wChange >= 0
+                            val simulated52wChangeText = String.format("%s%.2f%%", if(is52wPositive) "+" else "", simulated52wChange)
+                            Text(simulated52wChangeText, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black), color = if (is52wPositive) com.rivavafi.universal.ui.theme.EmeraldGreen else com.rivavafi.universal.ui.theme.VibrantRed)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("Exponential Trend", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -267,23 +274,12 @@ fun StockPortfolioDetailScreen(
                                 }
                                 Column {
                                     Text("Status", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text("Active", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text("Sold", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                                     Text(if (ticker == "IREDA") "715%" else "138.64%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
-                            }
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Button(
-                                onClick = { onNavigateToPdfViewer?.invoke(if (ticker == "IREDA") "portfolio_ireda.pdf" else "portfolio_rtx.pdf") },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Read Detailed PDF", fontWeight = FontWeight.Bold, color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
                             }
                         }
                     }
