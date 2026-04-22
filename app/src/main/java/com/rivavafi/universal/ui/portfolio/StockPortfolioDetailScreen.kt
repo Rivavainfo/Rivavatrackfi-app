@@ -169,10 +169,6 @@ fun StockPortfolioDetailScreen(
                 totalCash = cashBalanceText
             )
 
-            if (ticker == "IREDA" || ticker == "IREDA.NS") {
-                com.rivavafi.universal.ui.portfolio.components.IredaInsightsCard()
-            }
-
             if (newsList.isNotEmpty()) {
                 com.rivavafi.universal.ui.components.SectionHeader(title = "Company News")
                 androidx.compose.foundation.lazy.LazyRow(
@@ -280,6 +276,17 @@ fun StockPortfolioDetailScreen(
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                                     Text(if (ticker == "IREDA") "715%" else "138.64%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
+                            }
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(
+                                onClick = { onNavigateToPdfViewer?.invoke(if (ticker == "IREDA") "portfolio_ireda.pdf" else "portfolio_rtx.pdf") },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp), tint = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Read Detailed PDF", fontWeight = FontWeight.Bold, color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky)
                             }
                         }
                     }
