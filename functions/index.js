@@ -2,11 +2,26 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const sgMail = require("@sendgrid/mail");
 const crypto = require("crypto");
+const { sendWelcomeEmail } = require("./services/emailService");
 
 admin.initializeApp();
 sgMail.setApiKey(functions.config().sendgrid.key);
 
 const db = admin.firestore();
+
+// Firestore Trigger: Send welcome email on user creation
+exports.onUserCreated = functions.firestore.document('users/{userId}').onCreate(async (snap, context) => {
+    const newValue = snap.data();
+    const email = newValue.email;
+
+    if (!email) {
+        console.log('User created without an email. Skipping welcome email.');
+        return null;
+    }
+
+    await sendWelcomeEmail(email);
+    return null;
+});
 
 // 1. sendVerificationEmail
 exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
@@ -18,6 +33,18 @@ exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
         const { email, uid } = req.body;
         if (!email || !uid) {
             return res.status(400).send('Missing email or uid');
+        }
+
+        // Rate Limiting: Check if we sent an email in the last 60 seconds
+        const existingDoc = await db.collection('email_verifications').doc(uid).get();
+        if (existingDoc.exists) {
+            const data = existingDoc.data();
+            const now = new Date();
+            const createdAt = data.createdAt ? data.createdAt.toDate() : new Date(0);
+            const timeDiff = (now.getTime() - createdAt.getTime()) / 1000;
+            if (timeDiff < 60) {
+                return res.status(429).send({ error: 'Please wait 60 seconds before requesting another email.' });
+            }
         }
 
         const token = crypto.randomBytes(32).toString('hex');
@@ -97,27 +124,13 @@ exports.verify = functions.https.onRequest(async (req, res) => {
             isVerified: true
         });
 
+        await admin.auth().updateUser(data.uid, {
+            emailVerified: true
+        });
+
         await doc.ref.delete();
 
-        // Send Welcome Email
-        const welcomeMsg = {
-            to: data.email,
-            from: 'no-reply@rivava.in',
-            subject: 'Welcome to Rivava 🎉',
-            html: `
-                <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                        <h2 style="color: #333333; text-align: center;">Welcome to Rivava 🎉</h2>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5;">Your email has been successfully verified! You can now access all features of the app.</p>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="https://rivava.in" style="background-color: #3B82F6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; font-weight: bold; display: inline-block;">Open App</a>
-                        </div>
-                    </div>
-                </div>
-            `,
-        };
-
-        await sgMail.send(welcomeMsg);
+        // Welcome email is handled via the onUserCreated trigger, but we could also confirm verification success here
 
         // Render success page
         return res.status(200).send(`

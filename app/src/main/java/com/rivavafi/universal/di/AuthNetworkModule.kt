@@ -20,7 +20,8 @@ object AuthNetworkModule {
     @Named("auth")
     fun provideAuthRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            // Using central us-central1 as default firebase functions region
+            // Configure base URL from build config or use prod URL
+            // Ensure this points to the correct firebase functions endpoint for your project
             .baseUrl("https://us-central1-test-project.cloudfunctions.net/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
