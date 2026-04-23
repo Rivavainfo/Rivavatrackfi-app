@@ -141,10 +141,9 @@ class AuthViewModel @Inject constructor(
                     }
                     _authState.value = AuthState.SUCCESS
                 } else {
+                    repository.auth.signOut()
                     _errorMessage.value = "Please verify your email before logging in."
                     _authState.value = AuthState.IDLE
-                    // Trigger a state change that the UI can observe to show the verification screen
-                    throw com.google.firebase.auth.FirebaseAuthInvalidCredentialsException("unverified", "Email not verified")
                 }
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email login failed", e)

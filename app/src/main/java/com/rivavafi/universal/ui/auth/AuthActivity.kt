@@ -186,7 +186,7 @@ fun AuthScreenContent(
         errorMessage?.let {
             if (it.isNotEmpty()) {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-                if (it.contains("verify your email")) {
+                if (it.contains("verify your email", ignoreCase = true) || it.contains("email not verified", ignoreCase = true)) {
                     showEmailVerificationUI = true
                 }
                 viewModel.setErrorMessage("") // Clear after showing
@@ -447,8 +447,18 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            modifier = Modifier.fillMaxWidth().padding(bottom = if (emailError != null) 0.dp else 16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            isError = emailError != null,
+                            supportingText = {
+                                if (emailError != null) {
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        text = emailError!!,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
 
                         OutlinedTextField(
@@ -480,10 +490,6 @@ fun AuthScreenContent(
                             onClick = {
                                 if (!isRegister) {
                                     viewModel.onEmailLogin(email, password)
-                                    // In a real scenario we'd observe a state for unverified, but we can also check the message
-                                    if (errorMessage?.contains("verify your email") == true) {
-                                        showEmailVerificationUI = true
-                                    }
                                 } else {
                                     viewModel.onEmailRegister(email, password, name) {
                                         showEmailVerificationUI = true
