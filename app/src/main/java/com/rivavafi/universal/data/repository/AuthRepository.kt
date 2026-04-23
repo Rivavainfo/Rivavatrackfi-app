@@ -94,20 +94,44 @@ class AuthRepository @Inject constructor(
     suspend fun sendVerificationEmail(email: String, uid: String): Boolean {
         return try {
             val response = authApiService.sendVerificationEmail(SendVerificationRequest(email, uid))
-            response.isSuccessful
+            if (response.isSuccessful) {
+                true
+            } else {
+                Log.w("AuthRepository", "API verification failed with ${response.code()}. Falling back to Firebase Auth.")
+                auth.currentUser?.sendEmailVerification()?.await()
+                true
+            }
         } catch (e: Exception) {
-            Log.e("AuthRepository", "Failed to send verification email via API", e)
-            false
+            Log.e("AuthRepository", "Failed to send verification email via API. Falling back to Firebase Auth.", e)
+            try {
+                auth.currentUser?.sendEmailVerification()?.await()
+                true
+            } catch (fallbackEx: Exception) {
+                Log.e("AuthRepository", "Firebase Auth fallback failed", fallbackEx)
+                false
+            }
         }
     }
 
     suspend fun checkVerificationStatus(uid: String): Boolean {
         return try {
             val response = authApiService.checkVerification(uid)
-            response.body()?.isVerified ?: false
+            if (response.isSuccessful) {
+                response.body()?.isVerified ?: false
+            } else {
+                Log.w("AuthRepository", "API check failed with ${response.code()}. Falling back to Firebase Auth.")
+                auth.currentUser?.reload()?.await()
+                auth.currentUser?.isEmailVerified == true
+            }
         } catch (e: Exception) {
-            Log.e("AuthRepository", "Failed to check verification status via API", e)
-            false
+            Log.e("AuthRepository", "Failed to check verification status via API. Falling back to Firebase Auth.", e)
+            try {
+                auth.currentUser?.reload()?.await()
+                auth.currentUser?.isEmailVerified == true
+            } catch (fallbackEx: Exception) {
+                Log.e("AuthRepository", "Firebase Auth fallback failed", fallbackEx)
+                false
+            }
         }
     }
 
