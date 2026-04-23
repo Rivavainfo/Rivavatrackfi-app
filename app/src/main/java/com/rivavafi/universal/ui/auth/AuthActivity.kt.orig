@@ -42,6 +42,7 @@ import com.rivavafi.universal.ui.theme.*
 import com.rivavafi.universal.ui.theme.glassMorphism
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import android.util.Patterns
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -163,6 +164,7 @@ fun AuthScreenContent(
     var phoneNumber by remember { mutableStateOf("") }
     var authMethod by remember { mutableStateOf("INITIAL") } // INITIAL, EMAIL_LOGIN, EMAIL_REGISTER, PHONE
     var showEmailVerificationUI by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
 
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -184,6 +186,9 @@ fun AuthScreenContent(
         errorMessage?.let {
             if (it.isNotEmpty()) {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                if (it.contains("verify your email")) {
+                    showEmailVerificationUI = true
+                }
                 viewModel.setErrorMessage("") // Clear after showing
             }
         }
@@ -425,7 +430,14 @@ fun AuthScreenContent(
 
                         OutlinedTextField(
                             value = email,
-                            onValueChange = { email = it },
+                            onValueChange = {
+                                email = it
+                                if (it.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(it).matches()) {
+                                    emailError = "Invalid email address"
+                                } else {
+                                    emailError = null
+                                }
+                            },
                             label = { Text("Email", color = Color.White.copy(0.7f)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -468,13 +480,17 @@ fun AuthScreenContent(
                             onClick = {
                                 if (!isRegister) {
                                     viewModel.onEmailLogin(email, password)
+                                    // In a real scenario we'd observe a state for unverified, but we can also check the message
+                                    if (errorMessage?.contains("verify your email") == true) {
+                                        showEmailVerificationUI = true
+                                    }
                                 } else {
                                     viewModel.onEmailRegister(email, password, name) {
                                         showEmailVerificationUI = true
                                     }
                                 }
                             },
-                            enabled = authState != AuthState.LOADING,
+                            enabled = authState != AuthState.LOADING && emailError == null && email.isNotBlank() && password.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
