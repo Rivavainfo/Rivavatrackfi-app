@@ -55,9 +55,26 @@ class AuthViewModel @Inject constructor(
     private var _resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
     init {
-        if (repository.auth.currentUser != null) {
+        val user = repository.auth.currentUser
+        if (user != null) {
             _isNewUser.value = false // if already logged in, they are not a new user
-            _authState.value = AuthState.SUCCESS
+            viewModelScope.launch {
+                val providerId = user.providerData.firstOrNull()?.providerId
+                val isEmailAuth = providerId == "password" || providerId == "email"
+
+                if (isEmailAuth) {
+                    val isVerified = repository.checkVerificationStatus(user.uid)
+                    if (isVerified || user.isEmailVerified) {
+                        _authState.value = AuthState.SUCCESS
+                    } else {
+                        // User is signed in but not verified. Do not sign out so they can resend.
+                        _errorMessage.value = "Please verify your email before continuing."
+                        _authState.value = AuthState.IDLE
+                    }
+                } else {
+                    _authState.value = AuthState.SUCCESS
+                }
+            }
         }
     }
 
@@ -141,7 +158,7 @@ class AuthViewModel @Inject constructor(
                     }
                     _authState.value = AuthState.SUCCESS
                 } else {
-                    repository.auth.signOut()
+                    // Do NOT sign out. The user needs an active session to use 'Resend Verification Email'.
                     _errorMessage.value = "Please verify your email before logging in."
                     _authState.value = AuthState.IDLE
                 }
