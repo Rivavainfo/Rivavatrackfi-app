@@ -178,7 +178,7 @@ fun AuthScreenContent(
 
     LaunchedEffect(authState) {
         if (authState == AuthState.SUCCESS) {
-            onLoginSuccess(isNewUser ?: false)
+            onLoginSuccess(isNewUser == true)
         }
     }
 
@@ -233,7 +233,7 @@ fun AuthScreenContent(
             Button(
                 onClick = {
                     viewModel.checkEmailVerified(
-                        onVerified = { onLoginSuccess(isNewUser ?: false) },
+                        onVerified = { onLoginSuccess(isNewUser == true) },
                         onNotVerified = { }
                     )
                 },
