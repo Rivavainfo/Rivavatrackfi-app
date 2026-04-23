@@ -129,11 +129,10 @@ class AuthViewModel @Inject constructor(
                 repository.auth.signInWithEmailAndPassword(email, pass).await()
                 Log.d("AuthViewModel", "Email login successful")
 
-                repository.auth.currentUser?.reload()?.await()
-
-                if (repository.auth.currentUser?.isEmailVerified == true) {
-                    val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
-                    val firestoreNew = repository.saveUserToFirestore(uid, "Email User", email)
+                val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
+                val isVerified = repository.checkVerificationStatus(uid)
+                if (isVerified) {
+                    val firestoreNew = repository.saveUserToFirestore(uid, "Email User", email, isVerified = true)
                     val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
                     val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
@@ -142,9 +141,10 @@ class AuthViewModel @Inject constructor(
                     }
                     _authState.value = AuthState.SUCCESS
                 } else {
-                    repository.auth.signOut()
                     _errorMessage.value = "Please verify your email before logging in."
                     _authState.value = AuthState.IDLE
+                    // Trigger a state change that the UI can observe to show the verification screen
+                    throw com.google.firebase.auth.FirebaseAuthInvalidCredentialsException("unverified", "Email not verified")
                 }
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email login failed", e)
@@ -189,6 +189,12 @@ class AuthViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
+            if (repository.checkEmailExists(email)) {
+                _errorMessage.value = "Email is already registered. Please sign in."
+                _authState.value = AuthState.IDLE
+                return@launch
+            }
+
             try {
                 Log.d("AuthViewModel", "Attempting email registration for: $email")
                 val result = repository.auth.createUserWithEmailAndPassword(email, pass).await()
@@ -198,18 +204,14 @@ class AuthViewModel @Inject constructor(
                 repository.saveUserToFirestore(
                     uid = uid,
                     name = name.ifBlank { "Email User" },
-                    email = email
+                    email = email,
+                    isVerified = false
                 )
                 userPreferencesRepository.saveUserName(name)
 
-                val settings = com.google.firebase.auth.ActionCodeSettings.newBuilder()
-                    .setUrl("https://rivava.in/verify")
-                    .setHandleCodeInApp(true)
-                    .build()
+                repository.sendVerificationEmail(email, uid)
 
-                result.user?.sendEmailVerification(settings)?.await()
-
-                _errorMessage.value = "Registration successful. Please verify your email."
+                _errorMessage.value = "Registration successful. Please check your inbox to verify."
                 _authState.value = AuthState.IDLE
                 onVerificationSent()
             } catch (e: Exception) {
@@ -254,23 +256,31 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
             try {
-                repository.auth.currentUser?.reload()?.await()
-                if (repository.auth.currentUser?.isEmailVerified == true) {
-                    val firestoreNew = repository.saveUserToFirestore(
-                        uid = repository.auth.currentUser?.uid ?: "",
-                        name = "Email User",
-                        email = repository.auth.currentUser?.email ?: ""
-                    )
-                    val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
-                    val isNew = firestoreNew || firebaseNew
-                    _isNewUser.value = isNew
-                    if (isNew) {
-                        repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                val uid = repository.auth.currentUser?.uid
+                if (uid != null) {
+                    val isVerified = repository.checkVerificationStatus(uid)
+                    if (isVerified) {
+                        val firestoreNew = repository.saveUserToFirestore(
+                            uid = uid,
+                            name = "Email User",
+                            email = repository.auth.currentUser?.email ?: "",
+                            isVerified = true
+                        )
+                        val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                        val isNew = firestoreNew || firebaseNew
+                        _isNewUser.value = isNew
+                        if (isNew) {
+                            repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                        }
+                        _authState.value = AuthState.SUCCESS
+                        onVerified()
+                    } else {
+                        _errorMessage.value = "Email not verified yet. Please check your inbox."
+                        _authState.value = AuthState.IDLE
+                        onNotVerified()
                     }
-                    _authState.value = AuthState.SUCCESS
-                    onVerified()
                 } else {
-                    _errorMessage.value = "Email not verified yet. Please check your inbox."
+                    _errorMessage.value = "Failed to get user. Please try logging in again."
                     _authState.value = AuthState.IDLE
                     onNotVerified()
                 }
@@ -399,6 +409,26 @@ class AuthViewModel @Inject constructor(
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
                 onError()
+            }
+        }
+    }
+
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                val user = repository.auth.currentUser
+                if (user != null && user.email != null) {
+                    repository.sendVerificationEmail(user.email!!, user.uid)
+                    _errorMessage.value = "Verification email resent successfully."
+                } else {
+                    _errorMessage.value = "User not found. Please log in again."
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to resend verification email", e)
+                _errorMessage.value = "Failed to resend verification email."
+            } finally {
+                _authState.value = AuthState.IDLE
             }
         }
     }
