@@ -1,6 +1,7 @@
 package com.rivavafi.universal.ui.auth
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.GoogleAuthProvider
@@ -19,6 +20,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+data class AuthFormState(
+    val emailError: String? = null,
+    val phoneError: String? = null,
+    val isFormValid: Boolean = false
+)
+
 enum class AuthState {
     IDLE,
     LOADING,
@@ -36,7 +43,8 @@ enum class PhoneAuthState {
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val repository: AuthRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState.IDLE)
@@ -51,7 +59,13 @@ class AuthViewModel @Inject constructor(
     private val _isNewUser = MutableStateFlow<Boolean?>(null)
     val isNewUser: StateFlow<Boolean?> = _isNewUser.asStateFlow()
 
-    private var _verificationId: String? = null
+    private val _authFormState = MutableStateFlow(AuthFormState())
+    val authFormState: StateFlow<AuthFormState> = _authFormState.asStateFlow()
+
+    private var _verificationId: String?
+        get() = savedStateHandle.get("verificationId")
+        set(value) { savedStateHandle["verificationId"] = value }
+
     private var _resendToken: PhoneAuthProvider.ForceResendingToken? = null
 
     init {
@@ -104,7 +118,10 @@ class AuthViewModel @Inject constructor(
                 val firestoreNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
-                    email = email
+                    email = email,
+                    phoneNumber = null,
+                    authProvider = "google",
+                    isVerified = true
                 )
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                 _isNewUser.value = firebaseNew || firestoreNew
@@ -149,7 +166,14 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
-                    val firestoreNew = repository.saveUserToFirestore(uid, "Email User", email, isVerified = true)
+                    val firestoreNew = repository.saveUserToFirestore(
+                        uid = uid,
+                        name = "Email User",
+                        email = email,
+                        phoneNumber = null,
+                        authProvider = "email",
+                        isVerified = true
+                    )
                     val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
                     val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
@@ -221,6 +245,8 @@ class AuthViewModel @Inject constructor(
                     uid = uid,
                     name = name.ifBlank { "Email User" },
                     email = email,
+                    phoneNumber = null,
+                    authProvider = "email",
                     isVerified = false
                 )
                 userPreferencesRepository.saveUserName(name)
@@ -280,6 +306,8 @@ class AuthViewModel @Inject constructor(
                             uid = uid,
                             name = "Email User",
                             email = repository.auth.currentUser?.email ?: "",
+                            phoneNumber = null,
+                            authProvider = "email",
                             isVerified = true
                         )
                         val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
@@ -320,7 +348,10 @@ class AuthViewModel @Inject constructor(
                     val firestoreNew = repository.saveUserToFirestore(
                         uid = uid,
                         name = "Phone User",
-                        email = ""
+                        email = null,
+                        phoneNumber = repository.auth.currentUser?.phoneNumber,
+                        authProvider = "phone",
+                        isVerified = true
                     )
                     val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                     val isNew = firebaseNew || firestoreNew
@@ -339,8 +370,19 @@ class AuthViewModel @Inject constructor(
         }
 
         override fun onVerificationFailed(e: FirebaseException) {
-            _errorMessage.value = e.message ?: "Verification failed"
+            val message = when (e) {
+                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Invalid phone number"
+                is com.google.firebase.FirebaseTooManyRequestsException -> "Quota exceeded. Try again later."
+                else -> e.message ?: "Verification failed"
+            }
+            _errorMessage.value = message
             _phoneAuthState.value = PhoneAuthState.ERROR
+            _authState.value = AuthState.IDLE
+        }
+
+        override fun onCodeAutoRetrievalTimeOut(verificationId: String) {
+            _verificationId = verificationId
+            _errorMessage.value = "OTP retrieval timeout. You can request a new one."
             _authState.value = AuthState.IDLE
         }
 
@@ -357,7 +399,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun startPhoneVerification(phoneNumber: String, activity: android.app.Activity, onCodeSentCallback: (String) -> Unit) {
-        if (phoneNumber.isBlank() || phoneNumber.length < 12) {
+        if (phoneNumber.isBlank()) {
             _errorMessage.value = "Invalid phone number"
             return
         }
@@ -390,8 +432,33 @@ class AuthViewModel @Inject constructor(
         PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
     }
 
-    fun verifyOtp(verificationId: String, otp: String, onSuccess: () -> Unit, onError: () -> Unit) {
-        if (verificationId.isBlank() || otp.isBlank()) {
+    fun validatePhone(phone: String) {
+        val e164Regex = Regex("^\\+[1-9]\\d{1,14}$")
+        if (phone.isNotEmpty() && !e164Regex.matches(phone)) {
+            _authFormState.value = _authFormState.value.copy(phoneError = "Invalid E.164 phone format (e.g. +14155552671)")
+        } else {
+            _authFormState.value = _authFormState.value.copy(phoneError = null)
+        }
+        updateFormValidity()
+    }
+
+    fun validateEmail(email: String) {
+        if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            _authFormState.value = _authFormState.value.copy(emailError = "Invalid email address")
+        } else {
+            _authFormState.value = _authFormState.value.copy(emailError = null)
+        }
+        updateFormValidity()
+    }
+
+    private fun updateFormValidity() {
+        val state = _authFormState.value
+        _authFormState.value = state.copy(isFormValid = state.emailError == null && state.phoneError == null)
+    }
+
+    fun verifyOtp(verificationId: String, otp: String, phoneNumber: String, email: String?, onSuccess: () -> Unit, onError: () -> Unit) {
+        val activeVerificationId = _verificationId ?: verificationId
+        if (activeVerificationId.isBlank() || otp.isBlank()) {
             _errorMessage.value = "Invalid OTP or missing verification ID."
             onError()
             return
@@ -400,15 +467,19 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
             try {
-                val credential = PhoneAuthProvider.getCredential(verificationId, otp)
+                val credential = PhoneAuthProvider.getCredential(activeVerificationId, otp)
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
                 val firestoreNew = repository.saveUserToFirestore(
                     uid = uid,
                     name = "Phone User",
-                    email = ""
+                    email = email,
+                    phoneNumber = phoneNumber,
+                    authProvider = "phone",
+                    isVerified = true
                 )
+
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                 val isNew = firebaseNew || firestoreNew
                 _isNewUser.value = isNew
@@ -421,7 +492,8 @@ class AuthViewModel @Inject constructor(
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)
-                _errorMessage.value = "OTP failed. Try again or use test number"
+                val msg = if (e is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) "Invalid OTP code" else "OTP verification failed"
+                _errorMessage.value = msg
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
                 onError()

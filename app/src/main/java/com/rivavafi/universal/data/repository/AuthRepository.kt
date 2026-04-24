@@ -63,13 +63,22 @@ class AuthRepository @Inject constructor(
         })
     }
 
-    suspend fun saveUserToFirestore(uid: String, name: String, email: String, isVerified: Boolean = false): Boolean {
-        val userData = hashMapOf<String, Any>(
-            "uid" to uid,
-            "name" to name,
-            "email" to email,
-            "isVerified" to isVerified
-        )
+    suspend fun saveUserToFirestore(
+        uid: String,
+        name: String?,
+        email: String?,
+        phoneNumber: String?,
+        authProvider: String,
+        isVerified: Boolean = false
+    ): Boolean {
+        val userData = hashMapOf<String, Any?>()
+        userData["uid"] = uid
+        userData["name"] = name?.takeIf { it.isNotBlank() }
+        userData["email"] = email?.takeIf { it.isNotBlank() }
+        userData["phoneNumber"] = phoneNumber?.takeIf { it.isNotBlank() }
+        userData["authProvider"] = authProvider
+        userData["isVerified"] = isVerified
+        userData["updatedAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
         return runCatching {
             val docRef = firestore.collection("users").document(uid)
@@ -79,10 +88,10 @@ class AuthRepository @Inject constructor(
 
             val isNewUser = !docSnap.exists() || existingName.isBlank() || authProfileName.isBlank()
             if (!docSnap.exists()) {
-                userData["timestamp"] = System.currentTimeMillis().toString()
+                userData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
                 docRef.set(userData).await()
             } else {
-                docRef.set(userData, SetOptions.merge()).await()
+                docRef.set(userData.filterValues { it != null }, SetOptions.merge()).await()
             }
             isNewUser
         }.getOrElse { firestoreError ->
