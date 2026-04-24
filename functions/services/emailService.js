@@ -1,6 +1,6 @@
 const functions = require("firebase-functions");
 const sgMail = require("@sendgrid/mail");
-const { getWelcomeEmailHtml } = require("../mailTemplates");
+const { getWelcomeEmailHtml, getWelcomeEmailText } = require("../mailTemplates");
 
 // Ensure we don't crash when running locally without config
 try {
@@ -14,6 +14,7 @@ const sendWelcomeEmail = async (email) => {
         to: email,
         from: 'no-reply@rivava.in',
         subject: 'Welcome to Rivava 🚀',
+        text: getWelcomeEmailText(email),
         html: getWelcomeEmailHtml(email),
     };
 
