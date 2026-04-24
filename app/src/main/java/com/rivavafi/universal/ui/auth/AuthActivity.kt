@@ -66,7 +66,7 @@ class AuthActivity : ComponentActivity() {
                     AuthScreenContent(
                         viewModel = viewModel,
                         onLoginSuccess = { isNewUser -> goToHome(isNewUser) },
-                        onNavigateToOtp = { verificationId, phone -> goToOtp(verificationId, phone) },
+                        onNavigateToOtp = { verificationId, phone, email -> goToOtp(verificationId, phone, email) },
                         onNavigateToReset = { goToResetPassword() }
                     )
                 }
@@ -126,10 +126,11 @@ class AuthActivity : ComponentActivity() {
         finish()
     }
 
-    private fun goToOtp(verificationId: String, phone: String) {
+    private fun goToOtp(verificationId: String, phone: String, email: String?) {
         val intent = Intent(this, OtpActivity::class.java).apply {
             putExtra("verificationId", verificationId)
             putExtra("phone", phone)
+            putExtra("email", email)
         }
         startActivity(intent)
     }
@@ -145,7 +146,7 @@ class AuthActivity : ComponentActivity() {
 fun AuthScreenContent(
     viewModel: AuthViewModel,
     onLoginSuccess: (Boolean) -> Unit,
-    onNavigateToOtp: (String, String) -> Unit,
+    onNavigateToOtp: (String, String, String?) -> Unit,
     onNavigateToReset: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -155,11 +156,10 @@ fun AuthScreenContent(
     var phoneNumber by remember { mutableStateOf("") }
     var authMethod by remember { mutableStateOf("INITIAL") } // INITIAL, EMAIL_LOGIN, EMAIL_REGISTER, PHONE
     var showEmailVerificationUI by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isNewUser by viewModel.isNewUser.collectAsState()
+    val formState by viewModel.authFormState.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -468,11 +468,7 @@ fun AuthScreenContent(
                             value = email,
                             onValueChange = {
                                 email = it
-                                if (it.isNotEmpty() && !Patterns.EMAIL_ADDRESS.matcher(it).matches()) {
-                                    emailError = "Invalid email address"
-                                } else {
-                                    emailError = null
-                                }
+                                viewModel.validateEmail(it)
                             },
                             label = { Text("Email", color = Color.White.copy(0.7f)) },
                             singleLine = true,
@@ -483,14 +479,14 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth().padding(bottom = if (emailError != null) 0.dp else 16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
                             shape = RoundedCornerShape(16.dp),
-                            isError = emailError != null,
+                            isError = formState.emailError != null,
                             supportingText = {
-                                if (emailError != null) {
+                                if (formState.emailError != null) {
                                     Text(
                                         modifier = Modifier.fillMaxWidth(),
-                                        text = emailError!!,
+                                        text = formState.emailError!!,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -532,7 +528,7 @@ fun AuthScreenContent(
                                     }
                                 }
                             },
-                            enabled = authState != AuthState.LOADING && emailError == null && email.isNotBlank() && password.isNotBlank(),
+                            enabled = authState != AuthState.LOADING && formState.emailError == null && email.isNotBlank() && password.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -562,39 +558,77 @@ fun AuthScreenContent(
                         )
                         OutlinedTextField(
                             value = phoneNumber,
-                            onValueChange = { phoneNumber = it },
-                            label = { Text("Phone Number", color = Color.White.copy(0.7f)) },
+                            onValueChange = {
+                                phoneNumber = it
+                                viewModel.validatePhone(it)
+                            },
+                            label = { Text("Phone Number (with country code)", color = Color.White.copy(0.7f)) },
                             singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF3B82F6),
                                 unfocusedBorderColor = Color.White.copy(0.2f),
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = {
-                                Text("+91", modifier = Modifier.padding(start = 16.dp, end = 8.dp), color = Color.White)
+                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.phoneError != null) 0.dp else 16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            isError = formState.phoneError != null,
+                            supportingText = {
+                                if (formState.phoneError != null) {
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        text = formState.phoneError!!,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        )
+
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = {
+                                email = it
+                                viewModel.validateEmail(it)
                             },
-                            shape = RoundedCornerShape(16.dp)
+                            label = { Text("Email (Optional for Welcome Email)", color = Color.White.copy(0.7f)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color.White.copy(0.2f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            isError = formState.emailError != null,
+                            supportingText = {
+                                if (formState.emailError != null) {
+                                    Text(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        text = formState.emailError!!,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
-                                val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
-                                    digitsOnly.substring(2)
-                                } else {
-                                    digitsOnly
+                                val formattedNumber = phoneNumber.trim()
+                                viewModel.validatePhone(formattedNumber)
+                                if (formState.phoneError != null) {
+                                    return@Button
                                 }
-                                val formattedNumber = "+91$cleanNumber"
+
                                 (context as? android.app.Activity)?.let { act ->
                                     viewModel.startPhoneVerification(formattedNumber, act) { verificationId ->
-                                        onNavigateToOtp(verificationId, formattedNumber)
+                                        onNavigateToOtp(verificationId, formattedNumber, email.takeIf { it.isNotBlank() })
                                     }
                                 }
                             },
-                            enabled = authState != AuthState.LOADING,
+                            enabled = authState != AuthState.LOADING && formState.isFormValid && phoneNumber.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),

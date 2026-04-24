@@ -35,11 +35,13 @@ class OtpActivity : ComponentActivity() {
     private val viewModel: AuthViewModel by viewModels()
     private var verificationId: String = ""
     private var phoneNumber: String = ""
+    private var email: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         verificationId = intent.getStringExtra("verificationId") ?: ""
         phoneNumber = intent.getStringExtra("phone") ?: ""
+        email = intent.getStringExtra("email")
 
         if (verificationId.isEmpty() || phoneNumber.isEmpty()) {
             Toast.makeText(this, "Missing phone info. Returning to login.", Toast.LENGTH_SHORT).show()
@@ -57,6 +59,7 @@ class OtpActivity : ComponentActivity() {
                         viewModel = viewModel,
                         verificationId = verificationId,
                         phoneNumber = phoneNumber,
+                        email = email,
                         onSuccess = { isNewUser ->
                             val intent = Intent(this, HomeActivity::class.java).apply {
                                 putExtra("isNewUser", isNewUser)
@@ -79,6 +82,7 @@ fun OtpScreenContent(
     viewModel: AuthViewModel,
     verificationId: String,
     phoneNumber: String,
+    email: String?,
     onSuccess: (Boolean) -> Unit,
     onResendSent: (String) -> Unit
 ) {
@@ -141,6 +145,8 @@ fun OtpScreenContent(
                     viewModel.verifyOtp(
                         verificationId = verificationId,
                         otp = otp,
+                        phoneNumber = phoneNumber,
+                        email = email,
                         onSuccess = { onSuccess(isNewUser ?: false) },
                         onError = {}
                     )
