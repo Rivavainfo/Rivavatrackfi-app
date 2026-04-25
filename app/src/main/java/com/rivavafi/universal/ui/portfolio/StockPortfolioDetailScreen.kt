@@ -270,7 +270,7 @@ fun StockPortfolioDetailScreen(
                                 }
                                 Column {
                                     Text("Status", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text("Sold", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(if (ticker == "RTX") "StillActive" else "Sold", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
