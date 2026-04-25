@@ -86,7 +86,7 @@ class AuthRepository @Inject constructor(
             val existingName = docSnap.getString("name").orEmpty()
             val authProfileName = Firebase.auth.currentUser?.displayName.orEmpty()
 
-            val isNewUser = !docSnap.exists() || existingName.isBlank() || authProfileName.isBlank()
+            val isNewUser = !docSnap.exists() || existingName.isBlank()
             if (!docSnap.exists()) {
                 userData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
                 docRef.set(userData).await()

@@ -174,7 +174,7 @@ class AuthViewModel @Inject constructor(
                         authProvider = "email",
                         isVerified = true
                     )
-                    val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                    val firebaseNew = false
                     val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
                     if (isNew) {
@@ -312,7 +312,7 @@ class AuthViewModel @Inject constructor(
                             authProvider = "email",
                             isVerified = true
                         )
-                        val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                        val firebaseNew = false
                         val isNew = firestoreNew || firebaseNew
                         _isNewUser.value = isNew
                         if (isNew) {
