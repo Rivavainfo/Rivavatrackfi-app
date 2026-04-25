@@ -546,25 +546,24 @@ fun CryptoCard(id: String, data: CryptoData, isApiWorking: Boolean = true) {
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
-                if (isApiWorking) {
-                    Text(
-                        text = inrFormatter.format(data.price),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                } else {
-                    Text(
-                        text = "Click to see rate ->",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                        color = com.rivavafi.universal.ui.theme.PrimarySky
-                    )
-                }
-            }
-            if (isApiWorking) {
                 Text(
-                    text = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", data.change24h)}%",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = color
+                    text = "See current live rates now",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                    color = com.rivavafi.universal.ui.theme.PrimarySky
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(com.rivavafi.universal.ui.theme.EmeraldGreen.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "See rates",
+                    tint = com.rivavafi.universal.ui.theme.EmeraldGreen,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
