@@ -27,11 +27,11 @@ class AuthRepository @Inject constructor(
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun sendUserToSheet(user: FirebaseUser, provider: String) {
+    fun sendUserToSheet(user: FirebaseUser, provider: String, name: String? = null) {
         val client = OkHttpClient()
 
         val json = JSONObject()
-        json.put("name", user.displayName ?: "")
+        json.put("name", name ?: user.displayName ?: "")
         json.put("email", user.email ?: "")
         json.put("phone", user.phoneNumber ?: "")
         json.put("uid", user.uid)
