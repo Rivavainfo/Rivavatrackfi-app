@@ -13,6 +13,11 @@ const getWelcomeEmailHtml = (email) => {
     `;
 };
 
+const getWelcomeEmailText = (email) => {
+    return `Welcome to Rivava 🚀\n\nHello! We are thrilled to have you here.\nYour account with email ${email} has been successfully verified and created.\n\nExplore the App at https://rivava.in`;
+};
+
 module.exports = {
-    getWelcomeEmailHtml
+    getWelcomeEmailHtml,
+    getWelcomeEmailText
 };

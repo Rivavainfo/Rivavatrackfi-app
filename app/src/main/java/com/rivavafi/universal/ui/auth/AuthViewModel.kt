@@ -66,7 +66,9 @@ class AuthViewModel @Inject constructor(
         get() = savedStateHandle.get("verificationId")
         set(value) { savedStateHandle["verificationId"] = value }
 
-    private var _resendToken: PhoneAuthProvider.ForceResendingToken? = null
+    private var _resendToken: PhoneAuthProvider.ForceResendingToken?
+        get() = savedStateHandle.get("resendToken")
+        set(value) { savedStateHandle["resendToken"] = value }
 
     init {
         val user = repository.auth.currentUser

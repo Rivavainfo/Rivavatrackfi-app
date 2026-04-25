@@ -60,6 +60,7 @@ exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
             to: email,
             from: 'no-reply@rivava.in',
             subject: 'Verify your email for Rivava',
+            text: `Welcome to Rivava\n\nPlease verify your email address by visiting the link below:\n\n${verifyLink}\n\nIf you didn't create an account, you can safely ignore this email.`,
             html: `
                 <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
                     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
