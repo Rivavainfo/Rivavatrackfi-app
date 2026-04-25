@@ -447,23 +447,6 @@ fun AuthScreenContent(
                             color = Color.White
                         )
 
-                        if (isRegister) {
-                            OutlinedTextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                label = { Text("Full Name", color = Color.White.copy(0.7f)) },
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF3B82F6),
-                                    unfocusedBorderColor = Color.White.copy(0.2f),
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                ),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        }
-
                         OutlinedTextField(
                             value = email,
                             onValueChange = {

@@ -70,7 +70,7 @@ class AuthRepository @Inject constructor(
         phoneNumber: String?,
         authProvider: String,
         isVerified: Boolean = false
-    ): Boolean {
+    ): Pair<Boolean, String?> {
         val userData = hashMapOf<String, Any?>()
         userData["uid"] = uid
         userData["name"] = name?.takeIf { it.isNotBlank() }
@@ -93,10 +93,10 @@ class AuthRepository @Inject constructor(
             } else {
                 docRef.set(userData.filterValues { it != null }, SetOptions.merge()).await()
             }
-            isNewUser
+            Pair(isNewUser, docSnap.getString("name"))
         }.getOrElse { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
-            false // Default to treating them as returning if Firestore fails, to not force onboarding
+            Pair(false, null) // Default to treating them as returning if Firestore fails, to not force onboarding
         }
     }
 
