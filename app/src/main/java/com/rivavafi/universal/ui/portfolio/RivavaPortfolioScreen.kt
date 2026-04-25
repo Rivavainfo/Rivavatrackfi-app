@@ -1,6 +1,7 @@
 package com.rivavafi.universal.ui.portfolio
 
 import android.content.Context
+import androidx.compose.animation.animateContentSize
 import android.content.Intent
 import android.content.ContextWrapper
 import androidx.compose.foundation.background
@@ -519,6 +520,7 @@ fun CryptoCard(id: String, data: CryptoData, isApiWorking: Boolean = true) {
             .height(90.dp)
             .clip(RoundedCornerShape(16.dp))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+            .animateContentSize(animationSpec = androidx.compose.animation.core.tween(durationMillis = 300))
             .clickable {
                 val url = "https://www.google.com/search?q=$id+crypto+price"
                 try {
@@ -611,6 +613,7 @@ fun NewsCard(news: com.rivavafi.universal.domain.api.FinnhubNewsResponse) {
             .width(260.dp)
             .clip(RoundedCornerShape(16.dp))
             .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+
             .clickable {
                 try {
                     uriHandler.openUri(news.url)
@@ -691,6 +694,7 @@ fun StaticNewsCard(source: String, title: String, url: String, imageUrl: String,
             .fillMaxWidth()
             .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp))
+            .animateContentSize(animationSpec = androidx.compose.animation.core.tween(durationMillis = 300))
             .clickable {
                 try {
                     uriHandler.openUri(url)

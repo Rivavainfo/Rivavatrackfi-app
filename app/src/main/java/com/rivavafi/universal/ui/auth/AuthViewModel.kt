@@ -117,7 +117,7 @@ class AuthViewModel @Inject constructor(
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                val firestoreNew = repository.saveUserToFirestore(
+                val (firestoreNew, existingName) = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
                     email = email,
@@ -168,19 +168,21 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
-                    val firestoreNew = repository.saveUserToFirestore(
+                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
                         uid = uid,
-                        name = "Email User",
+                        name = null,
                         email = email,
                         phoneNumber = null,
                         authProvider = "email",
                         isVerified = true
                     )
-                    val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                    val firebaseNew = false
                     val isNew = firestoreNew || firebaseNew
                     _isNewUser.value = isNew
                     if (isNew) {
                         repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                    } else if (!existingName.isNullOrBlank()) {
+                        userPreferencesRepository.saveUserName(existingName)
                     }
                     _authState.value = AuthState.SUCCESS
                 } else {
@@ -245,7 +247,7 @@ class AuthViewModel @Inject constructor(
                 Log.d("AuthViewModel", "Registration successful. Saving to Firestore and Sheets...")
                 repository.saveUserToFirestore(
                     uid = uid,
-                    name = name.ifBlank { "Email User" },
+                    name = name.ifBlank { null },
                     email = email,
                     phoneNumber = null,
                     authProvider = "email",
@@ -304,19 +306,21 @@ class AuthViewModel @Inject constructor(
                 if (uid != null) {
                     val isVerified = repository.checkVerificationStatus(uid)
                     if (isVerified) {
-                        val firestoreNew = repository.saveUserToFirestore(
+                        val (firestoreNew, existingName) = repository.saveUserToFirestore(
                             uid = uid,
-                            name = "Email User",
+                            name = null,
                             email = repository.auth.currentUser?.email ?: "",
                             phoneNumber = null,
                             authProvider = "email",
                             isVerified = true
                         )
-                        val firebaseNew = repository.auth.currentUser?.displayName.isNullOrBlank()
+                        val firebaseNew = false
                         val isNew = firestoreNew || firebaseNew
                         _isNewUser.value = isNew
                         if (isNew) {
                             repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                        } else if (!existingName.isNullOrBlank()) {
+                            userPreferencesRepository.saveUserName(existingName)
                         }
                         _authState.value = AuthState.SUCCESS
                         onVerified()
@@ -347,9 +351,9 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                    val firestoreNew = repository.saveUserToFirestore(
+                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
                         uid = uid,
-                        name = "Phone User",
+                        name = null,
                         email = null,
                         phoneNumber = repository.auth.currentUser?.phoneNumber,
                         authProvider = "phone",
@@ -360,6 +364,8 @@ class AuthViewModel @Inject constructor(
                     _isNewUser.value = isNew
                     if (isNew) {
                         authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                    } else if (!existingName.isNullOrBlank()) {
+                        userPreferencesRepository.saveUserName(existingName)
                     }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
                     _authState.value = AuthState.SUCCESS
@@ -473,9 +479,9 @@ class AuthViewModel @Inject constructor(
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val firestoreNew = repository.saveUserToFirestore(
+                val (firestoreNew, existingName) = repository.saveUserToFirestore(
                     uid = uid,
-                    name = "Phone User",
+                    name = null,
                     email = email,
                     phoneNumber = phoneNumber,
                     authProvider = "phone",
@@ -487,6 +493,8 @@ class AuthViewModel @Inject constructor(
                 _isNewUser.value = isNew
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
+                } else if (!existingName.isNullOrBlank()) {
+                    userPreferencesRepository.saveUserName(existingName)
                 }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS

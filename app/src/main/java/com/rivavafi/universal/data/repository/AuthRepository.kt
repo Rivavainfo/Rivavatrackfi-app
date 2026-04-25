@@ -27,11 +27,11 @@ class AuthRepository @Inject constructor(
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun sendUserToSheet(user: FirebaseUser, provider: String) {
+    fun sendUserToSheet(user: FirebaseUser, provider: String, name: String? = null) {
         val client = OkHttpClient()
 
         val json = JSONObject()
-        json.put("name", user.displayName ?: "")
+        json.put("name", name ?: user.displayName ?: "")
         json.put("email", user.email ?: "")
         json.put("phone", user.phoneNumber ?: "")
         json.put("uid", user.uid)
@@ -70,7 +70,7 @@ class AuthRepository @Inject constructor(
         phoneNumber: String?,
         authProvider: String,
         isVerified: Boolean = false
-    ): Boolean {
+    ): Pair<Boolean, String?> {
         val userData = hashMapOf<String, Any?>()
         userData["uid"] = uid
         userData["name"] = name?.takeIf { it.isNotBlank() }
@@ -86,17 +86,17 @@ class AuthRepository @Inject constructor(
             val existingName = docSnap.getString("name").orEmpty()
             val authProfileName = Firebase.auth.currentUser?.displayName.orEmpty()
 
-            val isNewUser = !docSnap.exists() || existingName.isBlank() || authProfileName.isBlank()
+            val isNewUser = !docSnap.exists() || existingName.isBlank()
             if (!docSnap.exists()) {
                 userData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
                 docRef.set(userData).await()
             } else {
                 docRef.set(userData.filterValues { it != null }, SetOptions.merge()).await()
             }
-            isNewUser
+            Pair(isNewUser, docSnap.getString("name"))
         }.getOrElse { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
-            false // Default to treating them as returning if Firestore fails, to not force onboarding
+            Pair(false, null) // Default to treating them as returning if Firestore fails, to not force onboarding
         }
     }
 

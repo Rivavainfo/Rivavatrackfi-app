@@ -39,6 +39,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.universal.HomeActivity
 import com.rivavafi.universal.R
 import com.rivavafi.universal.ui.theme.*
+import androidx.compose.ui.draw.shadow
 import com.rivavafi.universal.ui.theme.glassMorphism
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -381,9 +382,10 @@ fun AuthScreenContent(
                             onClick = { authMethod = "EMAIL_LOGIN" },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                                .height(56.dp)
+                                .shadow(elevation = 12.dp, spotColor = PrimarySky, shape = RoundedCornerShape(20.dp)),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(Icons.Outlined.Email, contentDescription = null, tint = Color.White)
@@ -405,9 +407,10 @@ fun AuthScreenContent(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
+                                .height(56.dp)
+                                .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(
@@ -425,9 +428,10 @@ fun AuthScreenContent(
                             onClick = { authMethod = "PHONE" },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                                .height(56.dp)
+                                .shadow(elevation = 12.dp, spotColor = EmeraldGreen, shape = RoundedCornerShape(20.dp)),
+                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldGreen, contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Icon(Icons.Outlined.Phone, contentDescription = null, tint = Color.White)
@@ -531,9 +535,10 @@ fun AuthScreenContent(
                             enabled = authState != AuthState.LOADING && formState.emailError == null && email.isNotBlank() && password.isNotBlank(),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                                .height(56.dp)
+                                .shadow(elevation = 12.dp, spotColor = PrimarySky, shape = RoundedCornerShape(20.dp)),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             if (authState == AuthState.LOADING) {
