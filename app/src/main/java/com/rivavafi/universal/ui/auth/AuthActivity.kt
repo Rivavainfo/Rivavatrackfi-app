@@ -61,7 +61,8 @@ class AuthActivity : ComponentActivity() {
         setContent {
             TrackFiTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                                .fillMaxSize(),
                     color = AmoledBlack
                 ) {
                     AuthScreenContent(
@@ -219,6 +220,7 @@ fun AuthScreenContent(
 
         Column(
             modifier = Modifier
+
                 .fillMaxSize()
                 .background(AmoledBlack)
                 .padding(24.dp),
@@ -228,24 +230,28 @@ fun AuthScreenContent(
             Icon(
                 imageVector = Icons.Outlined.Email,
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier
+                                .size(80.dp),
                 tint = PrimarySky
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                                .height(16.dp))
             Text(
                 "Check your inbox",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier
+                                .height(8.dp))
             Text(
                 "We've sent a verification link to your email. Please click it to continue.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.7f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier
+                                .height(32.dp))
             Button(
                 onClick = {
                     viewModel.checkEmailVerified(
@@ -255,18 +261,21 @@ fun AuthScreenContent(
                 },
                 enabled = authState != AuthState.LOADING,
                 modifier = Modifier
+
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = PrimarySky, contentColor = AmoledBlack)
             ) {
                 if (authState == AuthState.LOADING) {
-                    CircularProgressIndicator(color = AmoledBlack, modifier = Modifier.size(24.dp))
+                    CircularProgressIndicator(color = AmoledBlack, modifier = Modifier
+                                .size(24.dp))
                 } else {
                     Text("I've Verified", fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                                .height(16.dp))
             OutlinedButton(
                 onClick = {
                     viewModel.resendVerificationEmail()
@@ -274,6 +283,7 @@ fun AuthScreenContent(
                 },
                 enabled = resendCooldown == 0 && authState != AuthState.LOADING,
                 modifier = Modifier
+
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -282,7 +292,8 @@ fun AuthScreenContent(
             ) {
                 Text(if (resendCooldown > 0) "Resend in ${resendCooldown}s" else "Resend Email")
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier
+                                .height(16.dp))
             TextButton(onClick = { showEmailVerificationUI = false }) {
                 Text("Back to Login", color = PrimarySky)
             }
@@ -292,11 +303,13 @@ fun AuthScreenContent(
 
     Box(
         modifier = Modifier
+
             .fillMaxSize()
             .background(Color(0xFF0A0A0A))
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. Moving Image Carousel
@@ -319,22 +332,27 @@ fun AuthScreenContent(
 
             Box(
                 modifier = Modifier
+
                     .fillMaxWidth()
                     .fillMaxHeight(0.4f)
             ) {
                 androidx.compose.foundation.pager.HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                                .fillMaxSize()
                 ) { page ->
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier
+                                .fillMaxSize()) {
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
                         )
                         Box(
                             modifier = Modifier
+
                                 .fillMaxSize()
                                 .background(
                                     Brush.verticalGradient(
@@ -350,6 +368,7 @@ fun AuthScreenContent(
                                 color = Color.White
                             ),
                             modifier = Modifier
+
                                 .align(Alignment.BottomStart)
                                 .padding(24.dp)
                         )
@@ -357,11 +376,13 @@ fun AuthScreenContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier
+                                .height(24.dp))
 
             // Glassmorphism Login Container
             androidx.compose.material3.Card(
                 modifier = Modifier
+
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(24.dp))
@@ -371,6 +392,7 @@ fun AuthScreenContent(
             ) {
                 Column(
                     modifier = Modifier
+
                         .fillMaxWidth()
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -409,7 +431,7 @@ fun AuthScreenContent(
                                 .fillMaxWidth()
                                 .height(56.dp)
                                 .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = AmoledBlack),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
                             shape = RoundedCornerShape(20.dp)
                         ) {
@@ -439,7 +461,8 @@ fun AuthScreenContent(
                             Text("Continue with Phone", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier
+                                .height(16.dp))
                         TextButton(onClick = { authMethod = "EMAIL_REGISTER" }) {
                             Text("Don't have an account? Sign up", color = Color(0xFF00A3FF), fontWeight = FontWeight.SemiBold)
                         }
@@ -450,23 +473,6 @@ fun AuthScreenContent(
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                             color = Color.White
                         )
-
-                        if (isRegister) {
-                            OutlinedTextField(
-                                value = name,
-                                onValueChange = { name = it },
-                                label = { Text("Full Name", color = Color.White.copy(0.7f)) },
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF3B82F6),
-                                    unfocusedBorderColor = Color.White.copy(0.2f),
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                ),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                        }
 
                         OutlinedTextField(
                             value = email,
@@ -483,13 +489,15 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
                             shape = RoundedCornerShape(16.dp),
                             isError = formState.emailError != null,
                             supportingText = {
                                 if (formState.emailError != null) {
                                     Text(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                .fillMaxWidth(),
                                         text = formState.emailError!!,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -510,12 +518,14 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth(),
                             shape = RoundedCornerShape(16.dp)
                         )
 
                         if (!isRegister) {
-                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                            Box(modifier = Modifier
+                                .fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
                                 TextButton(onClick = onNavigateToReset) {
                                     Text("Forgot Password?", color = Color(0xFF00A3FF))
                                 }
@@ -527,7 +537,7 @@ fun AuthScreenContent(
                                 if (!isRegister) {
                                     viewModel.onEmailLogin(email, password)
                                 } else {
-                                    viewModel.onEmailRegister(email, password, name) {
+                                    viewModel.onEmailRegister(email, password, "") {
                                         showEmailVerificationUI = true
                                     }
                                 }
@@ -576,13 +586,15 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.phoneError != null) 0.dp else 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth().padding(bottom = if (formState.phoneError != null) 0.dp else 16.dp),
                             shape = RoundedCornerShape(16.dp),
                             isError = formState.phoneError != null,
                             supportingText = {
                                 if (formState.phoneError != null) {
                                     Text(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                .fillMaxWidth(),
                                         text = formState.phoneError!!,
                                         color = MaterialTheme.colorScheme.error
                                     )
@@ -605,20 +617,23 @@ fun AuthScreenContent(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White
                             ),
-                            modifier = Modifier.fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth().padding(bottom = if (formState.emailError != null) 0.dp else 16.dp),
                             shape = RoundedCornerShape(16.dp),
                             isError = formState.emailError != null,
                             supportingText = {
                                 if (formState.emailError != null) {
                                     Text(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                .fillMaxWidth(),
                                         text = formState.emailError!!,
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier
+                                .height(16.dp))
                         Button(
                             onClick = {
                                 val formattedNumber = phoneNumber.trim()
@@ -635,6 +650,7 @@ fun AuthScreenContent(
                             },
                             enabled = authState != AuthState.LOADING && formState.isFormValid && phoneNumber.isNotBlank(),
                             modifier = Modifier
+
                                 .fillMaxWidth()
                                 .height(56.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
@@ -642,7 +658,8 @@ fun AuthScreenContent(
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             if (authState == AuthState.LOADING) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier
+                                .size(24.dp))
                             } else {
                                 Text("Send OTP", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
                             }
