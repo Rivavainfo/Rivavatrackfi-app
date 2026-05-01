@@ -18,3 +18,4 @@ build/
 app/release.keystore
 functions/node_modules
 functions/node_modules
+sendgrid.env
