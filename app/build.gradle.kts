@@ -20,12 +20,21 @@ android {
 
     signingConfigs {
         create("release") {
-            val storePwd = System.getenv("STORE_PASSWORD")
+            val storePwd = System.getenv("KEYSTORE_PASSWORD")
             val kAlias = System.getenv("KEY_ALIAS")
             val kPwd = System.getenv("KEY_PASSWORD")
 
+            if (storePwd == null || kAlias == null || kPwd == null) {
+                println("WARNING: Keystore credentials are null")
+            }
+
+            val keystoreFile = file("release.keystore")
+            if (!keystoreFile.exists()) {
+                println("WARNING: release.keystore does not exist at ${keystoreFile.absolutePath}")
+            }
+
             if (System.getenv("CI") == "true" && storePwd != null && kAlias != null && kPwd != null) {
-                storeFile = file("/home/runner/work/Rivavatrackfi-app/Rivavatrackfi-app/app/release.keystore")
+                storeFile = keystoreFile
                 storePassword = storePwd
                 keyAlias = kAlias
                 keyPassword = kPwd
