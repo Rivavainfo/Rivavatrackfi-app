@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
+import com.rivavafi.universal.data.repository.EmailService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -15,7 +16,8 @@ import javax.inject.Inject
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val emailService: EmailService
 ) : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
@@ -40,6 +42,15 @@ class OnboardingViewModel @Inject constructor(
                         else -> "Unknown"
                     }
                 } ?: "Unknown"
+
+                if (provider == "Phone") {
+                    user.email?.let { email ->
+                        viewModelScope.launch {
+                            emailService.sendWelcomeEmail(email, name)
+                        }
+                    }
+                }
+
                 authRepository.sendUserToSheet(user, provider, name)
             }
         }
