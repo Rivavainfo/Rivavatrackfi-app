@@ -20,12 +20,12 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = System.getenv("KEYSTORE_PATH") ?: localProperties.getProperty("keystore.file")
+            val keystoreFile = System.getenv("KEYSTORE_PATH")?.takeIf { it.isNotBlank() } ?: localProperties.getProperty("keystore.file")
             if (keystoreFile != null) {
                 storeFile = file(keystoreFile)
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: localProperties.getProperty("keystore.password") ?: "password"
-                keyAlias = System.getenv("KEY_ALIAS") ?: localProperties.getProperty("keystore.alias") ?: "release"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: localProperties.getProperty("keystore.key_password") ?: "password"
+                storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: localProperties.getProperty("keystore.password") ?: "password"
+                keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: localProperties.getProperty("keystore.alias") ?: "release"
+                keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: localProperties.getProperty("keystore.key_password") ?: "password"
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
