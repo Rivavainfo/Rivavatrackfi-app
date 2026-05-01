@@ -20,21 +20,15 @@ android {
 
     signingConfigs {
         create("release") {
+            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "release.keystore")
+
             val storePwd = System.getenv("KEYSTORE_PASSWORD")
             val kAlias = System.getenv("KEY_ALIAS")
             val kPwd = System.getenv("KEY_PASSWORD")
 
             if (storePwd == null || kAlias == null || kPwd == null) {
-                println("WARNING: Keystore credentials are null")
-            }
-
-            val keystoreFile = file("release.keystore")
-            if (!keystoreFile.exists()) {
-                println("WARNING: release.keystore does not exist at ${keystoreFile.absolutePath}")
-            }
-
-            if (System.getenv("CI") == "true" && storePwd != null && kAlias != null && kPwd != null) {
-                storeFile = keystoreFile
+                println("WARNING: Keystore credentials are missing. Check environment variables.")
+            } else {
                 storePassword = storePwd
                 keyAlias = kAlias
                 keyPassword = kPwd
@@ -42,18 +36,6 @@ android {
                 enableV2Signing = true
                 enableV3Signing = true
                 enableV4Signing = true
-            } else {
-                val localKeystore = localProperties.getProperty("keystore.file")
-                if (localKeystore != null) {
-                    storeFile = file(localKeystore)
-                    storePassword = localProperties.getProperty("keystore.password") ?: "password"
-                    keyAlias = localProperties.getProperty("keystore.alias") ?: "release"
-                    keyPassword = localProperties.getProperty("keystore.key_password") ?: "password"
-                    enableV1Signing = true
-                    enableV2Signing = true
-                    enableV3Signing = true
-                    enableV4Signing = true
-                }
             }
         }
     }

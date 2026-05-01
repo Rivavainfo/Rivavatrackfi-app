@@ -24,12 +24,10 @@ jobs:
         mkdir -p ~/.gradle
         echo "org.gradle.java.home=$JAVA_HOME" >> ~/.gradle/gradle.properties
 
-    - name: Handle Keystore
-      env:
-        BASE64_KEYSTORE: ${{ secrets.BASE64_KEYSTORE }}
+    - name: Decode Keystore
       run: |
-        if [ -n "$BASE64_KEYSTORE" ]; then
-          echo "$BASE64_KEYSTORE" | base64 --decode > app/release.keystore
+        if [ -n "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" ]; then
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
         else
           keytool -genkeypair -v -keystore app/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Rivava, OU=Mobile, O=Rivava, L=Global, S=NA, C=US"
         fi
@@ -37,14 +35,24 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Validate Signing Config
+      env:
+        KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.RELEASE_KEY_ALIAS_PASSWORD }}
+      run: |
+        if [ -z "$KEYSTORE_PASSWORD" ]; then echo "Missing KEYSTORE_PASSWORD"; exit 1; fi
+        if [ -z "$KEY_ALIAS" ]; then echo "Missing KEY_ALIAS"; exit 1; fi
+
     - name: Build with Gradle Debug
       run: ./gradlew assembleDebug --stacktrace --info
 
     - name: Build with Gradle Release
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.RELEASE_KEY_ALIAS_PASSWORD }}
+        KEYSTORE_FILE: release.keystore
       run: |
         ./gradlew assembleRelease --stacktrace --info
         ./gradlew bundleRelease --stacktrace --info
