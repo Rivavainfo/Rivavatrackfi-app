@@ -26,10 +26,10 @@ jobs:
 
     - name: Handle Keystore
       env:
-        ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        BASE64_KEYSTORE: ${{ secrets.BASE64_KEYSTORE }}
       run: |
-        if [ -n "$ANDROID_KEYSTORE" ]; then
-          echo "$ANDROID_KEYSTORE" | base64 --decode > app/release.keystore
+        if [ -n "$BASE64_KEYSTORE" ]; then
+          echo "$BASE64_KEYSTORE" | base64 --decode > app/release.keystore
         else
           keytool -genkeypair -v -keystore app/release.keystore -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Rivava, OU=Mobile, O=Rivava, L=Global, S=NA, C=US"
         fi
