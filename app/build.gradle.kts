@@ -20,12 +20,15 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePathStr = System.getenv("KEYSTORE_PATH")
-            if (keystorePathStr != null && keystorePathStr.isNotBlank()) {
-                storeFile = file(keystorePathStr)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+            val storePwd = System.getenv("STORE_PASSWORD")
+            val kAlias = System.getenv("KEY_ALIAS")
+            val kPwd = System.getenv("KEY_PASSWORD")
+
+            if (System.getenv("CI") == "true" && storePwd != null && kAlias != null && kPwd != null) {
+                storeFile = file("/home/runner/work/Rivavatrackfi-app/Rivavatrackfi-app/app/release.keystore")
+                storePassword = storePwd
+                keyAlias = kAlias
+                keyPassword = kPwd
                 enableV1Signing = true
                 enableV2Signing = true
                 enableV3Signing = true
