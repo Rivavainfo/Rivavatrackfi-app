@@ -7,34 +7,31 @@ plugins {
 }
 
 import java.util.Properties
+import java.io.FileInputStream
 
 android {
     namespace = "com.rivavafi.universal"
     compileSdk = 34
 
+    // Load local.properties for local builds
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
-        localProperties.load(localPropertiesFile.inputStream())
+        localProperties.load(FileInputStream(localPropertiesFile))
     }
 
     signingConfigs {
         create("release") {
+            // Path to the keystore file inside the 'app' folder
             storeFile = file("release-key.jks")
 
-            val storePwd = System.getenv("RELEASE_STORE_PASSWORD")
-            val kAlias = System.getenv("RELEASE_KEY_ALIAS")
-            val kPwd = System.getenv("RELEASE_KEY_PASSWORD")
-
-            if (storePwd.isNullOrEmpty()) {
-                println("WARNING: RELEASE_STORE_PASSWORD is null or empty.")
-            }
-            if (kAlias.isNullOrEmpty()) {
-                println("WARNING: RELEASE_KEY_ALIAS is null or empty.")
-            }
-            if (kPwd.isNullOrEmpty()) {
-                println("WARNING: RELEASE_KEY_PASSWORD is null or empty.")
-            }
+            // Prioritize Environment Variables (CI), fallback to local.properties (Local)
+            val storePwd = System.getenv("RELEASE_STORE_PASSWORD") 
+                ?: localProperties.getProperty("RELEASE_STORE_PASSWORD")
+            val kAlias = System.getenv("RELEASE_KEY_ALIAS") 
+                ?: localProperties.getProperty("RELEASE_KEY_ALIAS")
+            val kPwd = System.getenv("RELEASE_KEY_PASSWORD") 
+                ?: localProperties.getProperty("RELEASE_KEY_PASSWORD")
 
             if (!storePwd.isNullOrEmpty() && !kAlias.isNullOrEmpty() && !kPwd.isNullOrEmpty()) {
                 storePassword = storePwd
@@ -44,6 +41,8 @@ android {
                 enableV2Signing = true
                 enableV3Signing = true
                 enableV4Signing = true
+            } else {
+                println("SIGNING CONFIG WARNING: One or more signing variables are missing.")
             }
         }
     }
@@ -55,9 +54,10 @@ android {
         versionCode = 3
         versionName = "1.0.2"
 
+        // API Key injection with safe fallbacks
         buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
         buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: "d7efv4pr01qi33g64emgd7efv4pr01qi33g64en0"}\"")
-        buildConfigField("String", "SENDGRID_API_KEY", "\"${System.getenv("SENDGRID_API_KEY") ?: localProperties.getProperty("sendgrid.apikey") ?: ""}\"")
+        buildConfigField("String", "SENDGRID_API_KEY", "\"${System.getenv("SENDGRID_API_KEY") ?: localProperties.getProperty("sendgrid.apikey") ?: "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"}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -87,23 +87,29 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
     }
+
     lint {
         abortOnError = false
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
     }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true
@@ -168,10 +174,10 @@ dependencies {
 
     // Material Icons Extended
     implementation("androidx.compose.material:material-icons-extended")
+
     // TensorFlow Lite
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
