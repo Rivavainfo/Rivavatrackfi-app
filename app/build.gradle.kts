@@ -20,7 +20,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("release.keystore")
+            storeFile = file("release-key.jks")
 
             val storePwd = System.getenv("RELEASE_STORE_PASSWORD")
             val kAlias = System.getenv("RELEASE_KEY_ALIAS")
