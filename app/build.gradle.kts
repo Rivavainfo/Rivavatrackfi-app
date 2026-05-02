@@ -56,7 +56,7 @@ android {
 
         // API Key injection with safe fallbacks
         buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
-        buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: "d7efv4pr01qi33g64emgd7efv4pr01qi33g64en0"}\"")
+        buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: "d7efv4pr01qi33g64emg"}\"")
         buildConfigField("String", "SENDGRID_API_KEY", "\"${System.getenv("SENDGRID_API_KEY") ?: localProperties.getProperty("sendgrid.apikey") ?: "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"}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

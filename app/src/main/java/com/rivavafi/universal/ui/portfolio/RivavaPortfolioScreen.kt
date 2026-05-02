@@ -470,8 +470,7 @@ fun RivavaPortfolioScreen(
                 )
                 val usMarket = listOf(
                     NewsItem("The Wall Street Journal", "US Markets and Global Business", "https://www.wsj.com/", "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&q=80"),
-                    NewsItem("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&q=80"),
-                    NewsItem("The New York Times", "Business and Economy Updates", "https://www.nytimes.com/section/business", "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?w=600&q=80")
+                    NewsItem("Bloomberg", "Finance, Stock Market, and Business News", "https://www.bloomberg.com/", "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&q=80")
                 )
                 val internationalMarket = listOf(
                     NewsItem("Financial Times", "Global Economy and Market News", "https://www.ft.com/", "https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?w=600&q=80"),
