@@ -37,22 +37,24 @@ jobs:
 
     - name: Validate Signing Config
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.RELEASE_KEY_ALIAS_PASSWORD }}
+        RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       run: |
-        if [ -z "$KEYSTORE_PASSWORD" ]; then echo "Missing KEYSTORE_PASSWORD"; exit 1; fi
-        if [ -z "$KEY_ALIAS" ]; then echo "Missing KEY_ALIAS"; exit 1; fi
+        if [ -z "$RELEASE_STORE_PASSWORD" ]; then echo "Missing RELEASE_STORE_PASSWORD"; exit 1; fi
+        if [ -z "$RELEASE_KEY_ALIAS" ]; then echo "Missing RELEASE_KEY_ALIAS"; exit 1; fi
+
+    - name: Clean Project
+      run: ./gradlew clean
 
     - name: Build with Gradle Debug
       run: ./gradlew assembleDebug --stacktrace --info
 
     - name: Build with Gradle Release
       env:
-        KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-        KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        KEY_PASSWORD: ${{ secrets.RELEASE_KEY_ALIAS_PASSWORD }}
-        KEYSTORE_FILE: release.keystore
+        RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+        RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
       run: |
         ./gradlew assembleRelease --stacktrace --info
         ./gradlew bundleRelease --stacktrace --info
