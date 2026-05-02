@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -62,18 +64,27 @@ class StockRepository @Inject constructor(
     private suspend fun tryScrapeFallback(symbol: String, prefix: String, reason: String): StockQuoteWithSource {
         return withContext(Dispatchers.IO) {
             try {
-                val scrapeUrl = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) {
-                    "https://www.google.com/finance/quote/IREDA:NSE"
-                } else {
-                    "https://www.google.com/finance/quote/RTX:NYSE"
-                }
-                val doc = Jsoup.connect(scrapeUrl).get()
-                val priceStr = doc.select("div.YMlKec.fxKbKc").first()?.text()?.replace(Regex("[^0-9.]"), "")
-                val prevCloseDiv = doc.select("div.P6K39c").find { it.text().contains("Previous close", ignoreCase = true) }
-                val prevCloseStr = (prevCloseDiv?.nextElementSibling()?.text() ?: doc.select("div.gyFHrc:contains(Previous close) > div.P6K39c").first()?.text())?.replace(Regex("[^0-9.]"), "")
+                val yahooSymbol = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+                val scrapeUrl = "https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol"
 
-                val price = priceStr?.toDoubleOrNull()
-                val prevClose = prevCloseStr?.toDoubleOrNull() ?: price
+                val jsonResponse = Jsoup.connect(scrapeUrl)
+                    .userAgent("Mozilla/5.0")
+                    .ignoreContentType(true)
+                    .execute()
+                    .body()
+
+                var price: Double? = null
+                var prevClose: Double? = null
+
+                val priceMatcher: Matcher = Pattern.compile("\"regularMarketPrice\":([0-9.]+)").matcher(jsonResponse)
+                if (priceMatcher.find()) {
+                    price = priceMatcher.group(1)?.toDoubleOrNull()
+                }
+
+                val prevMatcher: Matcher = Pattern.compile("\"previousClose\":([0-9.]+)").matcher(jsonResponse)
+                if (prevMatcher.find()) {
+                    prevClose = prevMatcher.group(1)?.toDoubleOrNull()
+                }
 
                 if (price != null && price > 0.0 && prevClose != null) {
                     Log.d(TAG, "Scraped fallback succeeded for $symbol -> price=$price, pc=$prevClose")
