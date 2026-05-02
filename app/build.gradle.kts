@@ -20,15 +20,23 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "release.keystore")
+            storeFile = file("release.keystore")
 
-            val storePwd = System.getenv("KEYSTORE_PASSWORD")
-            val kAlias = System.getenv("KEY_ALIAS")
-            val kPwd = System.getenv("KEY_PASSWORD")
+            val storePwd = System.getenv("RELEASE_STORE_PASSWORD")
+            val kAlias = System.getenv("RELEASE_KEY_ALIAS")
+            val kPwd = System.getenv("RELEASE_KEY_PASSWORD")
 
-            if (storePwd == null || kAlias == null || kPwd == null) {
-                println("WARNING: Keystore credentials are missing. Check environment variables.")
-            } else {
+            if (storePwd.isNullOrEmpty()) {
+                println("WARNING: RELEASE_STORE_PASSWORD is null or empty.")
+            }
+            if (kAlias.isNullOrEmpty()) {
+                println("WARNING: RELEASE_KEY_ALIAS is null or empty.")
+            }
+            if (kPwd.isNullOrEmpty()) {
+                println("WARNING: RELEASE_KEY_PASSWORD is null or empty.")
+            }
+
+            if (!storePwd.isNullOrEmpty() && !kAlias.isNullOrEmpty() && !kPwd.isNullOrEmpty()) {
                 storePassword = storePwd
                 keyAlias = kAlias
                 keyPassword = kPwd
