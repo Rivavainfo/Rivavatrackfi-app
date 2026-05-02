@@ -6,7 +6,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -19,54 +18,31 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Configure Gradle to use workflow JDK
-      run: |
-        mkdir -p ~/.gradle
-        echo "org.gradle.java.home=$JAVA_HOME" >> ~/.gradle/gradle.properties
-
     - name: Decode Keystore
       run: |
-        if [ -n "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" ]; then
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > app/release-key.jks
+        # Using the correct secret name: BASE64_KEYSTORE
+        if [ -n "${{ secrets.BASE64_KEYSTORE }}" ]; then
+          echo "${{ secrets.BASE64_KEYSTORE }}" | base64 --decode > app/release-key.jks
+          echo "✅ Keystore decoded from BASE64_KEYSTORE"
         else
+          echo "⚠️ BASE64_KEYSTORE not found, generating temporary debug key..."
           keytool -genkeypair -v -keystore app/release-key.jks -alias release -keyalg RSA -keysize 2048 -validity 10000 -storepass password -keypass password -dname "CN=Rivava, OU=Mobile, O=Rivava, L=Global, S=NA, C=US"
         fi
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Verify Keystore File
-      run: ls -la app/
-
-    - name: Validate Signing Config
-      env:
-        RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-        RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-      run: |
-        if [ -z "$RELEASE_STORE_PASSWORD" ]; then echo "Missing RELEASE_STORE_PASSWORD"; exit 1; fi
-        if [ -z "$RELEASE_KEY_ALIAS" ]; then echo "Missing RELEASE_KEY_ALIAS"; exit 1; fi
-
-    - name: Clean Project
-      run: ./gradlew clean
-
-    - name: Build with Gradle Debug
-      run: ./gradlew assembleDebug --stacktrace --info
-
     - name: Build with Gradle Release
       env:
+        # These names must match your build.gradle.kts System.getenv() calls
         RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
         RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-      run: |
-        ./gradlew assembleRelease --stacktrace --info
-        ./gradlew bundleRelease --stacktrace --info
-
-    - name: Upload Debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/*.apk
+        # API Keys for BuildConfig
+        ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      run: ./gradlew assembleRelease bundleRelease --stacktrace
 
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
