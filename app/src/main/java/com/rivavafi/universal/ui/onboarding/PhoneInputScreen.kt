@@ -1,0 +1,126 @@
+package com.rivavafi.universal.ui.onboarding
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.rivavafi.universal.ui.theme.AmoledBlack
+import com.rivavafi.universal.ui.theme.PrimarySky
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PhoneInputScreen(
+    onNavigateNext: (String, String) -> Unit,
+    viewModel: OnboardingViewModel = hiltViewModel()
+) {
+    var phoneNumber by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let {
+            if (it.isNotEmpty()) {
+                android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show()
+                viewModel.clearError()
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Verify your number",
+            style = MaterialTheme.typography.displaySmall.copy(
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
+            ),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "We'll send you an OTP to verify your account.",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                color = Color.White.copy(alpha = 0.7f),
+                fontWeight = FontWeight.Medium
+            ),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        OutlinedTextField(
+            value = phoneNumber,
+            onValueChange = { phoneNumber = it },
+            label = { Text("Phone Number (with country code)", color = Color.White.copy(0.7f)) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF00A3FF),
+                unfocusedBorderColor = Color.White.copy(0.2f),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = {
+                val formattedNumber = phoneNumber.trim()
+                if (formattedNumber.isNotBlank()) {
+                    (context as? android.app.Activity)?.let { act ->
+                        viewModel.startPhoneVerification(formattedNumber, act) { verificationId ->
+                            onNavigateNext(verificationId, formattedNumber)
+                        }
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF00A3FF),
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFF005D8A),
+                disabledContentColor = Color.White.copy(alpha = 0.75f)
+            ),
+            enabled = phoneNumber.isNotBlank() && !isLoading,
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text(
+                    "Send OTP",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+    }
+}

@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -110,6 +111,11 @@ class UserPreferencesRepository @Inject constructor(
 
     val smsScanCompletedFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[SMS_SCAN_COMPLETED_KEY] ?: false
+    }
+
+    suspend fun getUserName(): String? {
+        val prefs = dataStore.data.first()
+        return prefs[USER_NAME_KEY]
     }
 
     suspend fun saveUserName(name: String) {
