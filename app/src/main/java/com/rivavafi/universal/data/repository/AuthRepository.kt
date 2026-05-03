@@ -72,28 +72,32 @@ class AuthRepository @Inject constructor(
         isVerified: Boolean = false
     ): Pair<Boolean, String?> {
         val userData = hashMapOf<String, Any?>()
-        userData["uid"] = uid
-        userData["name"] = name?.takeIf { it.isNotBlank() }
+        userData["google_uid"] = uid
+        userData["full_name"] = name?.takeIf { it.isNotBlank() }
         userData["email"] = email?.takeIf { it.isNotBlank() }
-        userData["phoneNumber"] = phoneNumber?.takeIf { it.isNotBlank() }
-        userData["authProvider"] = authProvider
-        userData["isVerified"] = isVerified
-        userData["updatedAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
+        userData["phone_number"] = phoneNumber?.takeIf { it.isNotBlank() }
+        if (isVerified) {
+            userData["phone_verified"] = true
+        }
+        userData["updated_at"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
         return runCatching {
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
-            val existingName = docSnap.getString("name").orEmpty()
-            val authProfileName = Firebase.auth.currentUser?.displayName.orEmpty()
+            val existingName = docSnap.getString("full_name").orEmpty()
 
-            val isNewUser = !docSnap.exists() || existingName.isBlank()
+            val onboardingCompleted = docSnap.getBoolean("onboarding_completed") ?: false
+            val isNewUser = !docSnap.exists() || !onboardingCompleted
+
             if (!docSnap.exists()) {
-                userData["createdAt"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
+                userData["created_at"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
+                userData["onboarding_completed"] = false
+                userData["auto_message_tracking_enabled"] = false
                 docRef.set(userData).await()
             } else {
                 docRef.set(userData.filterValues { it != null }, SetOptions.merge()).await()
             }
-            Pair(isNewUser, docSnap.getString("name"))
+            Pair(isNewUser, docSnap.getString("full_name"))
         }.getOrElse { firestoreError ->
             Log.w("AuthRepository", "Firestore sync failed. Continuing authenticated session.", firestoreError)
             Pair(false, null) // Default to treating them as returning if Firestore fails, to not force onboarding
