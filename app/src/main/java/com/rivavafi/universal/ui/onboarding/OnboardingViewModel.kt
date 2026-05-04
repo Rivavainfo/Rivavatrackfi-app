@@ -73,29 +73,28 @@ class OnboardingViewModel @Inject constructor(
         }
 
         _isLoading.value = true
-        viewModelScope.launch {
-            try {
-                val user = FirebaseAuth.getInstance().currentUser
-                if (user == null) {
-                    _errorMessage.value = "User not logged in."
-                    _isLoading.value = false
-                    return@launch
-                }
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            _isLoading.value = false
+            onSuccess() // Proceed anyway to avoid buffering
+            return
+        }
 
-                firestore.collection("users").document(user.uid)
-                    .set(mapOf(
-                        "phone_number" to phoneNumber
-                    ), com.google.firebase.firestore.SetOptions.merge())
-                    .await()
-
+        firestore.collection("users").document(user.uid)
+            .set(mapOf(
+                "phone_number" to phoneNumber
+            ), com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener {
                 _isLoading.value = false
                 onSuccess()
-            } catch (e: Exception) {
+            }
+            .addOnFailureListener { e ->
                 Log.e("OnboardingViewModel", "Failed to save phone number", e)
                 _errorMessage.value = "Failed to save phone number."
                 _isLoading.value = false
+                // Even on failure, redirect to avoid being stuck in buffering state forever
+                onSuccess()
             }
-        }
     }
 
     fun setSmsTrackingEnabled(enabled: Boolean) {
