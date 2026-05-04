@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.PrimarySky
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,16 +115,14 @@ fun PhoneInputScreen(
             enabled = phoneNumber.length == 10 && !isLoading,
             shape = RoundedCornerShape(20.dp)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
-                Text(
-                    "Continue",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    )
+            Text(
+                "Continue",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
                 )
-            }
+            )
         }
     }
+
+    RivavaLoadingOverlay(isLoading = isLoading)
 }

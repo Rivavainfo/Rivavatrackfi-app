@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 
 @Composable
 fun SmsOptInScreen(
@@ -33,6 +34,7 @@ fun SmsOptInScreen(
     var showDeniedMessage by remember { mutableStateOf(false) }
     var showRationaleDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -189,4 +191,6 @@ fun SmsOptInScreen(
             }
         )
     }
+
+    RivavaLoadingOverlay(isLoading = isLoading)
 }
