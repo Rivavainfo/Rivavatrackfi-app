@@ -72,10 +72,15 @@ fun PhoneInputScreen(
 
         OutlinedTextField(
             value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Phone Number (with country code)", color = Color.White.copy(0.7f)) },
+            onValueChange = {
+                val digitsOnly = it.filter { char -> char.isDigit() }
+                if (digitsOnly.length <= 10) {
+                    phoneNumber = digitsOnly
+                }
+            },
+            label = { Text("Phone Number (10 digits)", color = Color.White.copy(0.7f)) },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF00A3FF),
                 unfocusedBorderColor = Color.White.copy(0.2f),
@@ -91,7 +96,7 @@ fun PhoneInputScreen(
         Button(
             onClick = {
                 val formattedNumber = phoneNumber.trim()
-                if (formattedNumber.isNotBlank()) {
+                if (formattedNumber.length == 10) {
                     viewModel.savePhoneNumber(formattedNumber) {
                         onNavigateNext()
                     }
@@ -106,7 +111,7 @@ fun PhoneInputScreen(
                 disabledContainerColor = Color(0xFF005D8A),
                 disabledContentColor = Color.White.copy(alpha = 0.75f)
             ),
-            enabled = phoneNumber.isNotBlank() && !isLoading,
+            enabled = phoneNumber.length == 10 && !isLoading,
             shape = RoundedCornerShape(20.dp)
         ) {
             if (isLoading) {
