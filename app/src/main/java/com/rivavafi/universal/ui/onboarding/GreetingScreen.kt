@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 
 @Composable
 fun GreetingScreen(
@@ -22,6 +23,7 @@ fun GreetingScreen(
 ) {
     val userName by viewModel.userName.collectAsState()
     var isVisible by remember { mutableStateOf(false) }
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
         delay(300)
@@ -64,4 +66,6 @@ fun GreetingScreen(
             }
         }
     }
+
+    RivavaLoadingOverlay(isLoading = isLoading)
 }

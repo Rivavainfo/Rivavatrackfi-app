@@ -39,6 +39,7 @@ import com.rivavafi.universal.ui.theme.WelcomeSurfaceContainerLow
 import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +49,7 @@ fun WelcomeScreen(
 ) {
     var name by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     Column(
         modifier = Modifier
@@ -125,4 +127,6 @@ fun WelcomeScreen(
             )
         }
     }
+
+    RivavaLoadingOverlay(isLoading = isLoading)
 }
