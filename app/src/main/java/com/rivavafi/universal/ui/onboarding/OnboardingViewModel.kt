@@ -84,8 +84,7 @@ class OnboardingViewModel @Inject constructor(
 
                 firestore.collection("users").document(user.uid)
                     .set(mapOf(
-                        "phone_number" to phoneNumber,
-                        "phone_verified" to false
+                        "phone_number" to phoneNumber
                     ), com.google.firebase.firestore.SetOptions.merge())
                     .await()
 
