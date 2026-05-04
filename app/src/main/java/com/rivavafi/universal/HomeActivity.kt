@@ -262,15 +262,9 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.SmsOptIn.route) {
                 SmsOptInScreen(onNavigateNext = { optedIn ->
-                    val alreadyScanned = runBlocking { preferencesRepository?.smsScanCompletedFlow?.first() ?: false }
-                    if (optedIn && !alreadyScanned) {
-                        navController.navigate(Screen.Scanning.route) {
-                            popUpTo(Screen.SmsOptIn.route) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.SmsOptIn.route) { inclusive = true }
-                        }
+                    // Tracking preference is saved in SmsOptInScreen, navigate to Home regardless of choice
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.SmsOptIn.route) { inclusive = true }
                     }
                 })
             }

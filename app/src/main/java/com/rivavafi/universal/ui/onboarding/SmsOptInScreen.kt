@@ -68,22 +68,10 @@ fun SmsOptInScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Automatic Bank Tracking (Optional)",
+            text = "Do you want to enable automatic message tracking?",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
-            ),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "You can allow SMS access to automatically detect bank transactions.\n\n" +
-                    "This is optional. All processing happens offline on your device.\n" +
-                    "No data is uploaded anywhere.",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             ),
             textAlign = TextAlign.Center
         )
@@ -116,7 +104,7 @@ fun SmsOptInScreen(
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Allow SMS Access", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Enable automatic tracking", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -131,7 +119,7 @@ fun SmsOptInScreen(
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text("Skip – I prefer manual tracking", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Skip (I’ll do it manually)", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 
