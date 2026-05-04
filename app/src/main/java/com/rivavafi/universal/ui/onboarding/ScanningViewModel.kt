@@ -35,4 +35,8 @@ class ScanningViewModel @Inject constructor(
             }
         }
     }
+
+    fun completeOnboarding(onboardingViewModel: OnboardingViewModel) {
+        onboardingViewModel.completeOnboarding()
+    }
 }

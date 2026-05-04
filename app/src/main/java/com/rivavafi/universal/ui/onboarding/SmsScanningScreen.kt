@@ -19,7 +19,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun SmsScanningScreen(
     onNavigateNext: () -> Unit,
-    viewModel: ScanningViewModel = hiltViewModel()
+    viewModel: ScanningViewModel = hiltViewModel(),
+    onboardingViewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val scanState by viewModel.scanState.collectAsState()
 
@@ -136,7 +137,10 @@ fun SmsScanningScreen(
                     Spacer(modifier = Modifier.height(48.dp))
 
                     Button(
-                        onClick = onNavigateNext,
+                        onClick = {
+                            viewModel.completeOnboarding(onboardingViewModel)
+                            onNavigateNext()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
