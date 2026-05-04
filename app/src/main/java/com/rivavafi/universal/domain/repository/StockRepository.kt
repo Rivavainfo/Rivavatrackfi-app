@@ -20,7 +20,9 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 @Singleton
 class StockRepository @Inject constructor(
@@ -33,36 +35,75 @@ class StockRepository @Inject constructor(
     suspend fun getGuaranteedQuote(symbol: String): StockQuoteWithSource {
         val normalizedSymbol = normalizeSymbol(symbol)
         val prefix = cachePrefix(normalizedSymbol)
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-        return try {
-            if (apiKey.isBlank()) {
-                Log.w(TAG, "Finnhub API key missing, skipping live fetch for $normalizedSymbol")
-                resolveFromCacheOrDefault(normalizedSymbol, prefix, "missing_api_key")
-            } else {
+        if (apiKey.isBlank() || apiKey == "d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg") {
+            Log.w(TAG, "Finnhub API key missing or default, skipping live fetch for $normalizedSymbol")
+            val diagnostic = "[$timestamp] LIVE fetch skipped: Missing or placeholder API Key."
+            return resolveFromCacheOrDefault(normalizedSymbol, prefix, "No valid API key provided", diagnostic)
+        }
+
+        var retryCount = 0
+        var currentDelay = 1000L
+        val maxRetries = 2
+        var lastDiagnostic = ""
+        var userReason = "Service unavailable"
+
+        while (retryCount <= maxRetries) {
+            try {
                 val response = apiService.getQuote(normalizedSymbol, apiKey)
                 val body = response.body()
-                Log.d(TAG, "Quote response for $normalizedSymbol -> code=${response.code()} body=$body")
+                val code = response.code()
+                val errorBodySnippet = response.errorBody()?.string()?.take(100) ?: "null"
+
+                Log.d(TAG, "Quote response for $normalizedSymbol -> code=$code body=$body")
 
                 if (response.isSuccessful && body != null && body.c > 0.0) {
                     saveQuote(prefix, body.c, body.pc)
-                    StockQuoteWithSource(
+                    return StockQuoteWithSource(
                         symbol = normalizedSymbol,
                         quote = body,
-                        source = QuoteSource.LIVE
+                        source = QuoteSource.LIVE,
+                        userSafeReason = null,
+                        diagnostics = "[$timestamp] LIVE success for $normalizedSymbol: code=$code, c=${body.c}, pc=${body.pc}"
                     )
                 } else {
-                    val errorMsg = "api_failed_or_invalid: ${response.code()}"
-                    tryScrapeFallback(normalizedSymbol, prefix, errorMsg)
+                    lastDiagnostic = "[$timestamp] LIVE HTTP Error: code=$code, body snippet=$errorBodySnippet"
+                    if (code == 401) {
+                         userReason = "Authentication failed with data provider"
+                         break // Don't retry on 401
+                    } else if (code == 429) {
+                         userReason = "Rate limit exceeded. Too many requests."
+                         break // Could retry, but Finnhub rate limits are often daily or minutely, so fallback is faster
+                    } else if (code in 500..599) {
+                         userReason = "Market data service is temporarily down"
+                         // will retry
+                    } else {
+                         userReason = "Failed to fetch live data (HTTP $code)"
+                         break // Client error other than 401/429
+                    }
                 }
+            } catch (exception: Exception) {
+                lastDiagnostic = "[$timestamp] LIVE Exception: type=${exception.javaClass.simpleName}, message=${exception.message}"
+                userReason = "Network error while connecting to market data"
+                Log.e(TAG, "Quote fetch failed for $normalizedSymbol (attempt ${retryCount + 1})", exception)
+                // will retry
             }
-        } catch (exception: Exception) {
-            Log.e(TAG, "Quote fetch failed for $normalizedSymbol, attempting scrape fallback", exception)
-            tryScrapeFallback(normalizedSymbol, prefix, "exception: ${exception.message}")
+
+            retryCount++
+            if (retryCount <= maxRetries) {
+                Log.d(TAG, "Retrying live fetch in $currentDelay ms...")
+                delay(currentDelay)
+                currentDelay *= 2
+            }
         }
+
+        return tryScrapeFallback(normalizedSymbol, prefix, userReason, lastDiagnostic)
     }
 
-    private suspend fun tryScrapeFallback(symbol: String, prefix: String, reason: String): StockQuoteWithSource {
+    private suspend fun tryScrapeFallback(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
         return withContext(Dispatchers.IO) {
+            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
             try {
                 val yahooSymbol = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
                 val scrapeUrl = "https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol"
@@ -73,18 +114,13 @@ class StockRepository @Inject constructor(
                     .execute()
                     .body()
 
-                var price: Double? = null
-                var prevClose: Double? = null
+                val jsonObject = JSONObject(jsonResponse)
+                val chart = jsonObject.optJSONObject("chart")
+                val result = chart?.optJSONArray("result")?.optJSONObject(0)
+                val meta = result?.optJSONObject("meta")
 
-                val priceMatcher: Matcher = Pattern.compile("\"regularMarketPrice\":([0-9.]+)").matcher(jsonResponse)
-                if (priceMatcher.find()) {
-                    price = priceMatcher.group(1)?.toDoubleOrNull()
-                }
-
-                val prevMatcher: Matcher = Pattern.compile("\"previousClose\":([0-9.]+)").matcher(jsonResponse)
-                if (prevMatcher.find()) {
-                    prevClose = prevMatcher.group(1)?.toDoubleOrNull()
-                }
+                val price = meta?.optDouble("regularMarketPrice")?.takeIf { !it.isNaN() }
+                val prevClose = meta?.optDouble("previousClose")?.takeIf { !it.isNaN() }
 
                 if (price != null && price > 0.0 && prevClose != null) {
                     Log.d(TAG, "Scraped fallback succeeded for $symbol -> price=$price, pc=$prevClose")
@@ -92,14 +128,19 @@ class StockRepository @Inject constructor(
                     StockQuoteWithSource(
                         symbol = symbol,
                         quote = StockResponse(c = price, h = price, l = price, o = prevClose, pc = prevClose),
-                        source = QuoteSource.SCRAPE
+                        source = QuoteSource.SCRAPE,
+                        userSafeReason = null,
+                        diagnostics = "$previousDiagnostics\n[$timestamp] SCRAPE success: price=$price, prevClose=$prevClose"
                     )
                 } else {
-                    resolveFromCacheOrDefault(symbol, prefix, reason)
+                    val bodySnippet = jsonResponse.take(100)
+                    val scrapeDiagnostic = "[$timestamp] SCRAPE Failed: parsed price=$price, prevClose=$prevClose. Body snippet: $bodySnippet"
+                    resolveFromCacheOrDefault(symbol, prefix, reason, "$previousDiagnostics\n$scrapeDiagnostic")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Scrape fallback failed for $symbol", e)
-                resolveFromCacheOrDefault(symbol, prefix, reason)
+                val scrapeDiagnostic = "[$timestamp] SCRAPE Exception: type=${e.javaClass.simpleName}, message=${e.message}"
+                resolveFromCacheOrDefault(symbol, prefix, reason, "$previousDiagnostics\n$scrapeDiagnostic")
             }
         }
     }
@@ -154,16 +195,19 @@ class StockRepository @Inject constructor(
         }
     }
 
-    private fun resolveFromCacheOrDefault(symbol: String, prefix: String, reason: String): StockQuoteWithSource {
+    private fun resolveFromCacheOrDefault(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
         val cachedPrice = preferences.getFloat("${prefix}_price", -1f).toDouble()
         val cachedPc = preferences.getFloat("${prefix}_pc", -1f).toDouble()
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
         if (cachedPrice > 0.0 && cachedPc > 0.0) {
             Log.d(TAG, "Using cached quote for $symbol because $reason")
             return StockQuoteWithSource(
                 symbol = symbol,
                 quote = StockResponse(c = cachedPrice, h = cachedPrice, l = cachedPrice, o = cachedPc, pc = cachedPc),
-                source = QuoteSource.CACHE
+                source = QuoteSource.CACHE,
+                userSafeReason = "Showing last known prices. $reason",
+                diagnostics = "$previousDiagnostics\n[$timestamp] CACHE success: retrieved price=$cachedPrice, pc=$cachedPc"
             )
         }
 
@@ -173,7 +217,14 @@ class StockRepository @Inject constructor(
         }
 
         Log.d(TAG, "Using hard fallback quote for $symbol because $reason")
-        return StockQuoteWithSource(symbol = symbol, quote = defaultQuote, source = QuoteSource.DEFAULT)
+        val cacheDiagnostic = "[$timestamp] CACHE failed: no valid data found in SharedPreferences"
+        return StockQuoteWithSource(
+            symbol = symbol,
+            quote = defaultQuote,
+            source = QuoteSource.DEFAULT,
+            userSafeReason = "Unable to fetch live prices at this moment",
+            diagnostics = "$previousDiagnostics\n$cacheDiagnostic\n[$timestamp] DEFAULT fallback used."
+        )
     }
 
     private fun saveQuote(prefix: String, price: Double, previousClose: Double) {
@@ -199,5 +250,7 @@ enum class QuoteSource { LIVE, SCRAPE, CACHE, DEFAULT }
 data class StockQuoteWithSource(
     val symbol: String,
     val quote: StockResponse,
-    val source: QuoteSource
+    val source: QuoteSource,
+    val userSafeReason: String? = null,
+    val diagnostics: String? = null
 )

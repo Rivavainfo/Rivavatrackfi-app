@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rivavafi.universal.ui.theme.glassMorphism
 import com.rivavafi.universal.ui.theme.glowEffect
 import androidx.compose.ui.graphics.Brush
@@ -144,6 +145,7 @@ fun PortfolioStockCard(
     isPositive: Boolean = true,
     absoluteChange: String = "+0.00",
     percentageChange: String = "+2.4%",
+    isDefault: Boolean = false,
     latestNews: com.rivavafi.universal.domain.api.FinnhubNewsResponse? = null, // kept for backward compatibility if needed elsewhere
     onValueClick: ((String) -> Unit)? = null
 ) {
@@ -233,11 +235,24 @@ fun PortfolioStockCard(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = marketPrice,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = marketPrice,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                        if (isDefault) {
+                            Text(
+                                text = "No live data",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                color = Color.Gray,
+                                modifier = Modifier
+                                    .padding(top = 2.dp)
+                                    .background(Color(0xFF222222), RoundedCornerShape(4.dp))
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
 
                 // RIGHT: % Change

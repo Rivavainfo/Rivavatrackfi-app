@@ -20,7 +20,8 @@ data class StockState(
     val isLoading: Boolean = false,
     val data: StockResponse,
     val source: QuoteSource = QuoteSource.DEFAULT,
-    val error: String? = null
+    val error: String? = null,
+    val diagnostics: String? = null
 )
 
 data class CompanyProfileState(
@@ -102,9 +103,9 @@ class StockViewModel @Inject constructor(
 
             val resolved = repository.getGuaranteedQuote(symbol)
             Log.d(TAG, "Stock state update for $symbol using ${resolved.source}")
-            val errorString = if (resolved.source != QuoteSource.LIVE && resolved.source != QuoteSource.SCRAPE) "API Failed - showing ${resolved.source}" else null
+            val errorString = resolved.userSafeReason
             _stockStates.value = _stockStates.value.toMutableMap().apply {
-                put(symbol, StockState(isLoading = false, data = resolved.quote, source = resolved.source, error = errorString))
+                put(symbol, StockState(isLoading = false, data = resolved.quote, source = resolved.source, error = errorString, diagnostics = resolved.diagnostics))
             }
         }
     }
