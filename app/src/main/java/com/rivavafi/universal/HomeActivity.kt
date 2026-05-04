@@ -65,7 +65,6 @@ import com.rivavafi.universal.ui.history.TransactionsScreen
 import com.rivavafi.universal.ui.home.HomeScreen
 import com.rivavafi.universal.ui.onboarding.GreetingScreen
 import com.rivavafi.universal.ui.onboarding.PhoneInputScreen
-import com.rivavafi.universal.ui.onboarding.PhoneOtpScreen
 import com.rivavafi.universal.ui.onboarding.SmsScanningScreen
 import com.rivavafi.universal.ui.onboarding.SmsOptInScreen
 import com.rivavafi.universal.ui.onboarding.WelcomeScreen
@@ -86,7 +85,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Welcome : Screen("welcome", "Welcome", Icons.Outlined.Home)
     object Greeting : Screen("greeting", "Greeting", Icons.Outlined.Home)
     object PhoneInput : Screen("phone_input", "Phone Input", Icons.Outlined.Home)
-    object PhoneOtp : Screen("phone_otp/{verificationId}/{phoneNumber}", "Phone OTP", Icons.Outlined.Home)
     object SmsOptIn : Screen("sms_opt_in", "SmsOptIn", Icons.Outlined.Home)
     object Scanning : Screen("scanning", "Scanning", Icons.Outlined.Home)
     object Home : Screen("home", "Home", Icons.Outlined.Home)
@@ -248,30 +246,11 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
                 })
             }
             composable(Screen.PhoneInput.route) {
-                PhoneInputScreen(onNavigateNext = { verificationId, phoneNumber ->
-                    navController.navigate("phone_otp/$verificationId/$phoneNumber") {
+                PhoneInputScreen(onNavigateNext = {
+                    navController.navigate(Screen.SmsOptIn.route) {
                         popUpTo(Screen.PhoneInput.route) { inclusive = true }
                     }
                 })
-            }
-            composable(
-                route = Screen.PhoneOtp.route,
-                arguments = listOf(
-                    androidx.navigation.navArgument("verificationId") { type = androidx.navigation.NavType.StringType },
-                    androidx.navigation.navArgument("phoneNumber") { type = androidx.navigation.NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val verificationId = backStackEntry.arguments?.getString("verificationId") ?: ""
-                val phoneNumber = backStackEntry.arguments?.getString("phoneNumber") ?: ""
-                PhoneOtpScreen(
-                    verificationId = verificationId,
-                    phoneNumber = phoneNumber,
-                    onNavigateNext = {
-                        navController.navigate(Screen.SmsOptIn.route) {
-                            popUpTo(Screen.PhoneOtp.route) { inclusive = true }
-                        }
-                    }
-                )
             }
             composable(Screen.Greeting.route) {
                 GreetingScreen(onNavigateNext = {

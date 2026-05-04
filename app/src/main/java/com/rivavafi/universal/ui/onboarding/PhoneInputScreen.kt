@@ -23,7 +23,7 @@ import com.rivavafi.universal.ui.theme.PrimarySky
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhoneInputScreen(
-    onNavigateNext: (String, String) -> Unit,
+    onNavigateNext: () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     var phoneNumber by remember { mutableStateOf("") }
@@ -49,7 +49,7 @@ fun PhoneInputScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Verify your number",
+            text = "Add your number",
             style = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
@@ -60,7 +60,7 @@ fun PhoneInputScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "We'll send you an OTP to verify your account.",
+            text = "Kindly add the correct phone no. else the data can be degraded.",
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = Color.White.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium
@@ -92,10 +92,8 @@ fun PhoneInputScreen(
             onClick = {
                 val formattedNumber = phoneNumber.trim()
                 if (formattedNumber.isNotBlank()) {
-                    (context as? android.app.Activity)?.let { act ->
-                        viewModel.startPhoneVerification(formattedNumber, act) { verificationId ->
-                            onNavigateNext(verificationId, formattedNumber)
-                        }
+                    viewModel.savePhoneNumber(formattedNumber) {
+                        onNavigateNext()
                     }
                 }
             },
@@ -115,7 +113,7 @@ fun PhoneInputScreen(
                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
             } else {
                 Text(
-                    "Send OTP",
+                    "Continue",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     )
