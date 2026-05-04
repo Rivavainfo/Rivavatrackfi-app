@@ -72,29 +72,19 @@ class OnboardingViewModel @Inject constructor(
             return
         }
 
-        _isLoading.value = true
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user == null) {
-            _isLoading.value = false
-            onSuccess() // Proceed anyway to avoid buffering
-            return
-        }
+        // Call onSuccess immediately to completely avoid any buffering state
+        onSuccess()
 
-        firestore.collection("users").document(user.uid)
-            .set(mapOf(
-                "phone_number" to phoneNumber
-            ), com.google.firebase.firestore.SetOptions.merge())
-            .addOnSuccessListener {
-                _isLoading.value = false
-                onSuccess()
-            }
-            .addOnFailureListener { e ->
-                Log.e("OnboardingViewModel", "Failed to save phone number", e)
-                _errorMessage.value = "Failed to save phone number."
-                _isLoading.value = false
-                // Even on failure, redirect to avoid being stuck in buffering state forever
-                onSuccess()
-            }
+        // Fire-and-forget save
+        FirebaseAuth.getInstance().currentUser?.let { user ->
+            firestore.collection("users").document(user.uid)
+                .set(mapOf(
+                    "phone_number" to phoneNumber
+                ), com.google.firebase.firestore.SetOptions.merge())
+                .addOnFailureListener { e ->
+                    Log.e("OnboardingViewModel", "Failed to save phone number in background", e)
+                }
+        }
     }
 
     fun setSmsTrackingEnabled(enabled: Boolean) {
