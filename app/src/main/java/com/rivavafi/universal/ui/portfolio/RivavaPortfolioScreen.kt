@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rivavafi.universal.ui.components.PortfolioStockCard
 import com.rivavafi.universal.ui.theme.PrimaryContainerSky
 import com.rivavafi.universal.ui.components.SectionHeader
@@ -298,6 +299,14 @@ fun RivavaPortfolioScreen(
                                             Text(text = "Symbol: $symbol", fontWeight = FontWeight.Bold)
                                             Text(text = "Source: ${state.source.name}")
                                             Text(text = "Error: ${state.error ?: "None"}", color = if (state.error != null) VibrantRed else PrimarySky)
+                                            if (state.diagnostics != null) {
+                                                Text(
+                                                    text = "Logs:\n${state.diagnostics}",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                    color = Color.Gray,
+                                                    modifier = Modifier.padding(top = 4.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -381,6 +390,8 @@ fun RivavaPortfolioScreen(
                                 val displayAbsChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", change)}"
                                 val displayPctChange = "${if (isPositive) "+" else ""}${String.format(Locale.getDefault(), "%.2f", changePercent)}%"
 
+                                val isDefault = stockState?.source == com.rivavafi.universal.domain.repository.QuoteSource.DEFAULT
+
                                 AnimatedVisibility(
                                     visible = visible,
                                     enter = slideInVertically(
@@ -396,6 +407,7 @@ fun RivavaPortfolioScreen(
                                         isPositive = isPositive,
                                         absoluteChange = displayAbsChange,
                                         percentageChange = displayPctChange,
+                                        isDefault = isDefault,
                                         onValueClick = { focus ->
                                             onNavigateToDetail(ticker, focus)
                                         },
