@@ -31,6 +31,7 @@ class UserPreferencesRepository @Inject constructor(
         val HOME_LAYOUT_PRESET_KEY = stringPreferencesKey("home_layout_preset")
         val SHOW_SMS_DETAILS_KEY = booleanPreferencesKey("show_sms_details")
         val UNLOCKED_PREMIUM_USERS_KEY = stringPreferencesKey("unlocked_premium_users")
+        val IS_PREMIUM_GLOBAL_KEY = booleanPreferencesKey("is_premium_global")
         val PROFILE_IMAGE_URI_KEY = stringPreferencesKey("profile_image_uri")
     }
 
@@ -45,25 +46,33 @@ class UserPreferencesRepository @Inject constructor(
     }
 
     val isPremiumUserFlow: Flow<Boolean> = dataStore.data.map { preferences ->
-        val currentUser = preferences[USER_NAME_KEY] ?: return@map false
+        val currentUser = preferences[USER_NAME_KEY]?.lowercase()?.trim()
         val unlockedUsersStr = preferences[UNLOCKED_PREMIUM_USERS_KEY] ?: ""
         val unlockedUsers = unlockedUsersStr.split(",").filter { it.isNotBlank() }.toSet()
-        unlockedUsers.contains(currentUser.lowercase().trim())
+
+        when {
+            !currentUser.isNullOrBlank() -> unlockedUsers.contains(currentUser)
+            else -> preferences[IS_PREMIUM_GLOBAL_KEY] ?: false
+        }
     }
 
     suspend fun setPremiumUserForCurrent(isPremium: Boolean) {
         dataStore.edit { preferences ->
-            val currentUser = preferences[USER_NAME_KEY]?.lowercase()?.trim() ?: return@edit
-            val unlockedUsersStr = preferences[UNLOCKED_PREMIUM_USERS_KEY] ?: ""
-            val unlockedUsers = unlockedUsersStr.split(",").filter { it.isNotBlank() }.toMutableSet()
+            preferences[IS_PREMIUM_GLOBAL_KEY] = isPremium
 
-            if (isPremium) {
-                unlockedUsers.add(currentUser)
-            } else {
-                unlockedUsers.remove(currentUser)
+            val currentUser = preferences[USER_NAME_KEY]?.lowercase()?.trim()
+            if (!currentUser.isNullOrBlank()) {
+                val unlockedUsersStr = preferences[UNLOCKED_PREMIUM_USERS_KEY] ?: ""
+                val unlockedUsers = unlockedUsersStr.split(",").filter { it.isNotBlank() }.toMutableSet()
+
+                if (isPremium) {
+                    unlockedUsers.add(currentUser)
+                } else {
+                    unlockedUsers.remove(currentUser)
+                }
+
+                preferences[UNLOCKED_PREMIUM_USERS_KEY] = unlockedUsers.joinToString(",")
             }
-
-            preferences[UNLOCKED_PREMIUM_USERS_KEY] = unlockedUsers.joinToString(",")
         }
     }
 
