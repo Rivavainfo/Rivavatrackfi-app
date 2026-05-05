@@ -38,13 +38,9 @@ class PaymentActivity : ComponentActivity(), PaymentResultListener {
     }
 
     override fun onPaymentSuccess(paymentId: String?) {
-        val prefs = getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
-        prefs.edit()
-            .putBoolean("portfolio_unlocked", true)
-            .putBoolean("isPremium", true)
-            .apply()
         Toast.makeText(this, "Payment Successful", Toast.LENGTH_SHORT).show()
-        setResult(RESULT_OK)
+        val resultIntent = android.content.Intent().apply { putExtra("payment_id", paymentId) }
+        setResult(RESULT_OK, resultIntent)
         finish()
     }
 

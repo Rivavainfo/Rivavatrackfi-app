@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.GoogleAuthProvider
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
+import com.rivavafi.universal.data.repository.UserEntitlementRepository
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
@@ -44,6 +45,7 @@ enum class PhoneAuthState {
 class AuthViewModel @Inject constructor(
     private val repository: AuthRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val userEntitlementRepository: UserEntitlementRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -81,6 +83,8 @@ class AuthViewModel @Inject constructor(
                 if (isEmailAuth) {
                     val isVerified = repository.checkVerificationStatus(user.uid)
                     if (isVerified || user.isEmailVerified) {
+
+                        userEntitlementRepository.syncEntitlement()
                         _authState.value = AuthState.SUCCESS
                     } else {
                         // User is signed in but not verified. Do not sign out so they can resend.
@@ -88,7 +92,9 @@ class AuthViewModel @Inject constructor(
                         _authState.value = AuthState.IDLE
                     }
                 } else {
-                    _authState.value = AuthState.SUCCESS
+
+                        userEntitlementRepository.syncEntitlement()
+                        _authState.value = AuthState.SUCCESS
                 }
             }
         }
@@ -134,7 +140,9 @@ class AuthViewModel @Inject constructor(
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
-                _authState.value = AuthState.SUCCESS
+
+                        userEntitlementRepository.syncEntitlement()
+                        _authState.value = AuthState.SUCCESS
             } catch (e: com.google.firebase.auth.FirebaseAuthException) {
                 Log.e("AuthViewModel", "FirebaseAuthException during Google Sign In: ${e.errorCode}", e)
                 _errorMessage.value = "Firebase Auth Error: ${e.message}"
@@ -184,7 +192,9 @@ class AuthViewModel @Inject constructor(
                     } else if (!existingName.isNullOrBlank()) {
                         userPreferencesRepository.saveUserName(existingName)
                     }
-                    _authState.value = AuthState.SUCCESS
+
+                        userEntitlementRepository.syncEntitlement()
+                        _authState.value = AuthState.SUCCESS
                 } else {
                     // Do NOT sign out. The user needs an active session to use 'Resend Verification Email'.
                     _errorMessage.value = "Please verify your email before logging in."
@@ -322,6 +332,8 @@ class AuthViewModel @Inject constructor(
                         } else if (!existingName.isNullOrBlank()) {
                             userPreferencesRepository.saveUserName(existingName)
                         }
+
+                        userEntitlementRepository.syncEntitlement()
                         _authState.value = AuthState.SUCCESS
                         onVerified()
                     } else {
@@ -368,7 +380,9 @@ class AuthViewModel @Inject constructor(
                         userPreferencesRepository.saveUserName(existingName)
                     }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
-                    _authState.value = AuthState.SUCCESS
+
+                        userEntitlementRepository.syncEntitlement()
+                        _authState.value = AuthState.SUCCESS
                 } catch (e: Exception) {
                     _errorMessage.value = e.message ?: "Phone auto-login failed"
                     _phoneAuthState.value = PhoneAuthState.ERROR
@@ -498,7 +512,9 @@ class AuthViewModel @Inject constructor(
                 }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
-                _authState.value = AuthState.SUCCESS
+
+                        userEntitlementRepository.syncEntitlement()
+                        _authState.value = AuthState.SUCCESS
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)
