@@ -98,7 +98,47 @@ class StockRepository @Inject constructor(
             }
         }
 
-        return tryScrapeFallback(normalizedSymbol, prefix, userReason, lastDiagnostic)
+        return tryAlphaVantageFallback(normalizedSymbol, prefix, userReason, lastDiagnostic)
+    }
+
+    private suspend fun tryAlphaVantageFallback(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        try {
+            val alphaApi = retrofit2.Retrofit.Builder()
+                .baseUrl("https://www.alphavantage.co/")
+                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+                .build()
+                .create(com.rivavafi.universal.domain.api.StockApi::class.java)
+
+            val response = alphaApi.getStockPrice(symbol = symbol, apiKey = "zPU6h2XRAOSstyW6n72T4xVL0yD13jp6")
+            val priceStr = response.quote?.price
+            val changePercentStr = response.quote?.changePercent
+
+            val price = priceStr?.toDoubleOrNull()
+
+            if (price != null && price > 0.0) {
+                // Approximate previous close since AlphaVantage only gives change percent
+                val changePct = changePercentStr?.replace("%", "")?.toDoubleOrNull() ?: 0.0
+                val prevClose = price / (1 + (changePct / 100))
+
+                Log.d(TAG, "AlphaVantage fallback succeeded for $symbol -> price=$price")
+                saveQuote(prefix, price, prevClose)
+                return StockQuoteWithSource(
+                    symbol = symbol,
+                    quote = StockResponse(c = price, h = price, l = price, o = prevClose, pc = prevClose),
+                    source = QuoteSource.SCRAPE, // Reusing SCRAPE enum for fallback API
+                    userSafeReason = null,
+                    diagnostics = "$previousDiagnostics\n[$timestamp] ALPHA_VANTAGE success: price=$price"
+                )
+            } else {
+                val alphaDiagnostic = "[$timestamp] ALPHA_VANTAGE Failed: invalid or empty price. Response=$response"
+                return tryScrapeFallback(symbol, prefix, reason, "$previousDiagnostics\n$alphaDiagnostic")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "AlphaVantage fallback failed for $symbol", e)
+            val alphaDiagnostic = "[$timestamp] ALPHA_VANTAGE Exception: type=${e.javaClass.simpleName}, message=${e.message}"
+            return tryScrapeFallback(symbol, prefix, reason, "$previousDiagnostics\n$alphaDiagnostic")
+        }
     }
 
     private suspend fun tryScrapeFallback(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
