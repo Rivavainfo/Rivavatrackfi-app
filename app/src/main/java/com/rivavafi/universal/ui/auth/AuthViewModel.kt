@@ -72,6 +72,22 @@ class AuthViewModel @Inject constructor(
         get() = savedStateHandle.get("resendToken")
         set(value) { savedStateHandle["resendToken"] = value }
 
+    private fun restoreUserSession(sessionState: com.rivavafi.universal.data.repository.AuthRepository.UserSessionState) {
+        viewModelScope.launch {
+            if (!sessionState.existingName.isNullOrBlank()) {
+                userPreferencesRepository.saveUserName(sessionState.existingName)
+            }
+            if (!sessionState.photoUrl.isNullOrBlank()) {
+                userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+            }
+            if (sessionState.onboardingCompleted) {
+                userPreferencesRepository.setOnboardingCompleted(true)
+            }
+            userEntitlementRepository.syncEntitlement()
+            _authState.value = AuthState.SUCCESS
+        }
+    }
+
     init {
         val user = repository.auth.currentUser
         if (user != null) {
