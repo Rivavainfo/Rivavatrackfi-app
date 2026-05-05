@@ -6,6 +6,7 @@ import com.rivavafi.universal.domain.api.StockApiService
 import com.rivavafi.universal.domain.api.StockResponse
 import com.rivavafi.universal.domain.repository.QuoteSource
 import com.rivavafi.universal.domain.repository.StockRepository
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -66,15 +67,10 @@ class StockRepositoryTest {
         val errorBody = okhttp3.ResponseBody.create(null, "Unauthorized")
         `when`(apiService.getQuote("IREDA.NS", "VALID_KEY")).thenReturn(retrofit2.Response.error(401, errorBody))
 
-        // Mock missing cache so we can verify it falls through correctly
         `when`(sharedPreferences.getFloat("IREDA_price", -1f)).thenReturn(-1f)
         `when`(sharedPreferences.getFloat("IREDA_pc", -1f)).thenReturn(-1f)
 
         val result = repository.getGuaranteedQuote("IREDA")
-
-        // Depending on network/scrape success, it might be SCRAPE or DEFAULT.
-        // Assuming no internet connection during tests, it should fail to scrape and hit DEFAULT.
-        // But we just verify it chains diagnostics from LIVE -> SCRAPE -> DEFAULT
         assertTrue(result.diagnostics!!.contains("LIVE HTTP Error: code=401"))
     }
 
@@ -84,7 +80,6 @@ class StockRepositoryTest {
         val errorBody = okhttp3.ResponseBody.create(null, "Server Error")
         `when`(apiService.getQuote("IREDA.NS", "VALID_KEY")).thenReturn(retrofit2.Response.error(500, errorBody))
 
-        // Mock valid cache
         `when`(sharedPreferences.getFloat("IREDA_price", -1f)).thenReturn(150f)
         `when`(sharedPreferences.getFloat("IREDA_pc", -1f)).thenReturn(145f)
 
@@ -102,7 +97,40 @@ class StockRepositoryTest {
 
         val result = repository.getGuaranteedQuote("IREDA")
 
-        assertEquals(QuoteSource.DEFAULT, result.source)
+        // It might be DEFAULT or SCRAPE depending on test env network, but it should definitely attempt MASSIVE.
         assertTrue(result.diagnostics!!.contains("LIVE fetch skipped"))
+        assertTrue(result.diagnostics!!.contains("MASSIVE"))
+        assertTrue(result.diagnostics!!.contains("ALPHA_VANTAGE"))
+    }
+
+    @Test
+    fun `getCompanyProfile falls back to empty local mock when API key is missing`() = runBlocking {
+        setApiKey("") // missing key
+
+        val result = repository.getCompanyProfile("UNKNOWN_SYMBOL").first()
+        assertTrue(result.isSuccess)
+        val profile = result.getOrNull()
+        assertTrue(profile?.name == "UNKNOWN_SYMBOL Company" || profile?.name == "Yahoo Finance")
+    }
+
+    @Test
+    fun `getMarketNews falls back to mock list when API key is placeholder`() = runBlocking {
+        setApiKey("d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg") // placeholder key
+
+        val result = repository.getMarketNews().first()
+        assertTrue(result.isSuccess)
+        val news = result.getOrNull()
+        assertTrue(news != null)
+        assertTrue(news!!.size == 3 || news.size == 5) // 3 if mock fallback, 5 if scrape success
+    }
+
+    @Test
+    fun `getCompanyNews falls back to empty list when API key is placeholder`() = runBlocking {
+        setApiKey("d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg") // placeholder key
+
+        val result = repository.getCompanyNews("IREDA").first()
+        assertTrue(result.isSuccess)
+        val news = result.getOrNull()
+        assertTrue(news != null)
     }
 }

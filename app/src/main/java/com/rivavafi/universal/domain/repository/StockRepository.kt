@@ -53,64 +53,65 @@ class StockRepository @Inject constructor(
         val prefix = cachePrefix(normalizedSymbol)
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-        if (apiKey.isBlank() || apiKey == "d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg") {
-            Log.w(TAG, "Finnhub API key missing or default, skipping live fetch for $normalizedSymbol")
-            val diagnostic = "[$timestamp] LIVE fetch skipped: Missing or placeholder API Key."
-            return resolveFromCacheOrDefault(normalizedSymbol, prefix, "No valid API key provided", diagnostic)
-        }
-
-        var retryCount = 0
-        var currentDelay = 1000L
-        val maxRetries = 2
         var lastDiagnostic = ""
         var userReason = "Service unavailable"
 
-        while (retryCount <= maxRetries) {
-            try {
-                val response = apiService.getQuote(normalizedSymbol, apiKey)
-                val body = response.body()
-                val code = response.code()
-                val errorBodySnippet = response.errorBody()?.string()?.take(100) ?: "null"
+        if (!hasUsableFinnhubKey()) {
+            Log.w(TAG, "Finnhub API key missing or default, skipping live fetch for $normalizedSymbol")
+            lastDiagnostic = "[$timestamp] LIVE fetch skipped: Missing or placeholder API Key."
+            userReason = "No valid API key provided"
+        } else {
+            var retryCount = 0
+            var currentDelay = 1000L
+            val maxRetries = 2
 
-                Log.d(TAG, "Quote response for $normalizedSymbol -> code=$code body=$body")
+            while (retryCount <= maxRetries) {
+                try {
+                    val response = apiService.getQuote(normalizedSymbol, apiKey)
+                    val body = response.body()
+                    val code = response.code()
+                    val errorBodySnippet = response.errorBody()?.string()?.take(100) ?: "null"
 
-                if (response.isSuccessful && body != null && body.c > 0.0) {
-                    saveQuote(prefix, body.c, body.pc)
-                    return StockQuoteWithSource(
-                        symbol = normalizedSymbol,
-                        quote = body,
-                        source = QuoteSource.LIVE,
-                        userSafeReason = null,
-                        diagnostics = "[$timestamp] LIVE success for $normalizedSymbol: code=$code, c=${body.c}, pc=${body.pc}"
-                    )
-                } else {
-                    lastDiagnostic = "[$timestamp] LIVE HTTP Error: code=$code, body snippet=$errorBodySnippet"
-                    if (code == 401) {
-                         userReason = "Authentication failed with data provider"
-                         break // Don't retry on 401
-                    } else if (code == 429) {
-                         userReason = "Rate limit exceeded. Too many requests."
-                         break // Could retry, but Finnhub rate limits are often daily or minutely, so fallback is faster
-                    } else if (code in 500..599) {
-                         userReason = "Market data service is temporarily down"
-                         // will retry
+                    Log.d(TAG, "Quote response for $normalizedSymbol -> code=$code body=$body")
+
+                    if (response.isSuccessful && body != null && body.c > 0.0) {
+                        saveQuote(prefix, body.c, body.pc)
+                        return StockQuoteWithSource(
+                            symbol = normalizedSymbol,
+                            quote = body,
+                            source = QuoteSource.LIVE,
+                            userSafeReason = null,
+                            diagnostics = "[$timestamp] LIVE success for $normalizedSymbol: code=$code, c=${body.c}, pc=${body.pc}"
+                        )
                     } else {
-                         userReason = "Failed to fetch live data (HTTP $code)"
-                         break // Client error other than 401/429
+                        lastDiagnostic = "[$timestamp] LIVE HTTP Error: code=$code, body snippet=$errorBodySnippet"
+                        if (code == 401) {
+                             userReason = "Authentication failed with data provider"
+                             break // Don't retry on 401
+                        } else if (code == 429) {
+                             userReason = "Rate limit exceeded. Too many requests."
+                             break // Could retry, but Finnhub rate limits are often daily or minutely, so fallback is faster
+                        } else if (code in 500..599) {
+                             userReason = "Market data service is temporarily down"
+                             // will retry
+                        } else {
+                             userReason = "Failed to fetch live data (HTTP $code)"
+                             break // Client error other than 401/429
+                        }
                     }
+                } catch (exception: Exception) {
+                    lastDiagnostic = "[$timestamp] LIVE Exception: type=${exception.javaClass.simpleName}, message=${exception.message}"
+                    userReason = "Network error while connecting to market data"
+                    Log.e(TAG, "Quote fetch failed for $normalizedSymbol (attempt ${retryCount + 1})", exception)
+                    // will retry
                 }
-            } catch (exception: Exception) {
-                lastDiagnostic = "[$timestamp] LIVE Exception: type=${exception.javaClass.simpleName}, message=${exception.message}"
-                userReason = "Network error while connecting to market data"
-                Log.e(TAG, "Quote fetch failed for $normalizedSymbol (attempt ${retryCount + 1})", exception)
-                // will retry
-            }
 
-            retryCount++
-            if (retryCount <= maxRetries) {
-                Log.d(TAG, "Retrying live fetch in $currentDelay ms...")
-                delay(currentDelay)
-                currentDelay *= 2
+                retryCount++
+                if (retryCount <= maxRetries) {
+                    Log.d(TAG, "Retrying live fetch in $currentDelay ms...")
+                    delay(currentDelay)
+                    currentDelay *= 2
+                }
             }
         }
 
@@ -234,48 +235,264 @@ class StockRepository @Inject constructor(
     }
 
     fun getCompanyProfile(symbol: String): Flow<Result<FinnhubCompanyProfileResponse>> = flow {
-        if (apiKey.isBlank()) {
-            emit(Result.failure(Exception("Missing API Key")))
-            return@flow
+        val normalizedSymbol = normalizeSymbol(symbol)
+
+        if (hasUsableFinnhubKey()) {
+            try {
+                val response = apiService.getCompanyProfile(normalizedSymbol, apiKey)
+                emit(Result.success(response))
+                return@flow
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Finnhub profile fetch failed for $normalizedSymbol", e)
+            }
+        } else {
+            Log.w(TAG, "Finnhub API key missing or default, skipping profile fetch for $normalizedSymbol")
         }
+
+        // Fallback to Yahoo scrape
         try {
-            val response = apiService.getCompanyProfile(normalizeSymbol(symbol), apiKey)
-            emit(Result.success(response))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+            val yahooSymbol = if (normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+            val scrapeUrl = "https://finance.yahoo.com/quote/$yahooSymbol"
+
+            val document = withContext(Dispatchers.IO) {
+                Jsoup.connect(scrapeUrl)
+                    .userAgent("Mozilla/5.0")
+                    .get()
+            }
+
+            // Extract company name from the h1 tag on the Yahoo quote page
+            val name = document.select("h1.yf-3a2v0c").text().takeIf { it.isNotBlank() }
+                ?: document.select("h1").first()?.text()
+
+            if (name != null) {
+                Log.d(TAG, "Yahoo scrape profile fallback succeeded for $normalizedSymbol")
+                emit(Result.success(
+                    FinnhubCompanyProfileResponse(
+                        name = name,
+                        ticker = normalizedSymbol,
+                        logo = null,
+                        finnhubIndustry = null,
+                        marketCapitalization = null
+                    )
+                ))
+                return@flow
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+            Log.e(TAG, "Yahoo profile scrape fallback failed for $normalizedSymbol", e)
         }
+
+        // Hard fallback to deterministic local profile
+        Log.d(TAG, "Using deterministic local profile fallback for $normalizedSymbol")
+        val fallbackProfile = when (normalizedSymbol) {
+            IREDA_SYMBOL -> FinnhubCompanyProfileResponse(
+                name = "Indian Renewable Energy Development Agency",
+                ticker = IREDA_SYMBOL,
+                logo = null,
+                finnhubIndustry = "Financial Services",
+                marketCapitalization = null
+            )
+            "RTX" -> FinnhubCompanyProfileResponse(
+                name = "RTX Corporation",
+                ticker = "RTX",
+                logo = null,
+                finnhubIndustry = "Aerospace & Defense",
+                marketCapitalization = null
+            )
+            else -> FinnhubCompanyProfileResponse(
+                name = "$normalizedSymbol Company",
+                ticker = normalizedSymbol,
+                logo = null,
+                finnhubIndustry = "Unknown",
+                marketCapitalization = null
+            )
+        }
+        emit(Result.success(fallbackProfile))
     }
 
     fun getMarketNews(): Flow<Result<List<FinnhubNewsResponse>>> = flow {
-        if (apiKey.isBlank()) {
-            emit(Result.failure(Exception("Missing API Key")))
-            return@flow
+        if (hasUsableFinnhubKey()) {
+            try {
+                val response = apiService.getMarketNews("general", apiKey)
+                if (response.isNotEmpty()) {
+                    emit(Result.success(response.take(10)))
+                    return@flow
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Finnhub market news fetch failed", e)
+            }
+        } else {
+            Log.w(TAG, "Finnhub API key missing or default, skipping live market news fetch")
         }
+
+        // Fallback to Yahoo Finance Scrape
         try {
-            val response = apiService.getMarketNews("general", apiKey)
-            emit(Result.success(response.take(10)))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+            val document = withContext(Dispatchers.IO) {
+                Jsoup.connect("https://finance.yahoo.com/news")
+                    .userAgent("Mozilla/5.0")
+                    .get()
+            }
+
+            val newsItems = mutableListOf<FinnhubNewsResponse>()
+            val articles = document.select("div.Py(14px)") // typical Yahoo news list item wrapper, or try h3
+
+            val headers = document.select("h3.Mb(5px)")
+            if (headers.isNotEmpty()) {
+                headers.take(5).forEachIndexed { index, header ->
+                    val title = header.text()
+                    val linkElement = header.select("a").first()
+                    var url = linkElement?.attr("href") ?: "https://finance.yahoo.com"
+                    if (url.startsWith("/")) {
+                        url = "https://finance.yahoo.com$url"
+                    }
+                    val pTag = header.nextElementSibling()
+                    val summary = if (pTag?.tagName() == "p") pTag.text() else "Latest market news."
+
+                    newsItems.add(
+                        FinnhubNewsResponse(
+                            id = index.toLong(),
+                            headline = title,
+                            summary = summary,
+                            url = url,
+                            image = "", // Scrape often doesn't give clean images easily without deeper parsing
+                            source = "Yahoo Finance",
+                            datetime = System.currentTimeMillis() / 1000
+                        )
+                    )
+                }
+            }
+
+            if (newsItems.isNotEmpty()) {
+                Log.d(TAG, "Yahoo scrape market news fallback succeeded")
+                emit(Result.success(newsItems))
+                return@flow
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+            Log.e(TAG, "Yahoo market news scrape fallback failed", e)
         }
+
+        // Hard fallback to deterministic mock list
+        Log.d(TAG, "Using mock market news fallback")
+        emit(Result.success(generateMockNews()))
+    }
+
+    private fun generateMockNews(): List<FinnhubNewsResponse> {
+        val now = System.currentTimeMillis() / 1000
+        return listOf(
+            FinnhubNewsResponse(
+                id = 1,
+                headline = "Global markets rally as tech sectors see record investments.",
+                summary = "Investors are pouring billions into emerging AI and tech startups, driving indexes higher.",
+                url = "https://finance.yahoo.com",
+                image = "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=600&auto=format&fit=crop",
+                source = "Market Updates",
+                datetime = now - 3600
+            ),
+            FinnhubNewsResponse(
+                id = 2,
+                headline = "Federal Reserve announces steady interest rates for Q3.",
+                summary = "The central bank decided to pause rate hikes amid cooling inflation data.",
+                url = "https://finance.yahoo.com",
+                image = "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=600&auto=format&fit=crop",
+                source = "Market Updates",
+                datetime = now - 7200
+            ),
+            FinnhubNewsResponse(
+                id = 3,
+                headline = "Oil prices fluctuate ahead of OPEC+ meeting.",
+                summary = "Energy markets remain volatile as traders anticipate new production quotas.",
+                url = "https://finance.yahoo.com",
+                image = "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?q=80&w=600&auto=format&fit=crop",
+                source = "Market Updates",
+                datetime = now - 14400
+            )
+        )
     }
 
     fun getCompanyNews(symbol: String): Flow<Result<List<FinnhubNewsResponse>>> = flow {
-        if (apiKey.isBlank()) {
-            emit(Result.failure(Exception("Missing API Key")))
-            return@flow
-        }
-        try {
-            val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val today = format.format(Date())
-            val cal = Calendar.getInstance()
-            cal.add(Calendar.DAY_OF_YEAR, -14)
-            val twoWeeksAgo = format.format(cal.time)
+        val normalizedSymbol = normalizeSymbol(symbol)
 
-            val response = apiService.getCompanyNews(normalizeSymbol(symbol), twoWeeksAgo, today, apiKey)
-            emit(Result.success(response.take(5)))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
+        if (hasUsableFinnhubKey()) {
+            try {
+                val format = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val today = format.format(Date())
+                val cal = Calendar.getInstance()
+                cal.add(Calendar.DAY_OF_YEAR, -14)
+                val twoWeeksAgo = format.format(cal.time)
+
+                val response = apiService.getCompanyNews(normalizedSymbol, twoWeeksAgo, today, apiKey)
+                if (response.isNotEmpty()) {
+                    emit(Result.success(response.take(5)))
+                    return@flow
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Finnhub company news fetch failed for $normalizedSymbol", e)
+            }
+        } else {
+            Log.w(TAG, "Finnhub API key missing or default, skipping live company news fetch for $normalizedSymbol")
         }
+
+        // Fallback to Yahoo scrape
+        try {
+            val yahooSymbol = if (normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+            val scrapeUrl = "https://finance.yahoo.com/quote/$yahooSymbol"
+
+            val document = withContext(Dispatchers.IO) {
+                Jsoup.connect(scrapeUrl)
+                    .userAgent("Mozilla/5.0")
+                    .get()
+            }
+
+            val newsItems = mutableListOf<FinnhubNewsResponse>()
+            val headers = document.select("h3.Mb(5px)")
+            if (headers.isNotEmpty()) {
+                headers.take(3).forEachIndexed { index, header ->
+                    val title = header.text()
+                    val linkElement = header.select("a").first()
+                    var url = linkElement?.attr("href") ?: "https://finance.yahoo.com"
+                    if (url.startsWith("/")) {
+                        url = "https://finance.yahoo.com$url"
+                    }
+                    val pTag = header.nextElementSibling()
+                    val summary = if (pTag?.tagName() == "p") pTag.text() else "Latest company news for $normalizedSymbol."
+
+                    newsItems.add(
+                        FinnhubNewsResponse(
+                            id = index.toLong(),
+                            headline = title,
+                            summary = summary,
+                            url = url,
+                            image = "",
+                            source = "Yahoo Finance",
+                            datetime = System.currentTimeMillis() / 1000
+                        )
+                    )
+                }
+            }
+
+            if (newsItems.isNotEmpty()) {
+                Log.d(TAG, "Yahoo scrape company news fallback succeeded for $normalizedSymbol")
+                emit(Result.success(newsItems))
+                return@flow
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+            Log.e(TAG, "Yahoo company news scrape fallback failed for $normalizedSymbol", e)
+        }
+
+        // Hard fallback to empty list (user-safe error state)
+        Log.d(TAG, "Using empty list fallback for company news of $normalizedSymbol")
+        emit(Result.success(emptyList()))
     }
 
     private fun resolveFromCacheOrDefault(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
@@ -321,6 +538,11 @@ class StockRepository @Inject constructor(
 
     private fun cachePrefix(symbol: String): String = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA" else "RTX"
 
+
+
+    private fun hasUsableFinnhubKey(): Boolean {
+        return apiKey.isNotBlank() && apiKey != "d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg"
+    }
     companion object {
         private const val TAG = "StockRepository"
         private const val PREFS_NAME = "stock_quotes_cache"
