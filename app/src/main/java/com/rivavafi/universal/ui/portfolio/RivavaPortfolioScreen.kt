@@ -378,7 +378,7 @@ fun RivavaPortfolioScreen(
                                 val ticker = if (isIreda) "IREDA" else "RTX"
                                 val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
                                 val exchange = if (isIreda) "NSE" else "NYSE"
-                                val currency = "₹"
+                                val currency = if (exchange == "NYSE") "$" else "₹"
 
                                 val price = quote?.c ?: if (isIreda) 150.0 else 100.0
                                 val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
