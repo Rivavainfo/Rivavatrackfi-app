@@ -32,6 +32,22 @@ class StockRepository @Inject constructor(
     private val apiKey = BuildConfig.FINNHUB_API_KEY
     private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    private val massiveApi: com.rivavafi.universal.domain.api.MassiveApi by lazy {
+        retrofit2.Retrofit.Builder()
+            .baseUrl("https://api.massive.com/")
+            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+            .build()
+            .create(com.rivavafi.universal.domain.api.MassiveApi::class.java)
+    }
+
+    private val alphaApi: com.rivavafi.universal.domain.api.StockApi by lazy {
+        retrofit2.Retrofit.Builder()
+            .baseUrl("https://www.alphavantage.co/")
+            .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
+            .build()
+            .create(com.rivavafi.universal.domain.api.StockApi::class.java)
+    }
+
     suspend fun getGuaranteedQuote(symbol: String): StockQuoteWithSource {
         val normalizedSymbol = normalizeSymbol(symbol)
         val prefix = cachePrefix(normalizedSymbol)
@@ -98,19 +114,46 @@ class StockRepository @Inject constructor(
             }
         }
 
-        return tryAlphaVantageFallback(normalizedSymbol, prefix, userReason, lastDiagnostic)
+        return tryMassiveFallback(normalizedSymbol, prefix, userReason, lastDiagnostic)
+    }
+
+    private suspend fun tryMassiveFallback(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
+        val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        try {
+            val response = massiveApi.getStockPrice(symbol = symbol, apiKey = BuildConfig.MASSIVE_API_KEY)
+            val data = response.data
+
+            if (data != null && data.price != null && data.price > 0.0) {
+                val price = data.price
+                val prevClose = data.previousClose ?: price
+                val open = data.open ?: prevClose
+                val high = data.high ?: prevClose
+                val low = data.low ?: prevClose
+
+                Log.d(TAG, "Massive fallback succeeded for $symbol -> price=$price")
+                saveQuote(prefix, price, prevClose)
+                return StockQuoteWithSource(
+                    symbol = symbol,
+                    quote = StockResponse(c = price, h = high, l = low, o = open, pc = prevClose),
+                    source = QuoteSource.SCRAPE,
+                    userSafeReason = null,
+                    diagnostics = "$previousDiagnostics\n[$timestamp] MASSIVE success: price=$price"
+                )
+            } else {
+                val massiveDiagnostic = "[$timestamp] MASSIVE Failed: invalid or empty price. Response=$response"
+                return tryAlphaVantageFallback(symbol, prefix, reason, "$previousDiagnostics\n$massiveDiagnostic")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Massive fallback failed for $symbol", e)
+            val massiveDiagnostic = "[$timestamp] MASSIVE Exception: type=${e.javaClass.simpleName}, message=${e.message}"
+            return tryAlphaVantageFallback(symbol, prefix, reason, "$previousDiagnostics\n$massiveDiagnostic")
+        }
     }
 
     private suspend fun tryAlphaVantageFallback(symbol: String, prefix: String, reason: String, previousDiagnostics: String): StockQuoteWithSource {
         val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         try {
-            val alphaApi = retrofit2.Retrofit.Builder()
-                .baseUrl("https://www.alphavantage.co/")
-                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create())
-                .build()
-                .create(com.rivavafi.universal.domain.api.StockApi::class.java)
-
-            val response = alphaApi.getStockPrice(symbol = symbol, apiKey = "zPU6h2XRAOSstyW6n72T4xVL0yD13jp6")
+            val response = alphaApi.getStockPrice(symbol = symbol, apiKey = BuildConfig.ALPHA_VANTAGE_API_KEY)
             val priceStr = response.quote?.price
             val changePercentStr = response.quote?.changePercent
 
