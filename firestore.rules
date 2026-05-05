@@ -1,0 +1,14 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Strict rule: No client can modify premium entitlement fields directly.
+      // This enforces the "server-backed" and "cannot self-upgrade" constraints.
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && (resource == null || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['is_premium', 'premium_status', 'premium_source', 'premium_unlocked_at', 'premium_txn_id']));
+    }
+  }
+}

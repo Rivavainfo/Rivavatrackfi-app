@@ -73,6 +73,7 @@ import com.rivavafi.universal.ui.theme.PrimarySky
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    premiumViewModel: com.rivavafi.universal.ui.portfolio.PremiumViewModel = hiltViewModel(),
     onBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToHelpCenter: () -> Unit = {},
@@ -92,7 +93,8 @@ fun ProfileScreen(
     val stockStates by stockViewModel.stockStates.collectAsState()
 
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
-    val isPremiumPref = prefs.getBoolean("isPremium", false)
+    val premiumState by premiumViewModel.premiumState.collectAsState()
+    val isPremiumPref = premiumState.status == com.rivavafi.universal.data.repository.EntitlementStatus.UNLOCKED
     val finalIsPremium = isPremiumUser || isPremiumPref
 
     val galleryLauncher = rememberLauncherForActivityResult(

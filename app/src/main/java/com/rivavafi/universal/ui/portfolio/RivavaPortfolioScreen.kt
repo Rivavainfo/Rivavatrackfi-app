@@ -67,6 +67,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.app.Activity
+import com.rivavafi.universal.data.repository.EntitlementStatus
+import com.rivavafi.universal.ui.components.PremiumUnlockAnimation
 
 data class PortfolioItem(
     val exchange: String,
@@ -80,26 +82,53 @@ data class PortfolioItem(
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun RivavaPortfolioScreen(
+    premiumViewModel: PremiumViewModel = hiltViewModel(),
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     onBack: () -> Unit = {},
     viewModel: StockViewModel = hiltViewModel(),
     cryptoViewModel: CryptoViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
-    var isUnlocked by remember { mutableStateOf(prefs.getBoolean("portfolio_unlocked", false)) }
+    val premiumState by premiumViewModel.premiumState.collectAsState()
     var showUnlockDialog by remember { mutableStateOf(false) }
+    var showUnlockAnimation by remember { mutableStateOf(false) }
+    var awaitingPremiumVerification by remember { mutableStateOf(false) }
 
     val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            isUnlocked = true
+            val paymentId = result.data?.getStringExtra("payment_id")
+            awaitingPremiumVerification = true
+            premiumViewModel.grantPremium("razorpay", paymentId)
             showUnlockDialog = false
         }
     }
 
+    LaunchedEffect(premiumState.status) {
+        if (awaitingPremiumVerification && premiumState.status == EntitlementStatus.UNLOCKED) {
+            awaitingPremiumVerification = false
+            showUnlockAnimation = true
+        }
+    }
 
+    if (showUnlockAnimation) {
+        PremiumUnlockAnimation(
+            onAnimationComplete = { showUnlockAnimation = false }
+        )
+        return
+    }
 
-    if (!isUnlocked) {
+    if (awaitingPremiumVerification && premiumState.status != EntitlementStatus.ERROR) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = EmeraldGreen)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Verifying premium status...", color = Color.White)
+            }
+        }
+        return
+    }
+
+    if (premiumState.status != EntitlementStatus.UNLOCKED) {
         Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
             IconButton(
                 onClick = onBack,
@@ -168,7 +197,7 @@ fun RivavaPortfolioScreen(
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                     ) {
                         Text(
-                            "Unlock Premium",
+                            if (premiumState.status == EntitlementStatus.ERROR) "Retry Verification" else "Unlock Premium",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold
                             )
@@ -176,23 +205,23 @@ fun RivavaPortfolioScreen(
                     }
                 }
             }
-        }
 
-        if (showUnlockDialog) {
-            PremiumUnlockDialog(
-                userName = "",
-                onDismiss = { showUnlockDialog = false },
-                onUnlockSuccess = {
-                    prefs.edit().putBoolean("portfolio_unlocked", true).apply()
-                    isUnlocked = true
-                    showUnlockDialog = false
-                },
-                onPayClick = {
-                    val intent = Intent(context, PaymentActivity::class.java)
-                    paymentLauncher.launch(intent)
-                    showUnlockDialog = false
-                }
-            )
+            if (showUnlockDialog) {
+                PremiumUnlockDialog(
+                    userName = "",
+                    onDismiss = { showUnlockDialog = false },
+                    onUnlockSuccess = {
+                        awaitingPremiumVerification = true
+                        premiumViewModel.grantPremium("manual_verify")
+                        showUnlockDialog = false
+                    },
+                    onPayClick = {
+                        val intent = Intent(context, PaymentActivity::class.java)
+                        paymentLauncher.launch(intent)
+                        showUnlockDialog = false
+                    }
+                )
+            }
         }
         return
     }

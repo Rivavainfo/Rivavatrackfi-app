@@ -11,6 +11,7 @@ import com.rivavafi.universal.domain.usecase.AddCategoryUseCase
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.domain.usecase.GetCategoriesUseCase
 import com.rivavafi.universal.domain.usecase.GetTransactionsUseCase
+import com.rivavafi.universal.data.repository.UserEntitlementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,8 @@ class HomeViewModel @Inject constructor(
     private val addTransactionUseCase: AddTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userEntitlementRepository: UserEntitlementRepository
 ) : ViewModel() {
 
     private val _dailyBudget = MutableStateFlow(800.0)
@@ -170,6 +172,7 @@ class HomeViewModel @Inject constructor(
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
             userPreferencesRepository.setOnboardingCompleted(false)
             userPreferencesRepository.saveUserName("")
+            userEntitlementRepository.clearEntitlement()
         }
     }
 }
