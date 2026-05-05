@@ -90,8 +90,8 @@ class SettingsViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-            preferencesRepository.setOnboardingCompleted(false)
-            preferencesRepository.saveUserName("")
+            // Keep locally cached profile/onboarding data so returning users
+            // don't lose their displayed name after sign out.
         }
     }
 
