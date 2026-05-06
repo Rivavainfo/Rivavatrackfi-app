@@ -73,9 +73,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun exportCsv(context: Context, onResult: (Result<String>) -> Unit) {
+    fun exportCsv(context: Context, uri: Uri, onResult: (Result<String>) -> Unit) {
         viewModelScope.launch {
-            val result = exportCsvUseCase(context)
+            val result = exportCsvUseCase(context, uri)
             onResult(result)
         }
     }
