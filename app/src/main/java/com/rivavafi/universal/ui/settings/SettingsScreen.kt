@@ -51,6 +51,20 @@ fun SettingsScreen(
     var showSmsRationaleDialog by remember { mutableStateOf(false) }
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
 
+    val csvExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        if (uri != null) {
+            viewModel.exportCsv(context, uri) { result ->
+                result.onSuccess { path ->
+                    Toast.makeText(context, "Exported successfully", Toast.LENGTH_LONG).show()
+                }.onFailure { e ->
+                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     val csvImportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -167,13 +181,8 @@ fun SettingsScreen(
                         supportingContent = { Text("Offline backup of all your transactions") },
                         leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
                         modifier = Modifier.clickable {
-                            viewModel.exportCsv(context) { result ->
-                                result.onSuccess { path ->
-                                    Toast.makeText(context, "Exported to $path", Toast.LENGTH_LONG).show()
-                                }.onFailure { e ->
-                                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
+                            val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
+                            csvExportLauncher.launch("TrackFi_Backup_$timestamp.csv")
                         }
                     )
 
@@ -298,49 +307,6 @@ fun SettingsScreen(
                 }
             }
 
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "Appearance",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    val templates = listOf("Minimal", "Analytics", "Daily Tracker", "Subscription View")
-
-                    templates.forEach { template ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.setHomeLayoutPreset(template) }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = (template == layoutPreset),
-                                onClick = { viewModel.setHomeLayoutPreset(template) },
-                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
-                            )
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = template,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-            }
 
             if (banksDetected.isNotEmpty()) {
                 Card(

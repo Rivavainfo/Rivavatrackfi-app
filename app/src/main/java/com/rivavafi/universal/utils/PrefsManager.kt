@@ -1,0 +1,36 @@
+package com.rivavafi.universal.utils
+
+import android.content.Context
+import android.content.SharedPreferences
+import com.rivavafi.universal.data.model.User
+
+class PrefsManager(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+
+    companion object {
+        private const val KEY_UID = "uid"
+        private const val KEY_NAME = "name"
+        private const val KEY_EMAIL = "email"
+        private const val KEY_PHOTO = "photo"
+    }
+
+    fun saveUser(user: User) {
+        prefs.edit().apply {
+            putString(KEY_UID, user.uid)
+            putString(KEY_NAME, user.name)
+            putString(KEY_EMAIL, user.email)
+            putString(KEY_PHOTO, user.photo)
+            apply()
+        }
+    }
+
+    fun getUser(): User? {
+        val uid = prefs.getString(KEY_UID, null) ?: return null
+        return User(
+            uid = uid,
+            name = prefs.getString(KEY_NAME, null),
+            email = prefs.getString(KEY_EMAIL, null),
+            photo = prefs.getString(KEY_PHOTO, null)
+        )
+    }
+}

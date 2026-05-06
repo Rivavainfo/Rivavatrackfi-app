@@ -46,6 +46,7 @@ import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import android.util.Patterns
+import androidx.compose.foundation.shape.CircleShape
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -225,6 +226,10 @@ fun AuthScreenContent(
                 }
             }
 
+            val cachedUser = remember { viewModel.getCachedUser() }
+            val auth = FirebaseAuth.getInstance()
+            val showCachedUser = auth.currentUser == null && cachedUser != null
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -266,6 +271,37 @@ fun AuthScreenContent(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            if (showCachedUser && cachedUser != null) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    if (cachedUser.photo != null) {
+                        coil.compose.AsyncImage(
+                            model = cachedUser.photo,
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(CircleShape)
+                                .border(2.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.AccountCircle,
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier.size(64.dp),
+                            tint = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Last logged in as ${cachedUser.name ?: "User"}",
+                        style = MaterialTheme.typography.bodyMedium.copy(color = Color.White.copy(alpha = 0.7f))
+                    )
+                }
+            }
 
             // Glassmorphism Login Container
             androidx.compose.material3.Card(
