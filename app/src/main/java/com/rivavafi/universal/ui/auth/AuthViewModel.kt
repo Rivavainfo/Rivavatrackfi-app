@@ -14,6 +14,10 @@ import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.FirebaseException
 import java.util.concurrent.TimeUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
+import com.rivavafi.universal.data.model.User
+import com.rivavafi.universal.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,6 +50,8 @@ class AuthViewModel @Inject constructor(
     private val repository: AuthRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val userEntitlementRepository: UserEntitlementRepository,
+    private val userRepository: UserRepository,
+    @ApplicationContext private val context: Context,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -91,6 +97,15 @@ class AuthViewModel @Inject constructor(
     init {
         val user = repository.auth.currentUser
         if (user != null) {
+            // APP START LOGIC: If logged in, update cache
+            val appUser = User(
+                uid = user.uid,
+                name = user.displayName,
+                email = user.email,
+                photo = user.photoUrl?.toString()
+            )
+            userRepository.cacheUserLocally(context, appUser)
+
             _isNewUser.value = false // if already logged in, they are not a new user
             viewModelScope.launch {
                 val providerId = user.providerData.firstOrNull()?.providerId
@@ -129,6 +144,10 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.IDLE // Maintain IDLE state so UI fields remain accessible
     }
 
+    fun getCachedUser(): User? {
+        return userRepository.getCachedUser(context)
+    }
+
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String, photoUrl: String = "") {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
@@ -137,6 +156,15 @@ class AuthViewModel @Inject constructor(
                 val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
                 val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
+
+                val user = User(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    photo = photoUrl.ifBlank { null }
+                )
+                userRepository.saveUserToFirestore(user)
+                userRepository.cacheUserLocally(context, user)
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
                 val (firestoreNew, existingName) = repository.saveUserToFirestore(
