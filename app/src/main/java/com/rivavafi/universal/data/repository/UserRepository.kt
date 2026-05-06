@@ -21,6 +21,7 @@ class UserRepository @Inject constructor() {
             user.name?.let { userData["name"] = it }
             user.email?.let { userData["email"] = it }
             user.photo?.let { userData["photo"] = it }
+            user.phone?.let { userData["phone_number"] = it }
             userData["lastLogin"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
             firestore.collection("users").document(user.uid)
@@ -62,7 +63,8 @@ class UserRepository @Inject constructor() {
                     uid = uid,
                     name = docSnap.getString("name"),
                     email = docSnap.getString("email"),
-                    photo = docSnap.getString("photo")
+                    photo = docSnap.getString("photo"),
+                    phone = docSnap.getString("phone_number")
                 )
                 Log.d(TAG, "Successfully fetched user from Firestore: $uid")
                 user

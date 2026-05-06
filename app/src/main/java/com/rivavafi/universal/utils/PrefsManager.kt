@@ -12,6 +12,7 @@ class PrefsManager(context: Context) {
         private const val KEY_NAME = "name"
         private const val KEY_EMAIL = "email"
         private const val KEY_PHOTO = "photo"
+        private const val KEY_PHONE = "phone"
     }
 
     fun saveUser(user: User) {
@@ -20,6 +21,7 @@ class PrefsManager(context: Context) {
             putString(KEY_NAME, user.name)
             putString(KEY_EMAIL, user.email)
             putString(KEY_PHOTO, user.photo)
+            putString(KEY_PHONE, user.phone)
             apply()
         }
     }
@@ -30,7 +32,8 @@ class PrefsManager(context: Context) {
             uid = uid,
             name = prefs.getString(KEY_NAME, null),
             email = prefs.getString(KEY_EMAIL, null),
-            photo = prefs.getString(KEY_PHOTO, null)
+            photo = prefs.getString(KEY_PHOTO, null),
+            phone = prefs.getString(KEY_PHONE, null)
         )
     }
 }

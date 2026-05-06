@@ -102,7 +102,8 @@ class AuthViewModel @Inject constructor(
                 uid = user.uid,
                 name = user.displayName,
                 email = user.email,
-                photo = user.photoUrl?.toString()
+                photo = user.photoUrl?.toString(),
+                phone = user.phoneNumber
             )
             userRepository.cacheUserLocally(context, appUser)
 
@@ -161,7 +162,8 @@ class AuthViewModel @Inject constructor(
                     uid = uid,
                     name = name,
                     email = email,
-                    photo = photoUrl.ifBlank { null }
+                    photo = photoUrl.ifBlank { null },
+                    phone = repository.auth.currentUser?.phoneNumber
                 )
                 userRepository.saveUserToFirestore(user)
                 userRepository.cacheUserLocally(context, user)
@@ -180,14 +182,18 @@ class AuthViewModel @Inject constructor(
                 val isNew = firebaseNew || sessionState.isNewUser
                 _isNewUser.value = isNew
 
-                if (!existingName.isNullOrBlank()) {
-                    userPreferencesRepository.saveUserName(existingName)
+                if (!sessionState.existingName.isNullOrBlank()) {
+                    userPreferencesRepository.saveUserName(sessionState.existingName)
                 } else {
                     userPreferencesRepository.saveUserName(name)
                 }
 
-                if (!existingPhotoUrl.isNullOrBlank()) {
-                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                if (!sessionState.photoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                } else if (photoUrl.isNotBlank()) {
+                    userPreferencesRepository.setProfileImageUri(photoUrl)
+                }
+
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Google", name) }
                 }
@@ -204,7 +210,7 @@ class AuthViewModel @Inject constructor(
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
-                if (onboardingCompleted) {
+                if (sessionState.onboardingCompleted) {
                     userPreferencesRepository.setOnboardingCompleted(true)
                 }
 
@@ -243,7 +249,7 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
-                    val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
+
                     val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
@@ -265,10 +271,7 @@ class AuthViewModel @Inject constructor(
                             userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                         }
                     }
-                    if (!existingPhotoUrl.isNullOrBlank()) {
-                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
-                    }
-                    if (onboardingCompleted) {
+                    if (sessionState.onboardingCompleted) {
                         userPreferencesRepository.setOnboardingCompleted(true)
                     }
 
@@ -395,7 +398,7 @@ class AuthViewModel @Inject constructor(
                 if (uid != null) {
                     val isVerified = repository.checkVerificationStatus(uid)
                     if (isVerified) {
-                        val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
+
                         val sessionState = repository.saveUserToFirestore(
                             uid = uid,
                             name = null,
@@ -417,10 +420,7 @@ class AuthViewModel @Inject constructor(
                                 userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                             }
                         }
-                        if (!existingPhotoUrl.isNullOrBlank()) {
-                            userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
-                        }
-                        if (onboardingCompleted) {
+                        if (sessionState.onboardingCompleted) {
                             userPreferencesRepository.setOnboardingCompleted(true)
                         }
 
@@ -454,17 +454,23 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
+                    val phoneNumber = repository.auth.currentUser?.phoneNumber
                     val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
                         email = null,
-                        phoneNumber = repository.auth.currentUser?.phoneNumber,
+                        phoneNumber = phoneNumber,
                         authProvider = "phone",
                         isVerified = true
                     )
                     val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                     val isNew = firebaseNew || sessionState.isNewUser
                     _isNewUser.value = isNew
+
+                    if (!phoneNumber.isNullOrBlank()) {
+                        userPreferencesRepository.saveUserPhone(phoneNumber)
+                    }
+
                     if (isNew) {
                         authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
                     } else {
@@ -475,10 +481,7 @@ class AuthViewModel @Inject constructor(
                             userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                         }
                     }
-                    if (!existingPhotoUrl.isNullOrBlank()) {
-                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
-                    }
-                    if (onboardingCompleted) {
+                    if (sessionState.onboardingCompleted) {
                         userPreferencesRepository.setOnboardingCompleted(true)
                     }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
@@ -607,6 +610,9 @@ class AuthViewModel @Inject constructor(
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                 val isNew = firebaseNew || sessionState.isNewUser
                 _isNewUser.value = isNew
+                if (phoneNumber.isNotBlank()) {
+                    userPreferencesRepository.saveUserPhone(phoneNumber)
+                }
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
                 } else {
@@ -617,12 +623,9 @@ class AuthViewModel @Inject constructor(
                         userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                     }
                 }
-                if (!existingPhotoUrl.isNullOrBlank()) {
-                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
-                }
-                if (onboardingCompleted) {
-                    userPreferencesRepository.setOnboardingCompleted(true)
-                }
+                        if (sessionState.onboardingCompleted) {
+                            userPreferencesRepository.setOnboardingCompleted(true)
+                        }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
 
