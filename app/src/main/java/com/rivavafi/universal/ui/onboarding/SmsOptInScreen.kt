@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 
 @Composable
 fun SmsOptInScreen(
@@ -119,10 +120,14 @@ fun SmsOptInScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(56.dp),
+            enabled = !isLoading
         ) {
             Text("Skip (I’ll do it manually)", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+
+        Spacer(modifier = Modifier.height(32.dp))
+        RivavaBrandDisplay(showQuote = true)
     }
 
     if (showDeniedMessage) {

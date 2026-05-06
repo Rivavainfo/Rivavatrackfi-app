@@ -14,6 +14,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.CircularProgressIndicator
 import com.rivavafi.universal.R
 
 @Composable
@@ -37,12 +40,20 @@ fun RivavaLoadingOverlay(isLoading: Boolean) {
             .background(Color(0xFF0A0A0A).copy(alpha = 0.85f)),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.rivava_logo),
-            contentDescription = "Loading...",
-            modifier = Modifier
-                .size(100.dp)
-                .scale(scale)
-        )
+        Box(contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(120.dp),
+                color = Color(0xFF00A3FF),
+                strokeWidth = 2.dp
+            )
+            Image(
+                painter = painterResource(id = R.drawable.rivava_logo),
+                contentDescription = "Loading...",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .scale(scale)
+            )
+        }
     }
 }

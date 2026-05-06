@@ -41,6 +41,8 @@ import com.rivavafi.universal.R
 import com.rivavafi.universal.ui.theme.*
 import androidx.compose.ui.draw.shadow
 import com.rivavafi.universal.ui.theme.glassMorphism
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import android.util.Patterns
@@ -284,11 +286,13 @@ fun AuthScreenContent(
                 ) {
                     Text(
                         text = "Sign In",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         color = Color.White
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    RivavaBrandDisplay(showQuote = true)
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Google Login Button
                     Button(
@@ -308,23 +312,22 @@ fun AuthScreenContent(
                             .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = authState != AuthState.LOADING
                     ) {
-                        if (authState == AuthState.LOADING) {
-                            CircularProgressIndicator(color = AmoledBlack, modifier = Modifier.size(24.dp))
-                        } else {
-                            Icon(
-                                imageVector = Icons.Outlined.AccountCircle,
-                                contentDescription = "Google",
-                                modifier = Modifier.size(24.dp),
-                                tint = AmoledBlack
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        }
+                        Icon(
+                            imageVector = Icons.Outlined.AccountCircle,
+                            contentDescription = "Google",
+                            modifier = Modifier.size(24.dp),
+                            tint = AmoledBlack
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
         }
+
+        RivavaLoadingOverlay(isLoading = authState == AuthState.LOADING)
     }
 }
