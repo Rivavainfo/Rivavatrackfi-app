@@ -59,6 +59,12 @@ class HomeViewModel @Inject constructor(
         ""
     )
 
+    val userPhone = userPreferencesRepository.userPhoneFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ""
+    )
+
     val isSmsTrackingEnabled = userPreferencesRepository.isSmsTrackingEnabledFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -144,6 +150,12 @@ class HomeViewModel @Inject constructor(
     fun updateUserName(name: String) {
         viewModelScope.launch {
             userPreferencesRepository.saveUserName(name)
+        }
+    }
+
+    fun updateUserPhone(phone: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveUserPhone(phone)
         }
     }
 

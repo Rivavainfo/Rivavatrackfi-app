@@ -83,6 +83,7 @@ fun ProfileScreen(
     stockViewModel: StockViewModel = hiltViewModel()
 ) {
     val viewModelUserName by viewModel.userName.collectAsState()
+    val viewModelUserPhone by viewModel.userPhone.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val viewModelProfileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
@@ -93,11 +94,13 @@ fun ProfileScreen(
     val authUser = FirebaseAuth.getInstance().currentUser
 
     val userName = authUser?.displayName ?: cachedUser?.name ?: viewModelUserName
-    val profileImageUri = authUser?.photoUrl?.toString() ?: cachedUser?.photo ?: viewModelProfileImageUri
+    val userPhone = authUser?.phoneNumber ?: cachedUser?.phone ?: viewModelUserPhone
+    val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
     var screenshotsAllowed by remember { mutableStateOf(false) }
     var showEditNameDialog by remember { mutableStateOf(false) }
+    var showEditPhoneDialog by remember { mutableStateOf(false) }
     val stockStates by stockViewModel.stockStates.collectAsState()
 
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
@@ -263,6 +266,37 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Icon(Icons.Default.Edit, contentDescription = "Edit Name", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                // Divider
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                )
+
+                // Phone Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showEditPhoneDialog = true }
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "PHONE",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        letterSpacing = 1.5.sp
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = if (!userPhone.isNullOrBlank()) userPhone else "Add phone",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Phone", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -523,10 +557,17 @@ fun ProfileScreen(
                     onClick = onNavigateToHelpCenter
                 )
                 QuickActionItem(
-                    icon = Icons.Default.BugReport,
-                    title = "API Diagnostic Logs",
-                    tint = MaterialTheme.colorScheme.error,
-                    onClick = { showLogsDialog = true }
+                    icon = Icons.Default.OpenInNew,
+                    title = "Website",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.rivava.in"))
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.widget.Toast.makeText(context, "Unable to open website", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
 
 
@@ -577,6 +618,37 @@ fun ProfileScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showEditNameDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showEditPhoneDialog) {
+            var newPhone by remember { mutableStateOf(userPhone ?: "") }
+            AlertDialog(
+                onDismissRequest = { showEditPhoneDialog = false },
+                title = { Text("Edit Phone") },
+                text = {
+                    OutlinedTextField(
+                        value = newPhone,
+                        onValueChange = { newPhone = it },
+                        singleLine = true,
+                        label = { Text("Your Phone") }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (newPhone.isNotBlank()) {
+                            viewModel.updateUserPhone(newPhone.trim())
+                        }
+                        showEditPhoneDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditPhoneDialog = false }) {
                         Text("Cancel")
                     }
                 }

@@ -89,9 +89,16 @@ fun HomeScreen(
     val dailyBudget by viewModel.dailyBudget.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val showDetails by viewModel.showSmsDetails.collectAsState()
-    val userName by viewModel.userName.collectAsState()
+    val viewModelUserName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
-    val profileImageUri by viewModel.profileImageUri.collectAsState()
+    val viewModelProfileImageUri by viewModel.profileImageUri.collectAsState()
+
+    val context = LocalContext.current
+    val cachedUser = remember { com.rivavafi.universal.utils.PrefsManager(context).getUser() }
+    val authUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+    val userName = authUser?.displayName ?: cachedUser?.name ?: viewModelUserName
+    val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
@@ -99,7 +106,6 @@ fun HomeScreen(
     var showPremiumUnlockDialog by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
     val isPremiumPref = prefs.getBoolean("isPremium", false)
 

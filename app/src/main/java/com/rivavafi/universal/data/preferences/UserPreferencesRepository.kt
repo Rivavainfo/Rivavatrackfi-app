@@ -24,6 +24,7 @@ class UserPreferencesRepository @Inject constructor(
 
     companion object {
         val USER_NAME_KEY = stringPreferencesKey("user_name")
+        val USER_PHONE_KEY = stringPreferencesKey("user_phone")
         val HAS_COMPLETED_ONBOARDING_KEY = booleanPreferencesKey("has_completed_onboarding")
         val IS_SMS_TRACKING_ENABLED_KEY = booleanPreferencesKey("is_sms_tracking_enabled")
         val SMS_SCAN_COMPLETED_KEY = booleanPreferencesKey("sms_scan_completed")
@@ -110,6 +111,10 @@ class UserPreferencesRepository @Inject constructor(
         preferences[USER_NAME_KEY]
     }
 
+    val userPhoneFlow: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[USER_PHONE_KEY]
+    }
+
     val hasCompletedOnboardingFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[HAS_COMPLETED_ONBOARDING_KEY] ?: false
     }
@@ -130,6 +135,12 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun saveUserName(name: String) {
         dataStore.edit { preferences ->
             preferences[USER_NAME_KEY] = name
+        }
+    }
+
+    suspend fun saveUserPhone(phone: String) {
+        dataStore.edit { preferences ->
+            preferences[USER_PHONE_KEY] = phone
         }
     }
 
