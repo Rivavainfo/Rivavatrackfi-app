@@ -69,7 +69,6 @@ import com.rivavafi.universal.ui.onboarding.SmsScanningScreen
 import com.rivavafi.universal.ui.onboarding.SmsOptInScreen
 import com.rivavafi.universal.ui.onboarding.WelcomeScreen
 import com.rivavafi.universal.ui.settings.SettingsScreen
-import com.rivavafi.universal.ui.portfolio.PremiumUnlockDialog
 import com.rivavafi.universal.ui.portfolio.RivavaPortfolioScreen
 import com.rivavafi.universal.ui.profile.ProfileScreen
 import com.rivavafi.universal.ui.theme.TrackFiTheme

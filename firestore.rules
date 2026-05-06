@@ -10,5 +10,13 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId
                    && (resource == null || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['is_premium', 'premium_status', 'premium_source', 'premium_unlocked_at', 'premium_txn_id']));
     }
+
+    match /payments/{docId} {
+      // Allow users to read their own payment records.
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Clients cannot write to payment records directly; must be via Cloud Functions.
+      allow write: if false;
+    }
   }
 }

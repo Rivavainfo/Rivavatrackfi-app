@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.delay
 
 enum class EntitlementStatus { LOADING, UNLOCKED, LOCKED, ERROR }
 
@@ -21,6 +20,15 @@ data class PremiumState(
     val status: EntitlementStatus = EntitlementStatus.LOADING,
     val isPremium: Boolean = false,
     val source: String? = null
+)
+
+data class RazorpayOrderResult(
+    val success: Boolean,
+    val orderId: String? = null,
+    val amount: Int? = null,
+    val currency: String? = null,
+    val keyId: String? = null,
+    val error: String? = null
 )
 
 @Singleton
@@ -78,23 +86,51 @@ class UserEntitlementRepository @Inject constructor(
         }
     }
 
-    suspend fun grantPremium(source: String, txnId: String? = null): Boolean {
-        val uid = auth.currentUser?.uid ?: return false
+    suspend fun createRazorpayOrder(amountPaise: Int): RazorpayOrderResult {
+        if (auth.currentUser?.uid == null) return RazorpayOrderResult(false, error = "User not authenticated")
+
+        return try {
+            val data = hashMapOf("amount" to amountPaise)
+            val result = functions
+                .getHttpsCallable("createRazorpayOrder")
+                .call(data)
+                .await()
+
+            val resultData = result.data as? Map<*, *>
+            val orderId = resultData?.get("order_id") as? String
+            val amount = (resultData?.get("amount") as? Number)?.toInt()
+            val currency = resultData?.get("currency") as? String
+            val keyId = resultData?.get("key_id") as? String
+
+            if (orderId != null && amount != null) {
+                RazorpayOrderResult(true, orderId, amount, currency, keyId)
+            } else {
+                RazorpayOrderResult(false, error = "Invalid response from server")
+            }
+        } catch (e: Exception) {
+            Log.e("UserEntitlement", "Error creating Razorpay order", e)
+            RazorpayOrderResult(false, error = e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun verifyRazorpayPayment(orderId: String, paymentId: String, signature: String): Boolean {
+        if (auth.currentUser?.uid == null) return false
 
         return try {
             val data = hashMapOf(
-                "source" to source,
-                "txnId" to txnId
+                "razorpay_order_id" to orderId,
+                "razorpay_payment_id" to paymentId,
+                "razorpay_signature" to signature
             )
 
             val result = functions
-                .getHttpsCallable("verifyPayment")
+                .getHttpsCallable("verifyRazorpayPayment")
                 .call(data)
                 .await()
 
             val resultData = result.data as? Map<*, *>
             if (resultData?.get("success") == true) {
-                _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, source)
+                _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "razorpay")
                 val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
                 prefs.edit()
                     .putBoolean("isPremium", true)
@@ -103,11 +139,11 @@ class UserEntitlementRepository @Inject constructor(
                 userPreferencesRepository.setPremiumUserForCurrent(true)
                 true
             } else {
-                _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
-                false
+                 _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
+                 false
             }
         } catch (e: Exception) {
-            Log.e("UserEntitlement", "Failed to grant premium via Cloud Function", e)
+            Log.e("UserEntitlement", "Failed to verify payment via Cloud Function", e)
             _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
             false
         }

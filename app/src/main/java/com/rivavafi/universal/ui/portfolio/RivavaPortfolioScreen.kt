@@ -90,13 +90,33 @@ fun RivavaPortfolioScreen(
 ) {
     val context = LocalContext.current
     val premiumState by premiumViewModel.premiumState.collectAsState()
-    var showUnlockDialog by remember { mutableStateOf(false) }
+    val paymentState by premiumViewModel.paymentState.collectAsState()
 
     val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val paymentId = result.data?.getStringExtra("payment_id")
-            premiumViewModel.grantPremium("razorpay", paymentId)
-            showUnlockDialog = false
+            val orderId = result.data?.getStringExtra("order_id")
+            val signature = result.data?.getStringExtra("signature")
+
+            if (paymentId != null && orderId != null && signature != null) {
+                premiumViewModel.verifyRazorpayPayment(orderId, paymentId, signature)
+            } else {
+                premiumViewModel.clearPaymentError()
+            }
+        } else {
+            premiumViewModel.clearPaymentError()
+        }
+    }
+
+    LaunchedEffect(paymentState.uiState) {
+        if (paymentState.uiState == PaymentUiState.CHECKOUT_READY) {
+            val intent = Intent(context, PaymentActivity::class.java).apply {
+                putExtra("amount", paymentState.orderData?.amount)
+                putExtra("order_id", paymentState.orderData?.orderId)
+                putExtra("key_id", paymentState.orderData?.keyId)
+            }
+            paymentLauncher.launch(intent)
+            premiumViewModel.clearPaymentError()
         }
     }
 
@@ -111,7 +131,7 @@ fun RivavaPortfolioScreen(
         return
     }
 
-    if (premiumState.status != EntitlementStatus.UNLOCKED && !showUnlockAnimation) {
+    if (premiumState.status != EntitlementStatus.UNLOCKED) {
         Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
             IconButton(
                 onClick = onBack,
@@ -167,43 +187,46 @@ fun RivavaPortfolioScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(32.dp))
+                    val isProcessing = paymentState.uiState == PaymentUiState.CREATING_ORDER || paymentState.uiState == PaymentUiState.VERIFYING
                     Button(
-                        onClick = { showUnlockDialog = true },
+                        onClick = { premiumViewModel.startPremiumPurchase(1100) },
+                        enabled = !isProcessing,
                         modifier = Modifier
                             .widthIn(min = 220.dp)
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFF4C91),
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            disabledContainerColor = Color(0xFFFF4C91).copy(alpha = 0.5f),
+                            disabledContentColor = Color.White.copy(alpha = 0.5f)
                         ),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                     ) {
-                        Text(
-                            if (premiumState.status == EntitlementStatus.ERROR) "Retry Verification" else "Unlock Premium",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
+                        if (isProcessing) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(if (paymentState.uiState == PaymentUiState.VERIFYING) "Verifying..." else "Please wait...")
+                        } else {
+                            Text(
+                                if (paymentState.uiState == PaymentUiState.ERROR) "Retry Payment" else "Unlock Premium",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
+                        }
+                    }
+                    if (paymentState.uiState == PaymentUiState.ERROR && paymentState.errorMessage != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = paymentState.errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
             }
 
-            if (showUnlockDialog) {
-                PremiumUnlockDialog(
-                    userName = "",
-                    onDismiss = { showUnlockDialog = false },
-                    onUnlockSuccess = {
-                        premiumViewModel.grantPremium("manual_verify")
-                        showUnlockDialog = false
-                    },
-                    onPayClick = {
-                        val intent = Intent(context, PaymentActivity::class.java)
-                        paymentLauncher.launch(intent)
-                        showUnlockDialog = false
-                    }
-                )
-            }
         }
         return
     }
