@@ -167,20 +167,32 @@ class AuthViewModel @Inject constructor(
                 userRepository.cacheUserLocally(context, user)
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                val sessionState = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
                     email = email,
                     phoneNumber = null,
                     authProvider = "google",
-                    isVerified = true
+                    isVerified = true,
+                    photoUrl = photoUrl
                 )
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                _isNewUser.value = firebaseNew || firestoreNew
-                authResult.user?.let { repository.sendUserToSheet(it, "Google") }
+                val isNew = firebaseNew || sessionState.isNewUser
+                _isNewUser.value = isNew
 
-                userPreferencesRepository.saveUserName(name)
-                if (photoUrl.isNotBlank()) {
+                if (isNew) {
+                    authResult.user?.let { repository.sendUserToSheet(it, "Google", name) }
+                }
+
+                if (!sessionState.existingName.isNullOrBlank()) {
+                    userPreferencesRepository.saveUserName(sessionState.existingName)
+                } else if (name.isNotBlank()) {
+                    userPreferencesRepository.saveUserName(name)
+                }
+
+                if (!sessionState.photoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                } else if (photoUrl.isNotBlank()) {
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
@@ -220,7 +232,7 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
-                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                    val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
                         email = email,
@@ -229,12 +241,17 @@ class AuthViewModel @Inject constructor(
                         isVerified = true
                     )
                     val firebaseNew = false
-                    val isNew = firestoreNew || firebaseNew
+                    val isNew = sessionState.isNewUser || firebaseNew
                     _isNewUser.value = isNew
                     if (isNew) {
                         repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
-                    } else if (!existingName.isNullOrBlank()) {
-                        userPreferencesRepository.saveUserName(existingName)
+                    } else {
+                        if (!sessionState.existingName.isNullOrBlank()) {
+                            userPreferencesRepository.saveUserName(sessionState.existingName)
+                        }
+                        if (!sessionState.photoUrl.isNullOrBlank()) {
+                            userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                        }
                     }
 
                         userEntitlementRepository.syncEntitlement()
@@ -360,7 +377,7 @@ class AuthViewModel @Inject constructor(
                 if (uid != null) {
                     val isVerified = repository.checkVerificationStatus(uid)
                     if (isVerified) {
-                        val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                        val sessionState = repository.saveUserToFirestore(
                             uid = uid,
                             name = null,
                             email = repository.auth.currentUser?.email ?: "",
@@ -369,12 +386,17 @@ class AuthViewModel @Inject constructor(
                             isVerified = true
                         )
                         val firebaseNew = false
-                        val isNew = firestoreNew || firebaseNew
+                        val isNew = sessionState.isNewUser || firebaseNew
                         _isNewUser.value = isNew
                         if (isNew) {
                             repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
-                        } else if (!existingName.isNullOrBlank()) {
-                            userPreferencesRepository.saveUserName(existingName)
+                        } else {
+                            if (!sessionState.existingName.isNullOrBlank()) {
+                                userPreferencesRepository.saveUserName(sessionState.existingName)
+                            }
+                            if (!sessionState.photoUrl.isNullOrBlank()) {
+                                userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                            }
                         }
 
                         userEntitlementRepository.syncEntitlement()
@@ -407,7 +429,7 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                    val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
                         email = null,
@@ -416,12 +438,17 @@ class AuthViewModel @Inject constructor(
                         isVerified = true
                     )
                     val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                    val isNew = firebaseNew || firestoreNew
+                    val isNew = firebaseNew || sessionState.isNewUser
                     _isNewUser.value = isNew
                     if (isNew) {
                         authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
-                    } else if (!existingName.isNullOrBlank()) {
-                        userPreferencesRepository.saveUserName(existingName)
+                    } else {
+                        if (!sessionState.existingName.isNullOrBlank()) {
+                            userPreferencesRepository.saveUserName(sessionState.existingName)
+                        }
+                        if (!sessionState.photoUrl.isNullOrBlank()) {
+                            userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                        }
                     }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
 
@@ -537,7 +564,7 @@ class AuthViewModel @Inject constructor(
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                val sessionState = repository.saveUserToFirestore(
                     uid = uid,
                     name = null,
                     email = email,
@@ -547,12 +574,17 @@ class AuthViewModel @Inject constructor(
                 )
 
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                val isNew = firebaseNew || firestoreNew
+                val isNew = firebaseNew || sessionState.isNewUser
                 _isNewUser.value = isNew
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
-                } else if (!existingName.isNullOrBlank()) {
-                    userPreferencesRepository.saveUserName(existingName)
+                } else {
+                    if (!sessionState.existingName.isNullOrBlank()) {
+                        userPreferencesRepository.saveUserName(sessionState.existingName)
+                    }
+                    if (!sessionState.photoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                    }
                 }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
