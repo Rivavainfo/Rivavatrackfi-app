@@ -180,6 +180,14 @@ class AuthViewModel @Inject constructor(
                 val isNew = firebaseNew || sessionState.isNewUser
                 _isNewUser.value = isNew
 
+                if (!existingName.isNullOrBlank()) {
+                    userPreferencesRepository.saveUserName(existingName)
+                } else {
+                    userPreferencesRepository.saveUserName(name)
+                }
+
+                if (!existingPhotoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
                 if (isNew) {
                     authResult.user?.let { repository.sendUserToSheet(it, "Google", name) }
                 }
@@ -196,9 +204,12 @@ class AuthViewModel @Inject constructor(
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
+                if (onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
             } catch (e: com.google.firebase.auth.FirebaseAuthException) {
                 Log.e("AuthViewModel", "FirebaseAuthException during Google Sign In: ${e.errorCode}", e)
                 _errorMessage.value = "Firebase Auth Error: ${e.message}"
@@ -232,6 +243,7 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
+                    val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                     val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
@@ -253,9 +265,15 @@ class AuthViewModel @Inject constructor(
                             userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                         }
                     }
+                    if (!existingPhotoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                    }
+                    if (onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
                 } else {
                     // Do NOT sign out. The user needs an active session to use 'Resend Verification Email'.
                     _errorMessage.value = "Please verify your email before logging in."
@@ -377,6 +395,7 @@ class AuthViewModel @Inject constructor(
                 if (uid != null) {
                     val isVerified = repository.checkVerificationStatus(uid)
                     if (isVerified) {
+                        val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                         val sessionState = repository.saveUserToFirestore(
                             uid = uid,
                             name = null,
@@ -397,6 +416,12 @@ class AuthViewModel @Inject constructor(
                             if (!sessionState.photoUrl.isNullOrBlank()) {
                                 userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                             }
+                        }
+                        if (!existingPhotoUrl.isNullOrBlank()) {
+                            userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                        }
+                        if (onboardingCompleted) {
+                            userPreferencesRepository.setOnboardingCompleted(true)
                         }
 
                         userEntitlementRepository.syncEntitlement()
@@ -450,10 +475,16 @@ class AuthViewModel @Inject constructor(
                             userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                         }
                     }
+                    if (!existingPhotoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                    }
+                    if (onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
                 } catch (e: Exception) {
                     _errorMessage.value = e.message ?: "Phone auto-login failed"
                     _phoneAuthState.value = PhoneAuthState.ERROR
@@ -586,11 +617,17 @@ class AuthViewModel @Inject constructor(
                         userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
                     }
                 }
+                if (!existingPhotoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                }
+                if (onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)

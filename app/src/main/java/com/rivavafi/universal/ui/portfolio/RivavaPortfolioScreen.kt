@@ -91,38 +91,21 @@ fun RivavaPortfolioScreen(
     val context = LocalContext.current
     val premiumState by premiumViewModel.premiumState.collectAsState()
     var showUnlockDialog by remember { mutableStateOf(false) }
-    var showUnlockAnimation by remember { mutableStateOf(false) }
-    var awaitingPremiumVerification by remember { mutableStateOf(false) }
 
     val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val paymentId = result.data?.getStringExtra("payment_id")
-            awaitingPremiumVerification = true
             premiumViewModel.grantPremium("razorpay", paymentId)
             showUnlockDialog = false
         }
     }
 
-    LaunchedEffect(premiumState.status) {
-        if (awaitingPremiumVerification && premiumState.status == EntitlementStatus.UNLOCKED) {
-            awaitingPremiumVerification = false
-            showUnlockAnimation = true
-        }
-    }
-
-    if (showUnlockAnimation) {
-        PremiumUnlockAnimation(
-            onAnimationComplete = { showUnlockAnimation = false }
-        )
-        return
-    }
-
-    if (awaitingPremiumVerification && premiumState.status != EntitlementStatus.ERROR) {
+    if (premiumState.status == EntitlementStatus.LOADING) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(color = EmeraldGreen)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Verifying premium status...", color = Color.White)
+                Text("Loading premium status...", color = Color.White)
             }
         }
         return
@@ -211,7 +194,6 @@ fun RivavaPortfolioScreen(
                     userName = "",
                     onDismiss = { showUnlockDialog = false },
                     onUnlockSuccess = {
-                        awaitingPremiumVerification = true
                         premiumViewModel.grantPremium("manual_verify")
                         showUnlockDialog = false
                     },
