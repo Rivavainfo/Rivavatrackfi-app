@@ -128,7 +128,7 @@ fun RivavaPortfolioScreen(
         return
     }
 
-    if (premiumState.status != EntitlementStatus.UNLOCKED) {
+    if (premiumState.status != EntitlementStatus.UNLOCKED && !showUnlockAnimation) {
         Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
             IconButton(
                 onClick = onBack,
