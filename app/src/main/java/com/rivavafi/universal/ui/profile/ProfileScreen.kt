@@ -69,6 +69,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import com.rivavafi.universal.ui.theme.VibrantRed
 import com.rivavafi.universal.ui.theme.PrimarySky
+import com.google.firebase.auth.FirebaseAuth
+import com.rivavafi.universal.utils.PrefsManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,12 +82,18 @@ fun ProfileScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel()
 ) {
-    val userName by viewModel.userName.collectAsState()
+    val viewModelUserName by viewModel.userName.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
-    val profileImageUri by viewModel.profileImageUri.collectAsState()
+    val viewModelProfileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val context = LocalContext.current
+
+    val cachedUser = remember { PrefsManager(context).getUser() }
+    val authUser = FirebaseAuth.getInstance().currentUser
+
+    val userName = authUser?.displayName ?: cachedUser?.name ?: viewModelUserName
+    val profileImageUri = authUser?.photoUrl?.toString() ?: cachedUser?.photo ?: viewModelProfileImageUri
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
     var screenshotsAllowed by remember { mutableStateOf(false) }
