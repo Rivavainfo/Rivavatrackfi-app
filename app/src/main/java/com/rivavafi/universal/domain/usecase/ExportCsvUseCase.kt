@@ -1,6 +1,7 @@
 package com.rivavafi.universal.domain.usecase
 
 import android.content.Context
+import android.net.Uri
 import android.os.Environment
 import com.rivavafi.universal.domain.repository.TransactionRepository
 import kotlinx.coroutines.Dispatchers
@@ -13,23 +14,14 @@ import javax.inject.Inject
 class ExportCsvUseCase @Inject constructor(
     private val repository: TransactionRepository
 ) {
-    suspend operator fun invoke(@Suppress("UNUSED_PARAMETER") context: Context): Result<String> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(context: Context, uri: Uri): Result<String> = withContext(Dispatchers.IO) {
         try {
             val transactions = repository.getAllTransactionsSync()
             if (transactions.isEmpty()) {
                 return@withContext Result.failure(Exception("No transactions to export."))
             }
 
-            val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            val trackFiDir = File(downloadsDir, "TrackFi")
-            if (!trackFiDir.exists()) {
-                trackFiDir.mkdirs()
-            }
-
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-            val file = File(trackFiDir, "TrackFi_Backup_$timestamp.csv")
-
-            file.bufferedWriter().use { out ->
+            context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { out ->
                 // Write header
                 out.write("date,merchant,amount,type,category,subcategory,bank,message\n")
 
@@ -47,9 +39,9 @@ class ExportCsvUseCase @Inject constructor(
 
                     out.write("\"$dateStr\",\"$merchant\",\"$amount\",\"$type\",\"$category\",\"$subcategory\",\"$bank\",\"$message\"\n")
                 }
-            }
+            } ?: return@withContext Result.failure(Exception("Could not open output stream for URI."))
 
-            Result.success(file.absolutePath)
+            Result.success(uri.toString())
         } catch (e: Exception) {
             Result.failure(e)
         }
