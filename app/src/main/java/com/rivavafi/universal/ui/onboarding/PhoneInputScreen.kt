@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.PrimarySky
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +50,10 @@ fun PhoneInputScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        RivavaBrandDisplay(showQuote = true)
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         Text(
             text = "Add your number",
             style = MaterialTheme.typography.displaySmall.copy(

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.delay
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 
 @Composable
 fun GreetingScreen(
@@ -48,6 +49,9 @@ fun GreetingScreen(
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(24.dp)
             ) {
+                RivavaBrandDisplay(showQuote = true)
+                Spacer(modifier = Modifier.height(32.dp))
+
                 Text(
                     text = "Nice to meet you, ${userName ?: ""} \uD83D\uDC4B",
                     style = MaterialTheme.typography.headlineMedium.copy(

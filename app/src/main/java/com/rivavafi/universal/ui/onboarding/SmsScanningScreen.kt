@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 
 @Composable
 fun SmsScanningScreen(
@@ -32,6 +33,9 @@ fun SmsScanningScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        RivavaBrandDisplay(showQuote = true)
+        Spacer(modifier = Modifier.height(32.dp))
+
         if (!scanState.isComplete) {
             Text(
                 text = "Scanning your messages",

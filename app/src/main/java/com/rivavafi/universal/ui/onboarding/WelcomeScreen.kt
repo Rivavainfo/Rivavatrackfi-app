@@ -40,6 +40,7 @@ import com.rivavafi.universal.ui.theme.glassMorphism
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
+import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +61,10 @@ fun WelcomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        RivavaBrandDisplay(showQuote = true)
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         // Title
         Text(
             text = "Welcome to Rivava",
@@ -116,7 +121,7 @@ fun WelcomeScreen(
                 disabledContainerColor = Color(0xFF005D8A),
                 disabledContentColor = Color.White.copy(alpha = 0.75f)
             ),
-            enabled = name.isNotBlank(),
+            enabled = name.isNotBlank() && !isLoading,
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
