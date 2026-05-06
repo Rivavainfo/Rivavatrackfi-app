@@ -139,26 +139,37 @@ class AuthViewModel @Inject constructor(
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-                val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
                     email = email,
                     phoneNumber = null,
                     authProvider = "google",
-                    isVerified = true
+                    isVerified = true,
+                    photoUrl = photoUrl
                 )
                 val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
                 _isNewUser.value = firebaseNew || firestoreNew
                 authResult.user?.let { repository.sendUserToSheet(it, "Google") }
 
-                userPreferencesRepository.saveUserName(name)
-                if (photoUrl.isNotBlank()) {
+                if (!existingName.isNullOrBlank()) {
+                    userPreferencesRepository.saveUserName(existingName)
+                } else {
+                    userPreferencesRepository.saveUserName(name)
+                }
+
+                if (!existingPhotoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                } else if (photoUrl.isNotBlank()) {
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
+                if (onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
             } catch (e: com.google.firebase.auth.FirebaseAuthException) {
                 Log.e("AuthViewModel", "FirebaseAuthException during Google Sign In: ${e.errorCode}", e)
                 _errorMessage.value = "Firebase Auth Error: ${e.message}"
@@ -192,7 +203,7 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
                 if (isVerified) {
-                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                    val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
                         email = email,
@@ -208,9 +219,15 @@ class AuthViewModel @Inject constructor(
                     } else if (!existingName.isNullOrBlank()) {
                         userPreferencesRepository.saveUserName(existingName)
                     }
+                    if (!existingPhotoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                    }
+                    if (onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
                 } else {
                     // Do NOT sign out. The user needs an active session to use 'Resend Verification Email'.
                     _errorMessage.value = "Please verify your email before logging in."
@@ -332,7 +349,7 @@ class AuthViewModel @Inject constructor(
                 if (uid != null) {
                     val isVerified = repository.checkVerificationStatus(uid)
                     if (isVerified) {
-                        val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                        val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                             uid = uid,
                             name = null,
                             email = repository.auth.currentUser?.email ?: "",
@@ -347,6 +364,12 @@ class AuthViewModel @Inject constructor(
                             repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
                         } else if (!existingName.isNullOrBlank()) {
                             userPreferencesRepository.saveUserName(existingName)
+                        }
+                        if (!existingPhotoUrl.isNullOrBlank()) {
+                            userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                        }
+                        if (onboardingCompleted) {
+                            userPreferencesRepository.setOnboardingCompleted(true)
                         }
 
                         userEntitlementRepository.syncEntitlement()
@@ -379,7 +402,7 @@ class AuthViewModel @Inject constructor(
                     val authResult = repository.auth.signInWithCredential(credential).await()
                     val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                    val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                    val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
                         email = null,
@@ -395,10 +418,16 @@ class AuthViewModel @Inject constructor(
                     } else if (!existingName.isNullOrBlank()) {
                         userPreferencesRepository.saveUserName(existingName)
                     }
+                    if (!existingPhotoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                    }
+                    if (onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
                 } catch (e: Exception) {
                     _errorMessage.value = e.message ?: "Phone auto-login failed"
                     _phoneAuthState.value = PhoneAuthState.ERROR
@@ -509,7 +538,7 @@ class AuthViewModel @Inject constructor(
                 val authResult = repository.auth.signInWithCredential(credential).await()
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val (firestoreNew, existingName) = repository.saveUserToFirestore(
+                val (firestoreNew, existingName, onboardingCompleted, existingPhotoUrl) = repository.saveUserToFirestore(
                     uid = uid,
                     name = null,
                     email = email,
@@ -526,11 +555,17 @@ class AuthViewModel @Inject constructor(
                 } else if (!existingName.isNullOrBlank()) {
                     userPreferencesRepository.saveUserName(existingName)
                 }
+                if (!existingPhotoUrl.isNullOrBlank()) {
+                    userPreferencesRepository.setProfileImageUri(existingPhotoUrl)
+                }
+                if (onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
 
                 _phoneAuthState.value = PhoneAuthState.SUCCESS
 
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
                 onSuccess()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)
