@@ -103,7 +103,6 @@ fun HomeScreen(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
-    var showPremiumUnlockDialog by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
@@ -594,16 +593,6 @@ fun HomeScreen(
             )
         }
 
-        if (showPremiumUnlockDialog) {
-            com.rivavafi.universal.ui.portfolio.PremiumUnlockDialog(
-                userName = userName ?: "",
-                onDismiss = { showPremiumUnlockDialog = false },
-                onUnlockSuccess = {
-                    viewModel.setPremiumUser(true)
-                    showPremiumUnlockDialog = false
-                }
-            )
-        }
 
         if (showChatDialog) {
             var message by remember { mutableStateOf("") }
