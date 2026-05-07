@@ -63,6 +63,23 @@ class PremiumViewModel @Inject constructor(
         }
     }
 
+    fun unlockPremiumWithKey(key: String) {
+        if (_paymentState.value.uiState == PaymentUiState.VERIFYING) return
+
+        _paymentState.value = PaymentState(uiState = PaymentUiState.VERIFYING)
+        viewModelScope.launch {
+            val success = repository.unlockPremiumWithKey(key)
+            _paymentState.value = if (success) {
+                PaymentState(uiState = PaymentUiState.SUCCESS)
+            } else {
+                PaymentState(
+                    uiState = PaymentUiState.ERROR,
+                    errorMessage = "Invalid premium key"
+                )
+            }
+        }
+    }
+
     fun verifyRazorpayPayment(orderId: String, paymentId: String, signature: String) {
         if (_paymentState.value.uiState == PaymentUiState.VERIFYING) return
 

@@ -1,5 +1,6 @@
 package com.rivavafi.universal.ui.home
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rivavafi.universal.data.local.TransactionEntity
@@ -12,7 +13,9 @@ import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.domain.usecase.GetCategoriesUseCase
 import com.rivavafi.universal.domain.usecase.GetTransactionsUseCase
 import com.rivavafi.universal.data.repository.UserEntitlementRepository
+import com.rivavafi.universal.utils.PrefsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -29,7 +32,8 @@ class HomeViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val userEntitlementRepository: UserEntitlementRepository
+    private val userEntitlementRepository: UserEntitlementRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _dailyBudget = MutableStateFlow(800.0)
@@ -60,6 +64,12 @@ class HomeViewModel @Inject constructor(
     )
 
     val userPhone = userPreferencesRepository.userPhoneFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ""
+    )
+
+    val username = userPreferencesRepository.usernameFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         ""
@@ -144,18 +154,28 @@ class HomeViewModel @Inject constructor(
     fun setProfileImageUri(uri: String) {
         viewModelScope.launch {
             userPreferencesRepository.setProfileImageUri(uri)
+            PrefsManager(context).updatePhoto(uri)
         }
     }
 
     fun updateUserName(name: String) {
         viewModelScope.launch {
-            userPreferencesRepository.saveUserName(name)
+            userPreferencesRepository.setUserName(name)
+            PrefsManager(context).updateName(name)
+        }
+    }
+
+    fun updateUsername(username: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveUsername(username)
+            PrefsManager(context).updateUsername(username)
         }
     }
 
     fun updateUserPhone(phone: String) {
         viewModelScope.launch {
-            userPreferencesRepository.saveUserPhone(phone)
+            userPreferencesRepository.setUserPhone(phone)
+            PrefsManager(context).updatePhone(phone)
         }
     }
 

@@ -3,6 +3,7 @@ package com.rivavafi.universal.data.repository
 import android.content.Context
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
@@ -48,6 +49,8 @@ class UserEntitlementRepository @Inject constructor(
     suspend fun syncEntitlement() {
         val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
         val localPremium = prefs.getBoolean("isPremium", false)
+        val localPremiumSource = prefs.getString("premium_source", null)
+        val hasLocalKeyUnlock = localPremium && localPremiumSource == "access_key"
 
         if (localPremium) {
             _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "cache")
@@ -57,9 +60,14 @@ class UserEntitlementRepository @Inject constructor(
 
         val uid = auth.currentUser?.uid
         if (uid == null) {
-            _premiumState.value = PremiumState(EntitlementStatus.LOCKED, false, null)
-            prefs.edit().putBoolean("isPremium", false).putBoolean("portfolio_unlocked", false).apply()
-            userPreferencesRepository.setPremiumUserForCurrent(false)
+            if (hasLocalKeyUnlock) {
+                _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "access_key")
+                userPreferencesRepository.setPremiumUserForCurrent(true)
+            } else {
+                _premiumState.value = PremiumState(EntitlementStatus.LOCKED, false, null)
+                prefs.edit().putBoolean("isPremium", false).putBoolean("portfolio_unlocked", false).remove("premium_source").apply()
+                userPreferencesRepository.setPremiumUserForCurrent(false)
+            }
             snapshotListener?.remove()
             return
         }
@@ -78,20 +86,27 @@ class UserEntitlementRepository @Inject constructor(
                         val status = snapshot.getString("premium_status") ?: if (isPremium) "active" else "locked"
 
                         val validPremium = isPremium && status == "active"
+                        val effectivePremium = validPremium || hasLocalKeyUnlock
+                        val effectiveSource = if (validPremium) snapshot.getString("premium_source") else "access_key"
 
-                        _premiumState.value = if (validPremium) {
-                            PremiumState(EntitlementStatus.UNLOCKED, true, snapshot.getString("premium_source"))
+                        _premiumState.value = if (effectivePremium) {
+                            PremiumState(EntitlementStatus.UNLOCKED, true, effectiveSource)
                         } else {
                             PremiumState(EntitlementStatus.LOCKED, false, null)
                         }
 
                         val edit = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE).edit()
-                        edit.putBoolean("isPremium", validPremium)
-                            .putBoolean("portfolio_unlocked", validPremium)
-                            .apply()
+                        edit.putBoolean("isPremium", effectivePremium)
+                            .putBoolean("portfolio_unlocked", effectivePremium)
+                        if (effectivePremium) {
+                            edit.putString("premium_source", effectiveSource)
+                        } else {
+                            edit.remove("premium_source")
+                        }
+                        edit.apply()
 
                         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                            userPreferencesRepository.setPremiumUserForCurrent(validPremium)
+                            userPreferencesRepository.setPremiumUserForCurrent(effectivePremium)
                         }
                     }
                 }
@@ -100,18 +115,25 @@ class UserEntitlementRepository @Inject constructor(
             val status = docSnap.getString("premium_status") ?: if (isPremium) "active" else "locked"
 
             val validPremium = isPremium && status == "active"
+            val effectivePremium = validPremium || hasLocalKeyUnlock
+            val effectiveSource = if (validPremium) docSnap.getString("premium_source") else "access_key"
 
-            _premiumState.value = if (validPremium) {
-                PremiumState(EntitlementStatus.UNLOCKED, true, docSnap.getString("premium_source"))
+            _premiumState.value = if (effectivePremium) {
+                PremiumState(EntitlementStatus.UNLOCKED, true, effectiveSource)
             } else {
                 PremiumState(EntitlementStatus.LOCKED, false, null)
             }
 
-            prefs.edit()
-                .putBoolean("isPremium", validPremium)
-                .putBoolean("portfolio_unlocked", validPremium)
-                .apply()
-            userPreferencesRepository.setPremiumUserForCurrent(validPremium)
+            val edit = prefs.edit()
+                .putBoolean("isPremium", effectivePremium)
+                .putBoolean("portfolio_unlocked", effectivePremium)
+            if (effectivePremium) {
+                edit.putString("premium_source", effectiveSource)
+            } else {
+                edit.remove("premium_source")
+            }
+            edit.apply()
+            userPreferencesRepository.setPremiumUserForCurrent(effectivePremium)
 
         } catch (e: Exception) {
             Log.e("UserEntitlement", "Error syncing entitlement", e)
@@ -158,6 +180,7 @@ class UserEntitlementRepository @Inject constructor(
             prefs.edit()
                 .putBoolean("isPremium", true)
                 .putBoolean("portfolio_unlocked", true)
+                .putString("premium_source", "razorpay_debug")
                 .apply()
             userPreferencesRepository.setPremiumUserForCurrent(true)
             return true
@@ -184,6 +207,7 @@ class UserEntitlementRepository @Inject constructor(
                 prefs.edit()
                     .putBoolean("isPremium", true)
                     .putBoolean("portfolio_unlocked", true)
+                    .putString("premium_source", "razorpay")
                     .apply()
                 userPreferencesRepository.setPremiumUserForCurrent(true)
                 true
@@ -200,11 +224,50 @@ class UserEntitlementRepository @Inject constructor(
         }
     }
 
+
+    suspend fun unlockPremiumWithKey(key: String): Boolean {
+        if (!key.trim().equals("riv2026", ignoreCase = true)) {
+            _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
+            return false
+        }
+
+        val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean("isPremium", true)
+            .putBoolean("portfolio_unlocked", true)
+            .putString("premium_source", "access_key")
+            .apply()
+        userPreferencesRepository.setPremiumUserForCurrent(true)
+        _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "access_key")
+
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            try {
+                firestore.collection("users").document(uid)
+                    .set(
+                        mapOf(
+                            "is_premium" to true,
+                            "premium_status" to "active",
+                            "premium_source" to "access_key",
+                            "premium_unlocked_at" to FieldValue.serverTimestamp()
+                        ),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
+                    .await()
+            } catch (e: Exception) {
+                Log.w("UserEntitlement", "Local premium key unlock succeeded but Firestore sync failed", e)
+            }
+        }
+
+        return true
+    }
+
     suspend fun clearEntitlement() {
         val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
         prefs.edit()
             .putBoolean("isPremium", false)
             .putBoolean("portfolio_unlocked", false)
+            .remove("premium_source")
             .apply()
         userPreferencesRepository.setPremiumUserForCurrent(false)
         _premiumState.value = PremiumState(EntitlementStatus.LOCKED, false, null)

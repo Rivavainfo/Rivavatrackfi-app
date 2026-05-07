@@ -84,23 +84,28 @@ fun ProfileScreen(
 ) {
     val viewModelUserName by viewModel.userName.collectAsState()
     val viewModelUserPhone by viewModel.userPhone.collectAsState()
+    val viewModelUsername by viewModel.username.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val viewModelProfileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val context = LocalContext.current
 
-    val cachedUser = remember { PrefsManager(context).getUser() }
+    val prefsManager = remember { PrefsManager(context) }
+    val cachedUser = remember { prefsManager.getUser() }
+    val cachedUsername = remember { prefsManager.getUsername() }
     val authUser = FirebaseAuth.getInstance().currentUser
 
-    val userName = authUser?.displayName ?: cachedUser?.name ?: viewModelUserName
-    val userPhone = authUser?.phoneNumber ?: cachedUser?.phone ?: viewModelUserPhone
+    val userName = viewModelUserName?.takeIf { it.isNotBlank() } ?: cachedUser?.name ?: authUser?.displayName
+    val userPhone = viewModelUserPhone?.takeIf { it.isNotBlank() } ?: cachedUser?.phone ?: authUser?.phoneNumber
+    val username = viewModelUsername?.takeIf { it.isNotBlank() } ?: cachedUsername ?: userName?.lowercase()?.replace(Regex("[^a-z0-9]+"), "_")?.trim('_')
     val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
     var screenshotsAllowed by remember { mutableStateOf(false) }
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showEditPhoneDialog by remember { mutableStateOf(false) }
+    var showEditUsernameDialog by remember { mutableStateOf(false) }
     val stockStates by stockViewModel.stockStates.collectAsState()
 
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
@@ -270,6 +275,36 @@ fun ProfileScreen(
                 }
 
                 // Divider
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                )
+
+                // Username Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showEditUsernameDialog = true }
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "USERNAME",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        letterSpacing = 1.5.sp
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = username?.let { "@$it" } ?: "Add username",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Username", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
@@ -618,6 +653,40 @@ fun ProfileScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showEditNameDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showEditUsernameDialog) {
+            var newUsername by remember { mutableStateOf(username ?: "") }
+            AlertDialog(
+                onDismissRequest = { showEditUsernameDialog = false },
+                title = { Text("Edit Username") },
+                text = {
+                    OutlinedTextField(
+                        value = newUsername,
+                        onValueChange = { input ->
+                            newUsername = input.lowercase().replace(Regex("[^a-z0-9_]") , "")
+                        },
+                        singleLine = true,
+                        prefix = { Text("@") },
+                        label = { Text("Username") }
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        if (newUsername.isNotBlank()) {
+                            viewModel.updateUsername(newUsername.trim('_'))
+                        }
+                        showEditUsernameDialog = false
+                    }) {
+                        Text("Save")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditUsernameDialog = false }) {
                         Text("Cancel")
                     }
                 }

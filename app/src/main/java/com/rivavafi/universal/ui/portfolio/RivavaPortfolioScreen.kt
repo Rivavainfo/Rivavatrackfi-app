@@ -91,6 +91,7 @@ fun RivavaPortfolioScreen(
     val context = LocalContext.current
     val premiumState by premiumViewModel.premiumState.collectAsState()
     val paymentState by premiumViewModel.paymentState.collectAsState()
+    var premiumKeyInput by remember { mutableStateOf("") }
 
     val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -216,12 +217,57 @@ fun RivavaPortfolioScreen(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        "Have an access key?",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = Color.White.copy(alpha = 0.72f),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = premiumKeyInput,
+                        onValueChange = {
+                            premiumKeyInput = it
+                            if (paymentState.uiState == PaymentUiState.ERROR) {
+                                premiumViewModel.clearPaymentError()
+                            }
+                        },
+                        enabled = !isProcessing,
+                        singleLine = true,
+                        label = { Text("Premium key") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFFF4C91),
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.24f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                            cursorColor = Color(0xFFFF4C91)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { premiumViewModel.unlockPremiumWithKey(premiumKeyInput) },
+                        enabled = !isProcessing && premiumKeyInput.isNotBlank(),
+                        modifier = Modifier
+                            .widthIn(min = 220.dp)
+                            .height(52.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4C91)),
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
+                        Text("Unlock with Key", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                     if (paymentState.uiState == PaymentUiState.ERROR && paymentState.errorMessage != null) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = paymentState.errorMessage!!,
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }

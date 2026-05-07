@@ -34,6 +34,7 @@ class UserPreferencesRepository @Inject constructor(
         val UNLOCKED_PREMIUM_USERS_KEY = stringPreferencesKey("unlocked_premium_users")
         val IS_PREMIUM_GLOBAL_KEY = booleanPreferencesKey("is_premium_global")
         val PROFILE_IMAGE_URI_KEY = stringPreferencesKey("profile_image_uri")
+        val USER_USERNAME_KEY = stringPreferencesKey("user_username")
     }
 
     val profileImageUriFlow: Flow<String?> = dataStore.data.map { preferences ->
@@ -42,6 +43,14 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun setProfileImageUri(uri: String) {
         dataStore.edit { preferences ->
+            val existingUri = preferences[PROFILE_IMAGE_URI_KEY]
+            val existingIsLocal = existingUri?.startsWith("/") == true || existingUri?.startsWith("file:") == true
+            val newIsRemote = uri.startsWith("http://") || uri.startsWith("https://")
+
+            if (existingIsLocal && newIsRemote) {
+                return@edit
+            }
+
             preferences[PROFILE_IMAGE_URI_KEY] = uri
         }
     }
@@ -115,6 +124,10 @@ class UserPreferencesRepository @Inject constructor(
         preferences[USER_PHONE_KEY]
     }
 
+    val usernameFlow: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[USER_USERNAME_KEY]
+    }
+
     val hasCompletedOnboardingFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[HAS_COMPLETED_ONBOARDING_KEY] ?: false
     }
@@ -134,13 +147,35 @@ class UserPreferencesRepository @Inject constructor(
 
     suspend fun saveUserName(name: String) {
         dataStore.edit { preferences ->
+            if (preferences[USER_NAME_KEY].isNullOrBlank()) {
+                preferences[USER_NAME_KEY] = name
+            }
+        }
+    }
+
+    suspend fun setUserName(name: String) {
+        dataStore.edit { preferences ->
             preferences[USER_NAME_KEY] = name
         }
     }
 
     suspend fun saveUserPhone(phone: String) {
         dataStore.edit { preferences ->
+            if (preferences[USER_PHONE_KEY].isNullOrBlank()) {
+                preferences[USER_PHONE_KEY] = phone
+            }
+        }
+    }
+
+    suspend fun setUserPhone(phone: String) {
+        dataStore.edit { preferences ->
             preferences[USER_PHONE_KEY] = phone
+        }
+    }
+
+    suspend fun saveUsername(username: String) {
+        dataStore.edit { preferences ->
+            preferences[USER_USERNAME_KEY] = username
         }
     }
 
