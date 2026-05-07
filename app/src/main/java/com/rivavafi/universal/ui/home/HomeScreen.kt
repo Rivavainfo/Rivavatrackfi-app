@@ -97,7 +97,9 @@ fun HomeScreen(
     val cachedUser = remember { com.rivavafi.universal.utils.PrefsManager(context).getUser() }
     val authUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
 
-    val userName = authUser?.displayName ?: cachedUser?.name ?: viewModelUserName
+    val userName = viewModelUserName?.takeIf { it.isNotBlank() }
+        ?: cachedUser?.name?.takeIf { it.isNotBlank() }
+        ?: authUser?.displayName?.takeIf { it.isNotBlank() }
     val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
