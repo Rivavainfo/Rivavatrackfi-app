@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,11 +38,12 @@ class UserEntitlementRepository @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
     private val firestore = FirebaseFirestore.getInstance()
-    private val functions = FirebaseFunctions.getInstance()
+    private val functions = FirebaseFunctions.getInstance("asia-south1")
     private val auth = FirebaseAuth.getInstance()
 
     private val _premiumState = MutableStateFlow(PremiumState())
     val premiumState: StateFlow<PremiumState> = _premiumState.asStateFlow()
+    private var snapshotListener: com.google.firebase.firestore.ListenerRegistration? = null
 
     suspend fun syncEntitlement() {
         val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
@@ -58,10 +60,41 @@ class UserEntitlementRepository @Inject constructor(
             _premiumState.value = PremiumState(EntitlementStatus.LOCKED, false, null)
             prefs.edit().putBoolean("isPremium", false).putBoolean("portfolio_unlocked", false).apply()
             userPreferencesRepository.setPremiumUserForCurrent(false)
+            snapshotListener?.remove()
             return
         }
 
         try {
+            snapshotListener?.remove()
+            snapshotListener = firestore.collection("users").document(uid)
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        Log.e("UserEntitlement", "Listen failed.", e)
+                        return@addSnapshotListener
+                    }
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val isPremium = snapshot.getBoolean("is_premium") ?: false
+                        val status = snapshot.getString("premium_status") ?: if (isPremium) "active" else "locked"
+
+                        val validPremium = isPremium && status == "active"
+
+                        _premiumState.value = if (validPremium) {
+                            PremiumState(EntitlementStatus.UNLOCKED, true, snapshot.getString("premium_source"))
+                        } else {
+                            PremiumState(EntitlementStatus.LOCKED, false, null)
+                        }
+
+                        val edit = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE).edit()
+                        edit.putBoolean("isPremium", validPremium)
+                            .putBoolean("portfolio_unlocked", validPremium)
+                            .apply()
+
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                            userPreferencesRepository.setPremiumUserForCurrent(validPremium)
+                        }
+                    }
+                }
             val docSnap = firestore.collection("users").document(uid).get().await()
             val isPremium = docSnap.getBoolean("is_premium") ?: false
             val status = docSnap.getString("premium_status") ?: if (isPremium) "active" else "locked"
@@ -90,6 +123,7 @@ class UserEntitlementRepository @Inject constructor(
         if (auth.currentUser?.uid == null) return RazorpayOrderResult(false, error = "User not authenticated")
 
         return try {
+            Log.i("UserEntitlement", "ORDER_CREATE_STARTED")
             val data = hashMapOf("amount" to amountPaise)
             val result = functions
                 .getHttpsCallable("createRazorpayOrder")
@@ -103,6 +137,7 @@ class UserEntitlementRepository @Inject constructor(
             val keyId = resultData?.get("key_id") as? String
 
             if (orderId != null && amount != null) {
+                Log.i("UserEntitlement", "ORDER_CREATE_SUCCESS")
                 RazorpayOrderResult(true, orderId, amount, currency, keyId)
             } else {
                 RazorpayOrderResult(false, error = "Invalid response from server")
@@ -116,7 +151,20 @@ class UserEntitlementRepository @Inject constructor(
     suspend fun verifyRazorpayPayment(orderId: String, paymentId: String, signature: String): Boolean {
         if (auth.currentUser?.uid == null) return false
 
+        if (com.rivavafi.universal.BuildConfig.DEBUG && orderId == "2026") {
+            Log.w("UserEntitlement", "DEBUG ONLY PAYMENT OVERRIDE USED")
+            _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "razorpay_debug")
+            val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putBoolean("isPremium", true)
+                .putBoolean("portfolio_unlocked", true)
+                .apply()
+            userPreferencesRepository.setPremiumUserForCurrent(true)
+            return true
+        }
+
         return try {
+            Log.i("UserEntitlement", "PAYMENT_VERIFY_STARTED")
             val data = hashMapOf(
                 "razorpay_order_id" to orderId,
                 "razorpay_payment_id" to paymentId,
@@ -130,6 +178,7 @@ class UserEntitlementRepository @Inject constructor(
 
             val resultData = result.data as? Map<*, *>
             if (resultData?.get("success") == true) {
+                Log.i("UserEntitlement", "PAYMENT_VERIFY_SUCCESS")
                 _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "razorpay")
                 val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
                 prefs.edit()
@@ -139,11 +188,13 @@ class UserEntitlementRepository @Inject constructor(
                 userPreferencesRepository.setPremiumUserForCurrent(true)
                 true
             } else {
+                 Log.w("UserEntitlement", "PAYMENT_VERIFY_FAILED: Server returned success=false")
                  _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
                  false
             }
         } catch (e: Exception) {
             Log.e("UserEntitlement", "Failed to verify payment via Cloud Function", e)
+            Log.w("UserEntitlement", "PAYMENT_VERIFY_FAILED: Exception")
             _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
             false
         }
