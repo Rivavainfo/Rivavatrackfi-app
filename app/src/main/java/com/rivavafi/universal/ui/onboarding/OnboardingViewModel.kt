@@ -14,6 +14,7 @@ import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
 import com.rivavafi.universal.data.repository.EmailService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,13 +24,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import android.content.Context
+import com.rivavafi.universal.utils.PrefsManager
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val authRepository: AuthRepository,
     private val emailService: EmailService,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
@@ -54,43 +58,71 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun saveName(name: String) {
+        val cleanedName = name.trim()
+        if (cleanedName.isBlank()) return
+
         viewModelScope.launch {
-            preferencesRepository.saveUserName(name)
+            val generatedUsername = generateUsername(cleanedName)
+            preferencesRepository.setUserName(cleanedName)
+            preferencesRepository.saveUsername(generatedUsername)
+            PrefsManager(context).updateName(cleanedName)
+            PrefsManager(context).updateUsername(generatedUsername)
+
             FirebaseAuth.getInstance().currentUser?.let { user ->
                 val uid = user.uid
                 firestore.collection("users").document(uid)
-                    .set(mapOf("full_name" to name), com.google.firebase.firestore.SetOptions.merge())
+                    .set(
+                        mapOf(
+                            "full_name" to cleanedName,
+                            "display_name" to cleanedName,
+                            "username" to generatedUsername
+                        ),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
 
-                authRepository.sendUserToSheet(user, "Google", name)
+                authRepository.sendUserToSheet(user, "Google", cleanedName)
             }
         }
     }
 
     fun savePhoneNumber(phoneNumber: String, onSuccess: () -> Unit) {
-        if (phoneNumber.isBlank()) {
+        val cleanedPhoneNumber = phoneNumber.trim()
+        if (cleanedPhoneNumber.isBlank()) {
             _errorMessage.value = "Invalid phone number"
             return
         }
 
         _isLoading.value = true
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user == null) {
-            _isLoading.value = false
-            onSuccess()
-            return
-        }
+        viewModelScope.launch {
+            preferencesRepository.setUserPhone(cleanedPhoneNumber)
+            PrefsManager(context).updatePhone(cleanedPhoneNumber)
 
-        firestore.collection("users").document(user.uid)
-            .set(mapOf(
-                "phone_number" to phoneNumber
-            ), com.google.firebase.firestore.SetOptions.merge())
-            .addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.e("OnboardingViewModel", "Failed to save phone number", task.exception)
-                }
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user == null) {
                 _isLoading.value = false
                 onSuccess()
+                return@launch
             }
+
+            firestore.collection("users").document(user.uid)
+                .set(mapOf(
+                    "phone_number" to cleanedPhoneNumber
+                ), com.google.firebase.firestore.SetOptions.merge())
+                .addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
+                        Log.e("OnboardingViewModel", "Failed to save phone number", task.exception)
+                    }
+                    _isLoading.value = false
+                    onSuccess()
+                }
+        }
+    }
+
+    private fun generateUsername(name: String): String {
+        return name.lowercase()
+            .replace(Regex("[^a-z0-9]+"), "_")
+            .trim('_')
+            .ifBlank { "rivava_user" }
     }
 
     fun setSmsTrackingEnabled(enabled: Boolean) {
