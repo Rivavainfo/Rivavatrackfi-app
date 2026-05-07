@@ -18,9 +18,15 @@ class UserRepository @Inject constructor() {
     suspend fun saveUserToFirestore(user: User) {
         try {
             val userData = hashMapOf<String, Any?>()
-            user.name?.let { userData["name"] = it }
+            user.name?.let {
+                userData["name"] = it
+                userData["display_name"] = it
+            }
             user.email?.let { userData["email"] = it }
-            user.photo?.let { userData["photo"] = it }
+            user.photo?.let {
+                userData["photo"] = it
+                userData["profile_photo_url"] = it
+            }
             user.phone?.let { userData["phone_number"] = it }
             userData["lastLogin"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
@@ -61,9 +67,9 @@ class UserRepository @Inject constructor() {
             if (docSnap.exists()) {
                 val user = User(
                     uid = uid,
-                    name = docSnap.getString("name"),
+                    name = docSnap.getString("name") ?: docSnap.getString("display_name"),
                     email = docSnap.getString("email"),
-                    photo = docSnap.getString("photo"),
+                    photo = docSnap.getString("photo") ?: docSnap.getString("profile_photo_url"),
                     phone = docSnap.getString("phone_number")
                 )
                 Log.d(TAG, "Successfully fetched user from Firestore: $uid")

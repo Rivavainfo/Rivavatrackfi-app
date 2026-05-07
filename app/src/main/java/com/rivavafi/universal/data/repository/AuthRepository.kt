@@ -83,7 +83,10 @@ class AuthRepository @Inject constructor(
         userData["uid"] = uid
         userData["google_uid"] = uid
         userData["auth_provider"] = authProvider
-        name?.takeIf { it.isNotBlank() }?.let { userData["full_name"] = it }
+        name?.takeIf { it.isNotBlank() }?.let {
+            userData["full_name"] = it
+            userData["display_name"] = it
+        }
         email?.takeIf { it.isNotBlank() }?.let { userData["email"] = it }
         phoneNumber?.takeIf { it.isNotBlank() }?.let { userData["phone_number"] = it }
         if (isVerified) {
@@ -92,15 +95,18 @@ class AuthRepository @Inject constructor(
                 userData["email_verified"] = true
             }
         }
-        photoUrl?.takeIf { it.isNotBlank() }?.let { userData["photo_url"] = it }
+        photoUrl?.takeIf { it.isNotBlank() }?.let {
+            userData["photo_url"] = it
+            userData["profile_photo_url"] = it
+        }
         userData["updated_at"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
         userData["last_login_at"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
         return runCatching {
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
-            val existingName = docSnap.getString("full_name")
-            val existingPhotoUrl = docSnap.getString("photo_url")
+            val existingName = docSnap.getString("full_name") ?: docSnap.getString("display_name")
+            val existingPhotoUrl = docSnap.getString("photo_url") ?: docSnap.getString("profile_photo_url")
 
             val onboardingCompleted = docSnap.getBoolean("onboarding_completed") ?: false
             val isNewUser = !docSnap.exists() || !onboardingCompleted
@@ -113,10 +119,16 @@ class AuthRepository @Inject constructor(
                 UserSessionState(true, null, false, photoUrl)
             } else {
                 // Do not overwrite existing values with null/blanks
-                if (existingName?.isNotBlank() == true) userData.remove("full_name")
+                if (existingName?.isNotBlank() == true) {
+                    userData.remove("full_name")
+                    userData.remove("display_name")
+                }
                 if (docSnap.getString("email")?.isNotBlank() == true) userData.remove("email")
                 if (docSnap.getString("phone_number")?.isNotBlank() == true) userData.remove("phone_number")
-                if (existingPhotoUrl?.isNotBlank() == true) userData.remove("photo_url")
+                if (existingPhotoUrl?.isNotBlank() == true) {
+                    userData.remove("photo_url")
+                    userData.remove("profile_photo_url")
+                }
 
                 docRef.set(userData, SetOptions.merge()).await()
                 UserSessionState(isNewUser, existingName, onboardingCompleted, existingPhotoUrl)

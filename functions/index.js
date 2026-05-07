@@ -13,7 +13,7 @@ exports.verify = verificationFunctions.verify;
 exports.checkVerification = verificationFunctions.checkVerification;
 exports.onUserWrite = userLifecycleFunctions.onUserWrite;
 
-exports.createRazorpayOrder = functions.https.onCall(async (data, context) => {
+exports.createRazorpayOrder = functions.region('asia-south1').https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
@@ -79,7 +79,7 @@ exports.createRazorpayOrder = functions.https.onCall(async (data, context) => {
     }
 });
 
-exports.verifyRazorpayPayment = functions.https.onCall(async (data, context) => {
+exports.verifyRazorpayPayment = functions.region('asia-south1').https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
