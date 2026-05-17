@@ -148,7 +148,74 @@ fun PremiumUnlockDialog(
                         }
                     }
 
+                    UnlockStep.ConfirmPayment -> {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                "Verify Payment",
+                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
 
+                            Text(
+                                "Please enter the UPI Transaction ID below to verify your payment and unlock Rivava+ Premium for your account.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = paymentReferenceInput,
+                                onValueChange = {
+                                    paymentReferenceInput = it
+                                    showPaymentError = false
+                                },
+                                label = { Text("UPI Transaction ID") },
+                                isError = showPaymentError,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                    errorBorderColor = MaterialTheme.colorScheme.error
+                                ),
+                                singleLine = true
+                            )
+
+                            if (showPaymentError) {
+                                Text("Invalid Transaction ID. It must be at least 12 characters.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                            }
+
+                            Button(
+                                onClick = {
+                                    if (paymentReferenceInput.length >= 12) {
+                                        currentStep = UnlockStep.Verifying
+                                    } else {
+                                        showPaymentError = true
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth().height(50.dp),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
+                            ) {
+                                Text("Verify & Unlock", fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = { currentStep = UnlockStep.Main },
+                                shape = RoundedCornerShape(20.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6B7280))
+                            ) {
+                                Text("Go Back", color = Color(0xFF9CA3AF), fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
 
                     UnlockStep.Verifying -> {
                         LaunchedEffect(Unit) {
@@ -202,5 +269,5 @@ fun PremiumUnlockDialog(
 }
 
 enum class UnlockStep {
-    Main, Verifying, Success
+    Main, ConfirmPayment, Verifying, Success
 }
