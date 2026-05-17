@@ -3,7 +3,7 @@ package com.rivavafi.universal.ui.portfolio
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rivavafi.universal.data.repository.PremiumState
-import com.rivavafi.universal.data.repository.OrderResult
+import com.rivavafi.universal.data.repository.RazorpayOrderResult
 import com.rivavafi.universal.data.repository.UserEntitlementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,7 @@ enum class PaymentUiState {
 
 data class PaymentState(
     val uiState: PaymentUiState = PaymentUiState.IDLE,
-    val orderData: OrderResult? = null,
+    val orderData: RazorpayOrderResult? = null,
     val errorMessage: String? = null
 )
 
@@ -51,7 +51,7 @@ class PremiumViewModel @Inject constructor(
         _paymentState.value = PaymentState(uiState = PaymentUiState.CREATING_ORDER)
 
         viewModelScope.launch {
-            val result = repository.createUroPayOrder(amountPaise)
+            val result = repository.createRazorpayOrder(amountPaise)
             if (result.success && result.orderId != null) {
                 _paymentState.value = PaymentState(uiState = PaymentUiState.CHECKOUT_READY, orderData = result)
             } else {
@@ -63,14 +63,30 @@ class PremiumViewModel @Inject constructor(
         }
     }
 
+    fun unlockPremiumWithKey(key: String) {
+        if (_paymentState.value.uiState == PaymentUiState.VERIFYING) return
 
-    fun verifyUroPayPayment(orderId: String) {
+        _paymentState.value = PaymentState(uiState = PaymentUiState.VERIFYING)
+        viewModelScope.launch {
+            val success = repository.unlockPremiumWithKey(key)
+            _paymentState.value = if (success) {
+                PaymentState(uiState = PaymentUiState.SUCCESS)
+            } else {
+                PaymentState(
+                    uiState = PaymentUiState.ERROR,
+                    errorMessage = "Invalid premium key"
+                )
+            }
+        }
+    }
+
+    fun verifyRazorpayPayment(orderId: String, paymentId: String, signature: String) {
         if (_paymentState.value.uiState == PaymentUiState.VERIFYING) return
 
         _paymentState.value = _paymentState.value.copy(uiState = PaymentUiState.VERIFYING)
 
         viewModelScope.launch {
-            val success = repository.verifyUroPayPayment(orderId)
+            val success = repository.verifyRazorpayPayment(orderId, paymentId, signature)
             if (success) {
                 _paymentState.value = PaymentState(uiState = PaymentUiState.SUCCESS)
             } else {
