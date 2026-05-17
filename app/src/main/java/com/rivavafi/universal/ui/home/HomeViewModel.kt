@@ -13,6 +13,9 @@ import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.domain.usecase.GetCategoriesUseCase
 import com.rivavafi.universal.domain.usecase.GetTransactionsUseCase
 import com.rivavafi.universal.data.repository.UserEntitlementRepository
+import com.rivavafi.universal.data.repository.EliteRepository
+import com.rivavafi.universal.data.repository.EliteConfig
+import com.rivavafi.universal.data.repository.EliteSubscription
 import com.rivavafi.universal.utils.PrefsManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,6 +36,7 @@ class HomeViewModel @Inject constructor(
     private val addCategoryUseCase: AddCategoryUseCase,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val userEntitlementRepository: UserEntitlementRepository,
+    private val eliteRepository: EliteRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -93,7 +97,23 @@ class HomeViewModel @Inject constructor(
         null
     )
 
+    private val _eliteConfig = MutableStateFlow(EliteConfig())
+    val eliteConfig: StateFlow<EliteConfig> = _eliteConfig
+
+    private val _eliteSubscription = MutableStateFlow(EliteSubscription())
+    val eliteSubscription: StateFlow<EliteSubscription> = _eliteSubscription
+
     init {
+        viewModelScope.launch {
+            eliteRepository.getEliteConfig().collectLatest {
+                _eliteConfig.value = it
+            }
+        }
+        viewModelScope.launch {
+            eliteRepository.getUserSubscription().collectLatest {
+                _eliteSubscription.value = it
+            }
+        }
         viewModelScope.launch {
             userPreferencesRepository.dailyBudgetFlow.collectLatest {
                 _dailyBudget.value = it

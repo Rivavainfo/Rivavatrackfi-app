@@ -7,6 +7,7 @@ admin.initializeApp();
 
 const verificationFunctions = require('./verificationFunctions');
 const userLifecycleFunctions = require('./userLifecycleFunctions');
+const eliteFunctions = require('./eliteFunctions');
 
 exports.sendVerificationEmail = verificationFunctions.sendVerificationEmail;
 exports.verify = verificationFunctions.verify;
