@@ -5,11 +5,17 @@ admin.initializeApp();
 
 const verificationFunctions = require('./verificationFunctions');
 const userLifecycleFunctions = require('./userLifecycleFunctions');
+const eliteFunctions = require('./eliteFunctions');
 
 exports.sendVerificationEmail = verificationFunctions.sendVerificationEmail;
 exports.verify = verificationFunctions.verify;
 exports.checkVerification = verificationFunctions.checkVerification;
 exports.onUserWrite = userLifecycleFunctions.onUserWrite;
+
+exports.createEliteOrder = eliteFunctions.createEliteOrder;
+exports.verifyElitePayment = eliteFunctions.verifyElitePayment;
+exports.bookEliteSession = eliteFunctions.bookEliteSession;
+exports.cancelEliteSubscription = eliteFunctions.cancelEliteSubscription;
 
 exports.createUroPayOrder = functions.region('asia-south1').https.onCall(async (data, context) => {
     if (!context.auth) {
