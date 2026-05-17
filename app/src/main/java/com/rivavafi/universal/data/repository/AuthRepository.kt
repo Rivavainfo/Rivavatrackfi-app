@@ -118,17 +118,11 @@ class AuthRepository @Inject constructor(
                 docRef.set(userData).await()
                 UserSessionState(true, null, false, photoUrl)
             } else {
-                // Do not overwrite existing values with null/blanks
-                if (existingName?.isNotBlank() == true) {
-                    userData.remove("full_name")
-                    userData.remove("display_name")
-                }
-                if (docSnap.getString("email")?.isNotBlank() == true) userData.remove("email")
-                if (docSnap.getString("phone_number")?.isNotBlank() == true) userData.remove("phone_number")
-                if (existingPhotoUrl?.isNotBlank() == true) {
-                    userData.remove("photo_url")
-                    userData.remove("profile_photo_url")
-                }
+                // We use SetOptions.merge() so fields omitted from userData will not overwrite existing Firestore data.
+                // If new valid data is provided (e.g. from a Google login), we DO want to update Firestore.
+                // However, we only update if the new data is present, which is already handled above (e.g. name?.takeIf { it.isNotBlank() }?.let { ... }).
+                // If a user logs in via phone, name is null, so it's not in userData, and SetOptions.merge() preserves the existing name.
+                // We don't remove fields from userData here, so valid new data CAN update the profile.
 
                 docRef.set(userData, SetOptions.merge()).await()
                 UserSessionState(isNewUser, existingName, onboardingCompleted, existingPhotoUrl)
