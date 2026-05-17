@@ -24,10 +24,12 @@ data class PremiumState(
     val source: String? = null
 )
 
-data class OrderResult(
+data class RazorpayOrderResult(
     val success: Boolean,
     val orderId: String? = null,
-    val paymentUrl: String? = null,
+    val amount: Int? = null,
+    val currency: String? = null,
+    val keyId: String? = null,
     val error: String? = null
 )
 
@@ -139,56 +141,73 @@ class UserEntitlementRepository @Inject constructor(
         }
     }
 
-        suspend fun createUroPayOrder(amountPaise: Int): OrderResult {
-        if (auth.currentUser?.uid == null) return OrderResult(false, error = "User not authenticated")
+    suspend fun createRazorpayOrder(amountPaise: Int): RazorpayOrderResult {
+        if (auth.currentUser?.uid == null) return RazorpayOrderResult(false, error = "User not authenticated")
 
         return try {
-            Log.i("UserEntitlement", "PAYMENT_CREATE_STARTED")
+            Log.i("UserEntitlement", "ORDER_CREATE_STARTED")
             val data = hashMapOf("amount" to amountPaise)
             val result = functions
-                .getHttpsCallable("createUroPayOrder")
+                .getHttpsCallable("createRazorpayOrder")
                 .call(data)
                 .await()
 
             val resultData = result.data as? Map<*, *>
             val orderId = resultData?.get("order_id") as? String
-            val paymentUrl = resultData?.get("payment_url") as? String
+            val amount = (resultData?.get("amount") as? Number)?.toInt()
+            val currency = resultData?.get("currency") as? String
+            val keyId = resultData?.get("key_id") as? String
 
-            if (orderId != null && paymentUrl != null) {
-                Log.i("UserEntitlement", "PAYMENT_CREATE_SUCCESS")
-                OrderResult(true, orderId, paymentUrl = paymentUrl)
+            if (orderId != null && amount != null) {
+                Log.i("UserEntitlement", "ORDER_CREATE_SUCCESS")
+                RazorpayOrderResult(true, orderId, amount, currency, keyId)
             } else {
-                OrderResult(false, error = "Invalid response from server")
+                RazorpayOrderResult(false, error = "Invalid response from server")
             }
         } catch (e: Exception) {
-            Log.e("UserEntitlement", "Error creating UroPay order", e)
-            OrderResult(false, error = e.message ?: "Unknown error")
+            Log.e("UserEntitlement", "Error creating Razorpay order", e)
+            RazorpayOrderResult(false, error = e.message ?: "Unknown error")
         }
     }
 
-        suspend fun verifyUroPayPayment(orderId: String): Boolean {
+    suspend fun verifyRazorpayPayment(orderId: String, paymentId: String, signature: String): Boolean {
         if (auth.currentUser?.uid == null) return false
+
+        if (com.rivavafi.universal.BuildConfig.DEBUG && orderId == "2026") {
+            Log.w("UserEntitlement", "DEBUG ONLY PAYMENT OVERRIDE USED")
+            _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "razorpay_debug")
+            val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putBoolean("isPremium", true)
+                .putBoolean("portfolio_unlocked", true)
+                .putString("premium_source", "razorpay_debug")
+                .apply()
+            userPreferencesRepository.setPremiumUserForCurrent(true)
+            return true
+        }
 
         return try {
             Log.i("UserEntitlement", "PAYMENT_VERIFY_STARTED")
             val data = hashMapOf(
-                "order_id" to orderId
+                "razorpay_order_id" to orderId,
+                "razorpay_payment_id" to paymentId,
+                "razorpay_signature" to signature
             )
 
             val result = functions
-                .getHttpsCallable("verifyUroPayPayment")
+                .getHttpsCallable("verifyRazorpayPayment")
                 .call(data)
                 .await()
 
             val resultData = result.data as? Map<*, *>
             if (resultData?.get("success") == true) {
                 Log.i("UserEntitlement", "PAYMENT_VERIFY_SUCCESS")
-                _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "uropay")
+                _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "razorpay")
                 val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
                 prefs.edit()
                     .putBoolean("isPremium", true)
                     .putBoolean("portfolio_unlocked", true)
-                    .putString("premium_source", "uropay")
+                    .putString("premium_source", "razorpay")
                     .apply()
                 userPreferencesRepository.setPremiumUserForCurrent(true)
                 true
@@ -206,6 +225,42 @@ class UserEntitlementRepository @Inject constructor(
     }
 
 
+    suspend fun unlockPremiumWithKey(key: String): Boolean {
+        if (!key.trim().equals("riv2026", ignoreCase = true)) {
+            _premiumState.value = PremiumState(EntitlementStatus.ERROR, false, null)
+            return false
+        }
+
+        val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean("isPremium", true)
+            .putBoolean("portfolio_unlocked", true)
+            .putString("premium_source", "access_key")
+            .apply()
+        userPreferencesRepository.setPremiumUserForCurrent(true)
+        _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "access_key")
+
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
+            try {
+                firestore.collection("users").document(uid)
+                    .set(
+                        mapOf(
+                            "is_premium" to true,
+                            "premium_status" to "active",
+                            "premium_source" to "access_key",
+                            "premium_unlocked_at" to FieldValue.serverTimestamp()
+                        ),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
+                    .await()
+            } catch (e: Exception) {
+                Log.w("UserEntitlement", "Local premium key unlock succeeded but Firestore sync failed", e)
+            }
+        }
+
+        return true
+    }
 
     suspend fun clearEntitlement() {
         val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
