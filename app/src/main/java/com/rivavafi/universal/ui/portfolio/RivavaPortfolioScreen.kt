@@ -94,13 +94,10 @@ fun RivavaPortfolioScreen(
     var premiumKeyInput by remember { mutableStateOf("") }
 
     val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val paymentId = result.data?.getStringExtra("payment_id")
-            val orderId = result.data?.getStringExtra("order_id")
-            val signature = result.data?.getStringExtra("signature")
-
-            if (paymentId != null && orderId != null && signature != null) {
-                premiumViewModel.verifyRazorpayPayment(orderId, paymentId, signature)
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val orderId = paymentState.orderData?.orderId
+            if (orderId != null) {
+                premiumViewModel.verifyUroPayPayment(orderId)
             } else {
                 premiumViewModel.clearPaymentError()
             }
@@ -112,9 +109,7 @@ fun RivavaPortfolioScreen(
     LaunchedEffect(paymentState.uiState) {
         if (paymentState.uiState == PaymentUiState.CHECKOUT_READY) {
             val intent = Intent(context, PaymentActivity::class.java).apply {
-                putExtra("amount", paymentState.orderData?.amount)
-                putExtra("order_id", paymentState.orderData?.orderId)
-                putExtra("key_id", paymentState.orderData?.keyId)
+                putExtra("payment_url", paymentState.orderData?.paymentUrl)
             }
             paymentLauncher.launch(intent)
             premiumViewModel.clearPaymentError()
@@ -217,50 +212,7 @@ fun RivavaPortfolioScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        "Have an access key?",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            color = Color.White.copy(alpha = 0.72f),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = premiumKeyInput,
-                        onValueChange = {
-                            premiumKeyInput = it
-                            if (paymentState.uiState == PaymentUiState.ERROR) {
-                                premiumViewModel.clearPaymentError()
-                            }
-                        },
-                        enabled = !isProcessing,
-                        singleLine = true,
-                        label = { Text("Premium key") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFFF4C91),
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.24f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedLabelColor = Color.White,
-                            unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
-                            cursorColor = Color(0xFFFF4C91)
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { premiumViewModel.unlockPremiumWithKey(premiumKeyInput) },
-                        enabled = !isProcessing && premiumKeyInput.isNotBlank(),
-                        modifier = Modifier
-                            .widthIn(min = 220.dp)
-                            .height(52.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4C91)),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Text("Unlock with Key", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
+
                     if (paymentState.uiState == PaymentUiState.ERROR && paymentState.errorMessage != null) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
