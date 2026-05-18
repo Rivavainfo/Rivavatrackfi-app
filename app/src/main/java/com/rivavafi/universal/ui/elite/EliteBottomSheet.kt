@@ -26,6 +26,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.scale
 import androidx.compose.animation.AnimatedVisibility
@@ -33,6 +38,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.ui.text.style.TextAlign
 import android.widget.Toast
+import androidx.compose.ui.draw.alpha
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,13 +124,24 @@ fun EliteBottomSheet(
 
     val scale = remember { Animatable(1f) }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
+    val shimmerAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.1f,
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shimmerAlpha"
+    )
+
     LaunchedEffect(isConnecting) {
         if (isConnecting) {
             logInquiry("whatsapp", "inquiry_started")
             delay(50) // Allow UI to update before animation
             scale.animateTo(0.95f, animationSpec = tween(100))
             scale.animateTo(1f, animationSpec = tween(100))
-            delay(1500) // Simulate connecting delay
+            delay(2000) // Simulate connecting delay
             openWhatsApp()
             isConnecting = false
         }
@@ -206,7 +223,7 @@ fun EliteBottomSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .background(Color(0xFFD4AF37).copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
+                        .background(Color(0xFFD4AF37).copy(alpha = shimmerAlpha), RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -214,14 +231,14 @@ fun EliteBottomSheet(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         CircularProgressIndicator(
-                            color = Color(0xFFD4AF37),
+                            color = Color.White,
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
                         )
                         Text(
                             "Connecting you to Rivava Elite...",
-                            color = Color(0xFFD4AF37),
-                            fontWeight = FontWeight.Medium
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
