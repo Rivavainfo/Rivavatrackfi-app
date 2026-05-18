@@ -107,18 +107,11 @@ fun HomeScreen(
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
     var showChatDialog by remember { mutableStateOf(false) }
-    var showEliteBottomSheet by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
 
-    if (showEliteBottomSheet) {
-        com.rivavafi.universal.ui.elite.EliteBottomSheet(
-            onDismiss = { showEliteBottomSheet = false },
-            userName = userName,
-            userEmail = authUser?.email
-        )
-    }
+    // Removed showEliteBottomSheet logic as we now navigate directly to EliteLandingActivity
     val isPremiumPref = prefs.getBoolean("isPremium", false)
 
     Scaffold(
@@ -275,91 +268,165 @@ fun HomeScreen(
 
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                // Rivava Elite Card
+                val seatsRemaining = (eliteConfig.totalSeats - eliteConfig.occupiedSeats).coerceAtLeast(0)
+                val isFull = seatsRemaining == 0
+
+                // Ultra-Premium Rivava Elite Card Redesign
                 Card(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.3f)),
-                    shape = RoundedCornerShape(20.dp)
-                ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "Rivava Elite",
-                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                color = Color(0xFFD4AF37)
-                            )
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(28.dp))
+                        .clickable {
                             if (eliteSubscription.isElite) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .background(Color(0xFFD4AF37).copy(alpha = 0.2f), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text("MEMBER", style = MaterialTheme.typography.labelSmall, color = Color(0xFFD4AF37))
+                                context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java))
+                            } else {
+                                val intent = Intent(context, com.rivavafi.universal.ui.elite.EliteLandingActivity::class.java)
+                                val options = android.app.ActivityOptions.makeCustomAnimation(context, android.R.anim.fade_in, android.R.anim.fade_out)
+                                context.startActivity(intent, options.toBundle())
+                            }
+                        }
+                        .border(1.dp, Color(0xFFD4AF37).copy(alpha = 0.4f), RoundedCornerShape(28.dp)),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F0F0F)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        // Subtle shimmer/glow background effect
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFFD4AF37).copy(alpha = 0.03f))
+                        )
+
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.AutoAwesome,
+                                        contentDescription = "Premium",
+                                        tint = Color(0xFFD4AF37),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "EXCLUSIVE MEMBERSHIP",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                                        color = Color(0xFFD4AF37)
+                                    )
+                                }
+                                if (eliteSubscription.isElite) {
+                                    Box(
+                                        modifier = Modifier
+                                            .background(Color(0xFFD4AF37).copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("MEMBER", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFFD4AF37))
+                                    }
+                                } else {
+                                    Text(
+                                        text = if (isFull) "FULL" else "$seatsRemaining/100",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = if (isFull) Color.Red else Color(0xFFD4AF37)
+                                    )
                                 }
                             }
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "Private Fund Manager Access for Serious Investors",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.LightGray
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Insights, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("600 mins/month with fund manager", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.VideoCall, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Scheduled private video calls", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                        }
+                            Spacer(modifier = Modifier.height(20.dp))
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        val seatsRemaining = (eliteConfig.totalSeats - eliteConfig.occupiedSeats).coerceAtLeast(0)
-                        val isFull = seatsRemaining == 0
-
-                        if (!eliteSubscription.isElite) {
                             Text(
-                                "$seatsRemaining / ${eliteConfig.totalSeats} seats left",
-                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (isFull) Color.Red else Color(0xFFD4AF37)
+                                "RIVAVA ELITE",
+                                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp),
+                                color = Color.White
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
 
-                            Button(
-                                onClick = { showEliteBottomSheet = true },
-                                enabled = !isFull,
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFD4AF37),
-                                    disabledContainerColor = Color.DarkGray
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    if (isFull) "Elite Membership Full" else "Apply for Elite Access",
-                                    color = if (isFull) Color.LightGray else Color.Black,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                "Private Wealth Guidance for Serious Investors",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            // Features Chips
+                            @Composable
+                            fun FeatureChip(text: String) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Text(text, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.9f))
+                                }
                             }
-                        } else {
-                            Button(
-                                onClick = {
-                                    context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java))
-                                },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
-                                shape = RoundedCornerShape(16.dp)
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Enter Elite Dashboard", color = Color.Black, fontWeight = FontWeight.Bold)
+                                FeatureChip("600 Mins/mo")
+                                FeatureChip("Video Consults")
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                FeatureChip("Priority Support")
+                                FeatureChip("Elite Access")
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            if (!eliteSubscription.isElite) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "₹3300/month",
+                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                        color = Color.White
+                                    )
+                                    Button(
+                                        onClick = {
+                                            if (!isFull) {
+                                                val intent = Intent(context, com.rivavafi.universal.ui.elite.EliteLandingActivity::class.java)
+                                val options = android.app.ActivityOptions.makeCustomAnimation(context, android.R.anim.fade_in, android.R.anim.fade_out)
+                                context.startActivity(intent, options.toBundle())
+                                            }
+                                        },
+                                        enabled = !isFull,
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFD4AF37),
+                                            disabledContainerColor = Color.DarkGray
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            if (isFull) "Membership Full" else "Apply for Access",
+                                            color = if (isFull) Color.LightGray else Color.Black,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            } else {
+                                Button(
+                                    onClick = {
+                                        context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java))
+                                    },
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text("Enter Elite Dashboard", color = Color.Black, fontWeight = FontWeight.Bold)
+                                }
                             }
                         }
                     }
