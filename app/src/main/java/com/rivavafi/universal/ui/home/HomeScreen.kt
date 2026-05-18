@@ -115,12 +115,8 @@ fun HomeScreen(
     if (showEliteBottomSheet) {
         com.rivavafi.universal.ui.elite.EliteBottomSheet(
             onDismiss = { showEliteBottomSheet = false },
-            onContinue = {
-                showEliteBottomSheet = false
-                context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java).apply {
-                    putExtra("start_payment", true)
-                })
-            }
+            userName = userName,
+            userEmail = authUser?.email
         )
     }
     val isPremiumPref = prefs.getBoolean("isPremium", false)
