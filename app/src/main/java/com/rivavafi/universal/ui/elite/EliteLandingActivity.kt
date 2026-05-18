@@ -254,24 +254,44 @@ fun EliteLandingScreen(
                 )
                 .padding(24.dp)
         ) {
-            Button(
-                onClick = { isConnecting = true },
-                enabled = !isConnecting && !isFull,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFD4AF37),
-                    disabledContainerColor = Color.DarkGray
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                if (isConnecting) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text("Connecting you to Rivava Elite...", color = Color.White, fontWeight = FontWeight.Bold)
-                } else if (isFull) {
-                    Text("Membership Full", color = Color.LightGray, fontWeight = FontWeight.Bold)
-                } else {
-                    Text("Apply for Elite Access", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java).apply {
+                            putExtra("start_payment", true)
+                        })
+                    },
+                    enabled = !isConnecting && !isFull,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD4AF37),
+                        disabledContainerColor = Color.DarkGray
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    if (isFull) {
+                        Text("Membership Full", color = Color.LightGray, fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Enroll & Pay Now", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
+                }
+
+                if (!isFull) {
+                    OutlinedButton(
+                        onClick = { isConnecting = true },
+                        enabled = !isConnecting,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.5f))
+                    ) {
+                        if (isConnecting) {
+                            CircularProgressIndicator(color = Color(0xFFD4AF37), modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Connecting...", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
+                        } else {
+                            Text("Talk to an Advisor", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }
@@ -342,10 +362,25 @@ fun HeroSection(seatsRemaining: Int, totalSeats: Int) {
                 .align(Alignment.BottomStart)
                 .padding(24.dp)
         ) {
+            val goldGradient = Brush.linearGradient(
+                colors = listOf(Color(0xFFF3E5AB), Color(0xFFD4AF37), Color(0xFFAA7700))
+            )
+
+            val textScale by infiniteTransition.animateFloat(
+                initialValue = 0.98f,
+                targetValue = 1.02f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1500, easing = LinearOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "text_scale"
+            )
+
             Text(
                 "RIVAVA ELITE",
-                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp),
-                color = Color.White
+
+                modifier = Modifier.scale(textScale),
+                style = androidx.compose.ui.text.TextStyle(brush = goldGradient, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -542,10 +577,14 @@ fun SectionPricing(isFull: Boolean) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val goldGradient = Brush.linearGradient(
+                    colors = listOf(Color(0xFFF3E5AB), Color(0xFFD4AF37), Color(0xFFAA7700))
+                )
+
                 Text(
                     "RIVAVA ELITE",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
+
+                    style = androidx.compose.ui.text.TextStyle(brush = goldGradient, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -576,6 +615,29 @@ fun SectionPricing(isFull: Boolean) {
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+
+                val context = LocalContext.current
+                Button(
+                    onClick = {
+                        context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java).apply {
+                            putExtra("start_payment", true)
+                        })
+                    },
+                    enabled = !isFull,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD4AF37),
+                        disabledContainerColor = Color.DarkGray
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        if (isFull) "Membership Full" else "Enroll & Pay Now",
+                        color = if (isFull) Color.LightGray else Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
