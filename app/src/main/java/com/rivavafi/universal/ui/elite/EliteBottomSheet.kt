@@ -6,21 +6,165 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rivavafi.universal.ui.theme.EmeraldGreen
-import com.rivavafi.universal.ui.theme.PremiumGradientStart
+import kotlinx.coroutines.delay
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.scale
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.ui.text.style.TextAlign
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EliteBottomSheet(
     onDismiss: () -> Unit,
-    onContinue: () -> Unit
+    userName: String?,
+    userEmail: String?
 ) {
+    var isConnecting by remember { mutableStateOf(false) }
+    var showFallbackDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val auth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+
+    val targetNumber = "+919044761170"
+    val displayTargetNumber = "+91-9044761170"
+
+    val uid = auth.currentUser?.uid ?: "unknown"
+    val finalUserName = userName?.takeIf { it.isNotBlank() } ?: auth.currentUser?.displayName ?: "User"
+    val finalUserEmail = userEmail?.takeIf { it.isNotBlank() } ?: auth.currentUser?.email ?: "Not provided"
+
+    val currentTime = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date())
+
+    val message = """
+        Hello Rivava Team,
+
+        I am interested in applying for Rivava Elite Membership.
+
+        Details:
+        • Name: $finalUserName
+        • Email: $finalUserEmail
+        • User ID: $uid
+        • Plan: Rivava Elite ₹3300/month
+        • Timestamp: $currentTime
+
+        I would like to proceed with Elite enrollment and private fund manager access.
+
+        Please guide me with the next steps.
+    """.trimIndent()
+
+    val logInquiry = { method: String, eventType: String ->
+        val inquiryData = hashMapOf(
+            "uid" to uid,
+            "name" to finalUserName,
+            "email" to finalUserEmail,
+            "inquiryMethod" to method,
+            "createdAt" to Timestamp.now(),
+            "membershipPlan" to "elite_3300",
+            "eventType" to eventType
+        )
+        firestore.collection("elite_inquiries").add(inquiryData)
+    }
+
+    val openWhatsApp = {
+        try {
+            logInquiry("whatsapp", "whatsapp_opened")
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("https://api.whatsapp.com/send?phone=$targetNumber&text=${Uri.encode(message)}")
+                setPackage("com.whatsapp")
+            }
+            context.startActivity(intent)
+            logInquiry("whatsapp", "inquiry_completed")
+            onDismiss()
+        } catch (e: Exception) {
+            showFallbackDialog = true
+        }
+    }
+
+    val openSms = {
+        try {
+            logInquiry("sms", "sms_opened")
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = Uri.parse("sms:$targetNumber")
+                putExtra("sms_body", message)
+            }
+            context.startActivity(intent)
+            logInquiry("sms", "inquiry_completed")
+            onDismiss()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open SMS app.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val scale = remember { Animatable(1f) }
+
+    LaunchedEffect(isConnecting) {
+        if (isConnecting) {
+            logInquiry("whatsapp", "inquiry_started")
+            delay(50) // Allow UI to update before animation
+            scale.animateTo(0.95f, animationSpec = tween(100))
+            scale.animateTo(1f, animationSpec = tween(100))
+            delay(1500) // Simulate connecting delay
+            openWhatsApp()
+            isConnecting = false
+        }
+    }
+
+    if (showFallbackDialog) {
+        AlertDialog(
+            onDismissRequest = { showFallbackDialog = false },
+            title = { Text("WhatsApp not found", color = Color(0xFFD4AF37)) },
+            text = { Text("We couldn't find WhatsApp installed on your device. How would you like to proceed?", color = Color.White) },
+            containerColor = Color(0xFF131313),
+            confirmButton = {
+                TextButton(onClick = {
+                    showFallbackDialog = false
+                    openSms()
+                }) {
+                    Text("Send SMS", color = Color(0xFFD4AF37))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Phone Number", displayTargetNumber)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Number copied to clipboard", Toast.LENGTH_SHORT).show()
+                        showFallbackDialog = false
+                    }) {
+                        Text("Copy Number", color = Color.White)
+                    }
+                    TextButton(onClick = {
+                        showFallbackDialog = false
+                    }) {
+                        Text("Cancel", color = Color.Gray)
+                    }
+                }
+            }
+        )
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF131313),
@@ -57,26 +201,54 @@ fun EliteBottomSheet(
                 EliteBenefitRow("Limited 100-member access")
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+            AnimatedVisibility(visible = isConnecting, enter = fadeIn(), exit = fadeOut()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .background(Color(0xFFD4AF37).copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Cancel", color = Color.LightGray)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFFD4AF37),
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            "Connecting you to Rivava Elite...",
+                            color = Color(0xFFD4AF37),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
+            }
 
-                Button(
-                    onClick = onContinue,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
-                    shape = RoundedCornerShape(16.dp)
+            AnimatedVisibility(visible = !isConnecting, enter = fadeIn(), exit = fadeOut()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Continue", color = Color.Black, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                    ) {
+                        Text("Cancel", color = Color.LightGray)
+                    }
+
+                    Button(
+                        onClick = { isConnecting = true },
+                        modifier = Modifier.weight(1f).height(56.dp).scale(scale.value),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD4AF37)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Apply Now", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
