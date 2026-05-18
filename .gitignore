@@ -8,6 +8,7 @@
 /.idea/modules.xml
 /.idea/workspace.xml
 .DS_Store
+temp_auto_push.bat
 /build
 /captures
 .externalNativeBuild
@@ -19,3 +20,5 @@ app/release.keystore
 functions/node_modules
 functions/node_modules
 sendgrid.env
+.gitignore
+branch_structure.json
