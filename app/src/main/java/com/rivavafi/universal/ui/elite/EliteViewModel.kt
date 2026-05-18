@@ -18,6 +18,9 @@ class EliteViewModel @Inject constructor(
     private val eliteRepository: EliteRepository
 ) : ViewModel() {
 
+    private val _eliteConfig = MutableStateFlow(EliteConfig())
+    val eliteConfig: StateFlow<EliteConfig> = _eliteConfig
+
     private val _subscription = MutableStateFlow(EliteSubscription())
     val subscription: StateFlow<EliteSubscription> = _subscription
 
@@ -31,6 +34,11 @@ class EliteViewModel @Inject constructor(
     val error: StateFlow<String?> = _error
 
     init {
+        viewModelScope.launch {
+            eliteRepository.getEliteConfig().collectLatest {
+                _eliteConfig.value = it
+            }
+        }
         viewModelScope.launch {
             eliteRepository.getUserSubscription().collectLatest {
                 _subscription.value = it
