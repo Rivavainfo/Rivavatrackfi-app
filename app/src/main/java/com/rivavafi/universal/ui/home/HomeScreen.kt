@@ -189,7 +189,7 @@ fun HomeScreen(
                     ) {
                         if (profileImageUri != null) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                val initial = if (!userName.isNullOrEmpty()) userName!!.first().toString().uppercase() else ""
+                                val initial = if (!userName.isNullOrEmpty()) userName.first().toString().uppercase() else ""
                                 if (initial.isNotEmpty()) {
                                     Text(
                                         text = initial,
