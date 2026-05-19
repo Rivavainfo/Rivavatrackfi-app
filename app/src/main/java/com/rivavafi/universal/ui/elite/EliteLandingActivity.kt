@@ -22,7 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.FormatQuote
@@ -224,7 +224,7 @@ fun EliteLandingScreen(
             }
             item {
                 Spacer(modifier = Modifier.height(32.dp))
-                SectionPricing(isFull)
+                SectionPricing()
             }
         }
 
@@ -239,7 +239,7 @@ fun EliteLandingScreen(
                 .clickable { onBack() },
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
         }
 
         // Bottom CTA Overlay
@@ -366,20 +366,8 @@ fun HeroSection(seatsRemaining: Int, totalSeats: Int) {
                 colors = listOf(Color(0xFFF3E5AB), Color(0xFFD4AF37), Color(0xFFAA7700))
             )
 
-            val textScale by infiniteTransition.animateFloat(
-                initialValue = 0.98f,
-                targetValue = 1.02f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(1500, easing = LinearOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "text_scale"
-            )
-
             Text(
                 "RIVAVA ELITE",
-
-                modifier = Modifier.scale(textScale),
                 style = androidx.compose.ui.text.TextStyle(brush = goldGradient, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -566,7 +554,7 @@ fun SectionTestimonials() {
 }
 
 @Composable
-fun SectionPricing(isFull: Boolean) {
+fun SectionPricing() {
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)),
@@ -577,14 +565,10 @@ fun SectionPricing(isFull: Boolean) {
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val goldGradient = Brush.linearGradient(
-                    colors = listOf(Color(0xFFF3E5AB), Color(0xFFD4AF37), Color(0xFFAA7700))
-                )
-
                 Text(
                     "RIVAVA ELITE",
-
-                    style = androidx.compose.ui.text.TextStyle(brush = goldGradient, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+                    color = Color.White
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -616,28 +600,7 @@ fun SectionPricing(isFull: Boolean) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                val context = LocalContext.current
-                Button(
-                    onClick = {
-                        context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java).apply {
-                            putExtra("start_payment", true)
-                        })
-                    },
-                    enabled = !isFull,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD4AF37),
-                        disabledContainerColor = Color.DarkGray
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        if (isFull) "Membership Full" else "Enroll & Pay Now",
-                        color = if (isFull) Color.LightGray else Color.Black,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
+                // Payment handled in bottom sticky overlay instead
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
