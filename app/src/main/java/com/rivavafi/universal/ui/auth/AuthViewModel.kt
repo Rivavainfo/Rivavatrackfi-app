@@ -446,117 +446,45 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun createPhoneAuthCallbacks(onCodeSentCallback: (String) -> Unit) = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-            viewModelScope.launch {
-                _authState.value = AuthState.LOADING
-                try {
-                    val authResult = repository.auth.signInWithCredential(credential).await()
-                    val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
-
-                    val phoneNumber = repository.auth.currentUser?.phoneNumber
-                    val sessionState = repository.saveUserToFirestore(
-                        uid = uid,
-                        name = null,
-                        email = null,
-                        phoneNumber = phoneNumber,
-                        authProvider = "phone",
-                        isVerified = true
-                    )
-                    val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                    val isNew = firebaseNew || sessionState.isNewUser
-                    _isNewUser.value = isNew
-
-                    if (!phoneNumber.isNullOrBlank()) {
-                        userPreferencesRepository.saveUserPhone(phoneNumber)
-                    }
-
-                    if (isNew) {
-                        authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
-                    } else {
-                        if (!sessionState.existingName.isNullOrBlank()) {
-                            userPreferencesRepository.saveUserName(sessionState.existingName)
-                        }
-                        if (!sessionState.photoUrl.isNullOrBlank()) {
-                            userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
-                        }
-                    }
-                    if (sessionState.onboardingCompleted) {
-                        userPreferencesRepository.setOnboardingCompleted(true)
-                    }
-                    _phoneAuthState.value = PhoneAuthState.SUCCESS
-
-                    userEntitlementRepository.syncEntitlement()
-                    _authState.value = AuthState.SUCCESS
-                } catch (e: Exception) {
-                    _errorMessage.value = e.message ?: "Phone auto-login failed"
-                    _phoneAuthState.value = PhoneAuthState.ERROR
-                    _authState.value = AuthState.IDLE
-                }
-            }
-        }
-
-        override fun onVerificationFailed(e: FirebaseException) {
-            val message = when (e) {
-                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Invalid phone number"
-                is com.google.firebase.FirebaseTooManyRequestsException -> "Quota exceeded. Try again later."
-                else -> e.message ?: "Verification failed"
-            }
-            _errorMessage.value = message
-            _phoneAuthState.value = PhoneAuthState.ERROR
-            _authState.value = AuthState.IDLE
-        }
-
-        override fun onCodeAutoRetrievalTimeOut(verificationId: String) {
-            _verificationId = verificationId
-            _errorMessage.value = "OTP retrieval timeout. You can request a new one."
-            _authState.value = AuthState.IDLE
-        }
-
-        override fun onCodeSent(
-            verificationId: String,
-            token: PhoneAuthProvider.ForceResendingToken
-        ) {
-            _verificationId = verificationId
-            _resendToken = token
-            _phoneAuthState.value = PhoneAuthState.CODE_SENT
-            _authState.value = AuthState.IDLE
-            onCodeSentCallback(verificationId)
-        }
-    }
-
-    fun startPhoneVerification(phoneNumber: String, activity: android.app.Activity, onCodeSentCallback: (String) -> Unit) {
+    fun startPhoneVerification(phoneNumber: String, onCodeSentCallback: (String) -> Unit) {
         if (phoneNumber.isBlank()) {
             _errorMessage.value = "Invalid phone number"
             return
         }
 
         _authState.value = AuthState.LOADING
-
-        val optionsBuilder = PhoneAuthOptions.newBuilder(repository.auth)
-            .setPhoneNumber(phoneNumber)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(activity)
-            .setCallbacks(createPhoneAuthCallbacks(onCodeSentCallback))
-
-        PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
+        viewModelScope.launch {
+            val result = repository.sendOtp(phoneNumber)
+            if (result.isSuccess) {
+                _phoneAuthState.value = PhoneAuthState.CODE_SENT
+                _authState.value = AuthState.IDLE
+                onCodeSentCallback(phoneNumber)
+            } else {
+                _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to send OTP"
+                _phoneAuthState.value = PhoneAuthState.ERROR
+                _authState.value = AuthState.IDLE
+            }
+        }
     }
 
-    fun resendOtp(phoneNumber: String, activity: android.app.Activity, onCodeSentCallback: (String) -> Unit) {
-        if (_resendToken == null) {
-            _errorMessage.value = "Cannot resend code. Please try again later."
+    fun resendOtp(phoneNumber: String, onCodeSentCallback: (String) -> Unit) {
+        if (phoneNumber.isBlank()) {
+            _errorMessage.value = "Invalid phone number"
             return
         }
         _authState.value = AuthState.LOADING
-
-        val optionsBuilder = PhoneAuthOptions.newBuilder(repository.auth)
-            .setPhoneNumber(phoneNumber)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(activity)
-            .setCallbacks(createPhoneAuthCallbacks(onCodeSentCallback))
-            .setForceResendingToken(_resendToken!!)
-
-        PhoneAuthProvider.verifyPhoneNumber(optionsBuilder.build())
+        viewModelScope.launch {
+            val result = repository.sendOtp(phoneNumber)
+            if (result.isSuccess) {
+                _phoneAuthState.value = PhoneAuthState.CODE_SENT
+                _authState.value = AuthState.IDLE
+                onCodeSentCallback(phoneNumber)
+            } else {
+                _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to resend OTP"
+                _phoneAuthState.value = PhoneAuthState.ERROR
+                _authState.value = AuthState.IDLE
+            }
+        }
     }
 
     fun validatePhone(phone: String) {
@@ -583,10 +511,9 @@ class AuthViewModel @Inject constructor(
         _authFormState.value = state.copy(isFormValid = state.emailError == null && state.phoneError == null)
     }
 
-    fun verifyOtp(verificationId: String, otp: String, phoneNumber: String, email: String?, onSuccess: () -> Unit, onError: () -> Unit) {
-        val activeVerificationId = _verificationId ?: verificationId
-        if (activeVerificationId.isBlank() || otp.isBlank()) {
-            _errorMessage.value = "Invalid OTP or missing verification ID."
+    fun verifyOtp(otp: String, phoneNumber: String, email: String?, onSuccess: () -> Unit, onError: () -> Unit) {
+        if (phoneNumber.isBlank() || otp.isBlank()) {
+            _errorMessage.value = "Invalid OTP or missing phone number."
             onError()
             return
         }
@@ -594,48 +521,48 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
             try {
-                val credential = PhoneAuthProvider.getCredential(activeVerificationId, otp)
-                val authResult = repository.auth.signInWithCredential(credential).await()
-                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
+                val result = repository.verifyOtpAndSignIn(phoneNumber, otp)
+                if (result.isSuccess) {
+                    val uid = result.getOrNull() ?: throw Exception("Failed to retrieve UID")
 
-                val sessionState = repository.saveUserToFirestore(
-                    uid = uid,
-                    name = null,
-                    email = email,
-                    phoneNumber = phoneNumber,
-                    authProvider = "phone",
-                    isVerified = true
-                )
+                    val sessionState = repository.saveUserToFirestore(
+                        uid = uid,
+                        name = null,
+                        email = email,
+                        phoneNumber = phoneNumber,
+                        authProvider = "phone",
+                        isVerified = true
+                    )
 
-                val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                val isNew = firebaseNew || sessionState.isNewUser
-                _isNewUser.value = isNew
-                if (phoneNumber.isNotBlank()) {
-                    userPreferencesRepository.saveUserPhone(phoneNumber)
-                }
-                if (isNew) {
-                    authResult.user?.let { repository.sendUserToSheet(it, "Phone") }
-                } else {
-                    if (!sessionState.existingName.isNullOrBlank()) {
-                        userPreferencesRepository.saveUserName(sessionState.existingName)
+                    val isNew = sessionState.isNewUser
+                    _isNewUser.value = isNew
+                    if (phoneNumber.isNotBlank()) {
+                        userPreferencesRepository.saveUserPhone(phoneNumber)
                     }
-                    if (!sessionState.photoUrl.isNullOrBlank()) {
-                        userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
-                    }
-                }
-                        if (sessionState.onboardingCompleted) {
-                            userPreferencesRepository.setOnboardingCompleted(true)
+                    if (isNew) {
+                        repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Phone") }
+                    } else {
+                        if (!sessionState.existingName.isNullOrBlank()) {
+                            userPreferencesRepository.saveUserName(sessionState.existingName)
                         }
+                        if (!sessionState.photoUrl.isNullOrBlank()) {
+                            userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                        }
+                    }
+                    if (sessionState.onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
 
-                _phoneAuthState.value = PhoneAuthState.SUCCESS
-
-                userEntitlementRepository.syncEntitlement()
-                _authState.value = AuthState.SUCCESS
-                onSuccess()
+                    _phoneAuthState.value = PhoneAuthState.SUCCESS
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
+                    onSuccess()
+                } else {
+                    throw result.exceptionOrNull() ?: Exception("Verification failed")
+                }
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "OTP verification failed", e)
-                val msg = if (e is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException) "Invalid OTP code" else "OTP verification failed"
-                _errorMessage.value = msg
+                _errorMessage.value = e.message ?: "Invalid OTP"
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
                 onError()

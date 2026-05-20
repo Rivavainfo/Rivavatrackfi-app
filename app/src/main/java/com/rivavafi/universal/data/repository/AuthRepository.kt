@@ -27,6 +27,49 @@ class AuthRepository @Inject constructor(
     val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
+    suspend fun sendOtp(phone: String): Result<String> {
+        return try {
+            val response = com.rivavafi.universal.data.network.RetrofitClient.apiService.sendOtp(
+                com.rivavafi.universal.data.network.OtpRequest(phone)
+            )
+            if (response.isSuccessful) {
+                Result.success(response.body()?.message ?: "OTP sent")
+            } else {
+                val errorMsg = try {
+                    JSONObject(response.errorBody()?.string() ?: "").optString("error", "Failed to send OTP")
+                } catch (e: Exception) {
+                    "Failed to send OTP"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun verifyOtpAndSignIn(phone: String, otp: String): Result<String> {
+        return try {
+            val response = com.rivavafi.universal.data.network.RetrofitClient.apiService.verifyOtp(
+                com.rivavafi.universal.data.network.VerifyOtpRequest(phone, otp)
+            )
+            if (response.isSuccessful && response.body()?.token != null) {
+                val token = response.body()!!.token!!
+                val authResult = auth.signInWithCustomToken(token).await()
+                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
+                Result.success(uid)
+            } else {
+                val errorMsg = try {
+                    JSONObject(response.errorBody()?.string() ?: "").optString("error", "OTP verification failed")
+                } catch (e: Exception) {
+                    "OTP verification failed"
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun sendUserToSheet(user: FirebaseUser, provider: String, name: String? = null) {
         val client = OkHttpClient()
 

@@ -70,7 +70,7 @@ class AuthActivity : ComponentActivity() {
                     AuthScreenContent(
                         viewModel = viewModel,
                         onLoginSuccess = { isNewUser -> goToHome(isNewUser) },
-                        onNavigateToOtp = { verificationId, phone, email -> goToOtp(verificationId, phone, email) },
+                        onNavigateToOtp = { phone, email -> goToOtp(phone, email) },
                         onNavigateToReset = { goToResetPassword() }
                     )
                 }
@@ -130,9 +130,8 @@ class AuthActivity : ComponentActivity() {
         finish()
     }
 
-    private fun goToOtp(verificationId: String, phone: String, email: String?) {
+    private fun goToOtp(phone: String, email: String?) {
         val intent = Intent(this, OtpActivity::class.java).apply {
-            putExtra("verificationId", verificationId)
             putExtra("phone", phone)
             putExtra("email", email)
         }
@@ -150,20 +149,38 @@ class AuthActivity : ComponentActivity() {
 fun AuthScreenContent(
     viewModel: AuthViewModel,
     onLoginSuccess: (Boolean) -> Unit,
-    onNavigateToOtp: (String, String, String?) -> Unit,
+    onNavigateToOtp: (String, String?) -> Unit,
     onNavigateToReset: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val phoneAuthState by viewModel.phoneAuthState.collectAsState()
     val isNewUser by viewModel.isNewUser.collectAsState()
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
+    var authMethod by remember { mutableStateOf("INITIAL") }
+    var phoneNumber by remember { mutableStateOf("") }
+
 
     BackHandler(enabled = authState == AuthState.LOADING) {
         viewModel.resetState()
     }
 
+
+    LaunchedEffect(phoneAuthState) {
+        if (phoneAuthState == PhoneAuthState.CODE_SENT) {
+            val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
+            val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
+                digitsOnly.substring(2)
+            } else {
+                digitsOnly
+            }
+            val formattedNumber = "+91$cleanNumber"
+            onNavigateToOtp(formattedNumber, null)
+        }
+    }
+
     LaunchedEffect(authState) {
+
         if (authState == AuthState.SUCCESS) {
             onLoginSuccess(isNewUser == true)
         }
@@ -330,36 +347,122 @@ fun AuthScreenContent(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Google Login Button
-                    Button(
-                        onClick = {
-                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                .requestIdToken(context.getString(R.string.default_web_client_id))
-                                .requestEmail()
-                                .build()
-                            val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                            googleSignInClient.signOut().addOnCompleteListener {
-                                launcher.launch(googleSignInClient.signInIntent)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        enabled = authState != AuthState.LOADING
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.AccountCircle,
-                            contentDescription = "Google",
-                            modifier = Modifier.size(24.dp),
-                            tint = AmoledBlack
+
+                    if (authMethod == "INITIAL") {
+                        // Google Login Button
+                        Button(
+                            onClick = {
+                                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                                    .requestEmail()
+                                    .build()
+                                val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                                googleSignInClient.signOut().addOnCompleteListener {
+                                    launcher.launch(googleSignInClient.signInIntent)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            enabled = authState != AuthState.LOADING
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccountCircle,
+                                contentDescription = "Google",
+                                modifier = Modifier.size(24.dp),
+                                tint = AmoledBlack
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Phone Login Button
+                        Button(
+                            onClick = { authMethod = "PHONE" },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            shape = RoundedCornerShape(20.dp),
+                            enabled = authState != AuthState.LOADING
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Phone,
+                                contentDescription = "Phone",
+                                modifier = Modifier.size(24.dp),
+                                tint = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("Continue with Phone", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                    } else if (authMethod == "PHONE") {
+                        Text(
+                            text = "Phone Sign In",
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = { Text("Phone Number", color = Color.White.copy(0.7f)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF3B82F6),
+                                unfocusedBorderColor = Color.White.copy(0.2f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                Text("+91", modifier = Modifier.padding(start = 16.dp, end = 8.dp), color = Color.White)
+                            },
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
+                                val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
+                                    digitsOnly.substring(2)
+                                } else {
+                                    digitsOnly
+                                }
+                                val formattedNumber = "+91$cleanNumber"
+                                viewModel.startPhoneVerification(formattedNumber) {
+                                    // Handled by launched effect
+                                }
+                            },
+                            enabled = authState != AuthState.LOADING,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            if (authState == AuthState.LOADING) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                            } else {
+                                Text("Send OTP", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(onClick = { authMethod = "INITIAL" }) {
+                            Text("Back to options", color = Color.White.copy(alpha = 0.7f))
+                        }
                     }
+
                 }
             }
         }
