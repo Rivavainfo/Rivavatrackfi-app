@@ -33,17 +33,15 @@ import kotlinx.coroutines.delay
 class OtpActivity : ComponentActivity() {
 
     private val viewModel: AuthViewModel by viewModels()
-    private var verificationId: String = ""
     private var phoneNumber: String = ""
     private var email: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        verificationId = intent.getStringExtra("verificationId") ?: ""
         phoneNumber = intent.getStringExtra("phone") ?: ""
         email = intent.getStringExtra("email")
 
-        if (verificationId.isEmpty() || phoneNumber.isEmpty()) {
+        if (phoneNumber.isEmpty()) {
             Toast.makeText(this, "Missing phone info. Returning to login.", Toast.LENGTH_SHORT).show()
             finish()
             return
@@ -57,7 +55,6 @@ class OtpActivity : ComponentActivity() {
                 ) {
                     OtpScreenContent(
                         viewModel = viewModel,
-                        verificationId = verificationId,
                         phoneNumber = phoneNumber,
                         email = email,
                         onSuccess = { isNewUser ->
@@ -67,9 +64,7 @@ class OtpActivity : ComponentActivity() {
                             }
                             startActivity(intent)
                         },
-                        onResendSent = { newVerificationId ->
-                            verificationId = newVerificationId
-                        }
+                        onResendSent = { }
                     )
                 }
             }
@@ -80,7 +75,6 @@ class OtpActivity : ComponentActivity() {
 @Composable
 fun OtpScreenContent(
     viewModel: AuthViewModel,
-    verificationId: String,
     phoneNumber: String,
     email: String?,
     onSuccess: (Boolean) -> Unit,
