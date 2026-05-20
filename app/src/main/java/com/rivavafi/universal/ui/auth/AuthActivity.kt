@@ -168,14 +168,7 @@ fun AuthScreenContent(
 
     LaunchedEffect(phoneAuthState) {
         if (phoneAuthState == PhoneAuthState.CODE_SENT) {
-            val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
-            val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
-                digitsOnly.substring(2)
-            } else {
-                digitsOnly
-            }
-            val formattedNumber = "+91$cleanNumber"
-            onNavigateToOtp(formattedNumber, null)
+            onNavigateToOtp(phoneNumber, null)
         }
     }
 
@@ -430,15 +423,14 @@ fun AuthScreenContent(
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = {
-                                val digitsOnly = phoneNumber.replace(Regex("\\D"), "")
-                                val cleanNumber = if (digitsOnly.startsWith("91") && digitsOnly.length > 10) {
-                                    digitsOnly.substring(2)
+                                val normalized = viewModel.normalizePhoneNumber(phoneNumber)
+                                if (normalized != null) {
+                                    phoneNumber = normalized
+                                    viewModel.startPhoneVerification(normalized) {
+                                        // Handled by launched effect
+                                    }
                                 } else {
-                                    digitsOnly
-                                }
-                                val formattedNumber = "+91$cleanNumber"
-                                viewModel.startPhoneVerification(formattedNumber) {
-                                    // Handled by launched effect
+                                    Toast.makeText(context, "Invalid phone number format.", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             enabled = authState != AuthState.LOADING,
