@@ -1,16 +1,12 @@
 package com.rivavafi.universal.ui.auth
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.GoogleAuthProvider
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
 import com.rivavafi.universal.data.repository.UserEntitlementRepository
-import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
-import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.FirebaseException
 import java.util.concurrent.TimeUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,8 +47,7 @@ class AuthViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val userEntitlementRepository: UserEntitlementRepository,
     private val userRepository: UserRepository,
-    @ApplicationContext private val context: Context,
-    private val savedStateHandle: SavedStateHandle
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState.IDLE)
@@ -69,14 +64,6 @@ class AuthViewModel @Inject constructor(
 
     private val _authFormState = MutableStateFlow(AuthFormState())
     val authFormState: StateFlow<AuthFormState> = _authFormState.asStateFlow()
-
-    private var _verificationId: String?
-        get() = savedStateHandle.get("verificationId")
-        set(value) { savedStateHandle["verificationId"] = value }
-
-    private var _resendToken: PhoneAuthProvider.ForceResendingToken?
-        get() = savedStateHandle.get("resendToken")
-        set(value) { savedStateHandle["resendToken"] = value }
 
     private fun restoreUserSession(sessionState: com.rivavafi.universal.data.repository.AuthRepository.UserSessionState) {
         viewModelScope.launch {
@@ -136,8 +123,6 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.IDLE
         _phoneAuthState.value = PhoneAuthState.IDLE
         _errorMessage.value = null
-        _verificationId = null
-        _resendToken = null
     }
 
     fun setErrorMessage(message: String) {
@@ -521,10 +506,13 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
             try {
+                Log.d("AuthViewModel", "Starting OTP verification for $phoneNumber")
                 val result = repository.verifyOtpAndSignIn(phoneNumber, otp)
                 if (result.isSuccess) {
+                    Log.d("AuthViewModel", "OTP verified successfully. Retrieving UID...")
                     val uid = result.getOrNull() ?: throw Exception("Failed to retrieve UID")
 
+                    Log.d("AuthViewModel", "UID retrieved: $uid. Saving user to Firestore...")
                     val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,
@@ -553,15 +541,19 @@ class AuthViewModel @Inject constructor(
                         userPreferencesRepository.setOnboardingCompleted(true)
                     }
 
+                    Log.d("AuthViewModel", "User session saved. Syncing entitlements...")
                     _phoneAuthState.value = PhoneAuthState.SUCCESS
                     userEntitlementRepository.syncEntitlement()
                     _authState.value = AuthState.SUCCESS
+                    Log.d("AuthViewModel", "Sign-in complete. Executing success callback.")
                     onSuccess()
                 } else {
-                    throw result.exceptionOrNull() ?: Exception("Verification failed")
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Verification failed"
+                    Log.e("AuthViewModel", "verifyOtpAndSignIn failed with: $errorMsg")
+                    throw result.exceptionOrNull() ?: Exception(errorMsg)
                 }
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "OTP verification failed", e)
+                Log.e("AuthViewModel", "OTP verification failed. Exception: ${e.javaClass.simpleName}, Message: ${e.message}", e)
                 _errorMessage.value = e.message ?: "Invalid OTP"
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
