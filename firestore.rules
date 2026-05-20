@@ -43,5 +43,9 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == resource.data.uid;
       allow write: if false; // Backend only
     }
+
+    match /otps/{phone} {
+      allow read, write: if false; // Node.js Backend only via Admin SDK
+    }
   }
 }
