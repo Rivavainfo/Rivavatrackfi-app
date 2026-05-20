@@ -472,6 +472,15 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun normalizePhoneNumber(input: String): String? {
+        val digits = input.replace(Regex("\\D"), "")
+        return when {
+            digits.length == 10 -> "+91$digits"
+            digits.length > 10 -> "+$digits"
+            else -> null
+        }
+    }
+
     fun validatePhone(phone: String) {
         val e164Regex = Regex("^\\+[1-9]\\d{1,14}$")
         if (phone.isNotEmpty() && !e164Regex.matches(phone)) {

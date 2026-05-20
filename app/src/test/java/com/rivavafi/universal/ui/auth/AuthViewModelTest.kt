@@ -23,4 +23,28 @@ class AuthViewModelTest {
         assertFalse(e164Regex.matches("+919876543210123456")) // Too long
         assertFalse(e164Regex.matches("+")) // Too short
     }
+
+    @Test
+    fun testNormalizePhoneNumber() {
+        // We test the normalization logic using a standalone test class or object if it's static.
+        // Since we didn't extract it, we create a basic instance.
+        // The issue with creating AuthViewModel is that it instantiates MutableStateFlow which might fail
+        // without proper coroutine test setup or context mocking.
+
+        // As a workaround since it doesn't need context or repository for the method we can use an alternative way,
+        // or ensure Mockito handles the creation without NPE on StateFlow.
+        // However, actually let's mock it using Mockito's mock creation but spy the method, or just use reflection,
+        // or actually since it's just a method we could extract it to a standalone object `PhoneNormalizer` but
+        // for now let's set up the test correctly.
+
+        // Actually, the NPE is likely in `new AuthViewModel(...)` because of StateFlow initialization or similar inside Android environment.
+        // Let's use `mock(AuthViewModel.class)` and call real method.
+        val authViewModel = org.mockito.Mockito.mock(com.rivavafi.universal.ui.auth.AuthViewModel::class.java)
+        org.mockito.Mockito.`when`(authViewModel.normalizePhoneNumber(org.mockito.Mockito.anyString())).thenCallRealMethod()
+
+        org.junit.Assert.assertEquals("+919044761170", authViewModel.normalizePhoneNumber("9044761170"))
+        org.junit.Assert.assertEquals("+14155552671", authViewModel.normalizePhoneNumber("+14155552671"))
+        org.junit.Assert.assertEquals("+919044761170", authViewModel.normalizePhoneNumber(" 904 476 1170 "))
+        org.junit.Assert.assertNull(authViewModel.normalizePhoneNumber("123"))
+    }
 }
