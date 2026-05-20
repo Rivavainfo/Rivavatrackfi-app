@@ -1,111 +1,151 @@
 const express = require('express');
-const axios = require('axios');
-const { db, auth } = require('../firebase');
 const router = express.Router();
+const { admin, db } = require('../firebase');
+const { generateOTP, sendSmsOTP } = require('../services/otpService');
 
+// Constants
 const OTP_EXPIRY_MINUTES = 5;
 const MAX_ATTEMPTS = 3;
-const MAX_RESENDS = 3;
+const RESEND_COOLDOWN_SECONDS = 60;
 
-function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+// Helper to format phone number to E.164 (simplistic check for 10 digits)
+function sanitizePhone(phone) {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 10) {
+    return '+91' + digits; // Default to India country code if 10 digits
+  } else if (digits.length > 10) {
+    return '+' + digits;
+  }
+  return null;
 }
 
-async function sendSMSViaFast2SMS(phone, otp) {
-    const apiKey = process.env.FAST2SMS_API_KEY;
-    if (!apiKey) {
-        throw new Error("FAST2SMS_API_KEY is not configured.");
-    }
-    const url = 'https://www.fast2sms.com/dev/bulkV2';
-    const cleanPhone = phone.replace(/^\+91/, '');
-    const params = new URLSearchParams({
-        authorization: apiKey,
-        variables_values: otp,
-        route: 'otp',
-        numbers: cleanPhone
-    });
-    const response = await axios.get(`${url}?${params.toString()}`);
-    if (response.data && response.data.return === false) {
-        throw new Error(`Fast2SMS Error: ${response.data.message}`);
-    }
-    return response.data;
-}
-
+// 1. POST /send-otp
 router.post('/send-otp', async (req, res) => {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ error: 'Phone number is required.' });
+  try {
+    let { phone } = req.body;
 
-    try {
-        const otpRef = db.collection('otps').doc(phone);
-        const docSnap = await otpRef.get();
-        let resendCount = 0;
-
-        if (docSnap.exists) {
-            const data = docSnap.data();
-            const now = Date.now();
-            const diffMinutes = (now - data.createdAt) / (1000 * 60);
-            if (diffMinutes < 1) return res.status(429).json({ error: 'Please wait before requesting a new OTP.' });
-            resendCount = data.resendCount || 0;
-            if (resendCount >= MAX_RESENDS && diffMinutes < OTP_EXPIRY_MINUTES) {
-                 return res.status(429).json({ error: 'Maximum resend limit reached. Try again later.' });
-            }
-        }
-
-        const otp = generateOTP();
-        const createdAt = Date.now();
-        await otpRef.set({ otp: otp, createdAt: createdAt, attempts: 0, resendCount: resendCount + 1 });
-        await sendSMSViaFast2SMS(phone, otp);
-        res.status(200).json({ message: 'OTP sent successfully.' });
-    } catch (error) {
-        console.error("Error sending OTP:", error);
-        res.status(500).json({ error: 'Failed to send OTP.' });
+    if (!phone) {
+      return res.status(400).json({ success: false, error: 'Phone number is required.' });
     }
+
+    const sanitizedPhone = sanitizePhone(phone);
+    if (!sanitizedPhone) {
+      return res.status(400).json({ success: false, error: 'Invalid phone number format.' });
+    }
+
+    const otpRef = db.collection('otps').doc(sanitizedPhone);
+    const docSnap = await otpRef.get();
+
+    let attempts = 0;
+    let resendCount = 0;
+
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      const now = Date.now();
+      const createdAt = data.createdAt;
+
+      // Check if within expiry
+      if (now - createdAt < OTP_EXPIRY_MINUTES * 60 * 1000) {
+        // Enforce cooldown
+        if (now - createdAt < RESEND_COOLDOWN_SECONDS * 1000) {
+          return res.status(429).json({
+            success: false,
+            error: `Please wait ${RESEND_COOLDOWN_SECONDS} seconds before requesting a new OTP.`
+          });
+        }
+      }
+
+      attempts = data.attempts || 0;
+      resendCount = (data.resendCount || 0) + 1;
+    }
+
+    const otp = generateOTP();
+    // In a real Fast2SMS account, the 'route: otp' requires a variables array or specific format.
+    // The instructions say use: "Your Rivava OTP is XXXXX"
+    // Using fast2sms bulkV2 we'll rely on the service implementation.
+
+    const smsSent = await sendSmsOTP(sanitizedPhone.replace('+91', ''), otp); // Fast2SMS generally expects 10 digits without +91
+
+    if (!smsSent) {
+      return res.status(500).json({ success: false, error: 'Failed to send SMS.' });
+    }
+
+    await otpRef.set({
+      otp: otp,
+      createdAt: Date.now(),
+      attempts: attempts,
+      resendCount: resendCount
+    });
+
+    return res.status(200).json({ success: true, message: 'OTP sent successfully.' });
+
+  } catch (error) {
+    console.error('Error in /send-otp:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error.' });
+  }
 });
 
+// 2. POST /verify-otp
 router.post('/verify-otp', async (req, res) => {
+  try {
     const { phone, otp } = req.body;
-    if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP are required.' });
 
-    try {
-        const otpRef = db.collection('otps').doc(phone);
-        const docSnap = await otpRef.get();
-        if (!docSnap.exists) return res.status(400).json({ error: 'No active OTP found for this number.' });
-
-        const data = docSnap.data();
-        const now = Date.now();
-        const diffMinutes = (now - data.createdAt) / (1000 * 60);
-        if (diffMinutes > OTP_EXPIRY_MINUTES) {
-            await otpRef.delete();
-            return res.status(400).json({ error: 'OTP has expired.' });
-        }
-        if (data.attempts >= MAX_ATTEMPTS) {
-            await otpRef.delete();
-            return res.status(400).json({ error: 'Maximum attempts reached. Please request a new OTP.' });
-        }
-        if (data.otp !== otp) {
-            await otpRef.update({ attempts: data.attempts + 1 });
-            return res.status(400).json({ error: 'Invalid OTP.' });
-        }
-
-        await otpRef.delete();
-        let uid = phone;
-        if (!uid.startsWith('+')) uid = `+${uid}`;
-
-        let userRecord;
-        try {
-            userRecord = await auth.getUserByPhoneNumber(uid);
-        } catch (error) {
-            if (error.code === 'auth/user-not-found') {
-                userRecord = await auth.createUser({ phoneNumber: uid });
-            } else {
-                throw error;
-            }
-        }
-        const customToken = await auth.createCustomToken(userRecord.uid);
-        res.status(200).json({ token: customToken, message: 'OTP verified successfully.' });
-    } catch (error) {
-        console.error("Error verifying OTP:", error);
-        res.status(500).json({ error: 'Internal server error during verification.' });
+    if (!phone || !otp) {
+      return res.status(400).json({ success: false, error: 'Phone number and OTP are required.' });
     }
+
+    const sanitizedPhone = sanitizePhone(phone);
+    if (!sanitizedPhone) {
+      return res.status(400).json({ success: false, error: 'Invalid phone number format.' });
+    }
+
+    const otpRef = db.collection('otps').doc(sanitizedPhone);
+    const docSnap = await otpRef.get();
+
+    if (!docSnap.exists) {
+      return res.status(400).json({ success: false, error: 'OTP not found or expired.' });
+    }
+
+    const data = docSnap.data();
+    const now = Date.now();
+
+    // Check expiry
+    if (now - data.createdAt > OTP_EXPIRY_MINUTES * 60 * 1000) {
+      await otpRef.delete();
+      return res.status(400).json({ success: false, error: 'OTP expired.' });
+    }
+
+    // Check attempts
+    if (data.attempts >= MAX_ATTEMPTS) {
+      await otpRef.delete();
+      return res.status(400).json({ success: false, error: 'Maximum attempts reached. Please request a new OTP.' });
+    }
+
+    // Verify OTP
+    if (data.otp !== otp) {
+      await otpRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
+      return res.status(400).json({ success: false, error: 'Invalid OTP.' });
+    }
+
+    // OTP verified successfully
+    await otpRef.delete();
+
+    // Create Firebase Custom Token
+    // We use the sanitized phone as the UID. Or you can generate a new UID if needed.
+    // For phone auth, standard Firebase uses the E.164 phone as the primary identifier if no other email exists.
+    const customToken = await admin.auth().createCustomToken(sanitizedPhone);
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully.',
+      token: customToken
+    });
+
+  } catch (error) {
+    console.error('Error in /verify-otp:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error.' });
+  }
 });
+
 module.exports = router;

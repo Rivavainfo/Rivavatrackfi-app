@@ -1,24 +1,22 @@
 const admin = require('firebase-admin');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const path = require('path');
 
 let serviceAccount;
 try {
-  serviceAccount = require('./serviceAccountKey.json');
+  serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
 } catch (error) {
-  console.warn("serviceAccountKey.json not found. Proceeding with default application credentials.");
+  console.warn("Warning: serviceAccountKey.json not found in backend directory. Make sure to place it there before running the server.");
 }
 
 if (serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
 } else {
-    admin.initializeApp();
+  // Fallback for initializing without specific cert if environment variables are used
+  admin.initializeApp();
 }
 
 const db = admin.firestore();
-const auth = admin.auth();
 
-module.exports = { admin, db, auth };
+module.exports = { admin, db };
