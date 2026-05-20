@@ -143,7 +143,6 @@ fun OtpScreenContent(
             onClick = {
                 if (otp.length == 6) {
                     viewModel.verifyOtp(
-                        verificationId = verificationId,
                         otp = otp,
                         phoneNumber = phoneNumber,
                         email = email,
@@ -171,10 +170,8 @@ fun OtpScreenContent(
         TextButton(
             onClick = {
                 timer = 60
-                (context as? android.app.Activity)?.let { act ->
-                    viewModel.resendOtp(phoneNumber, act) { newVerificationId ->
-                        onResendSent(newVerificationId)
-                    }
+                viewModel.resendOtp(phoneNumber) {
+                    onResendSent(it)
                 }
             },
             enabled = timer == 0

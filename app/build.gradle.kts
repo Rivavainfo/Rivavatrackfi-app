@@ -59,6 +59,7 @@ android {
         buildConfigField("String", "FINNHUB_API_KEY", "\"${System.getenv("FINNHUB_API_KEY") ?: localProperties.getProperty("finnhub.apikey") ?: "d7r4hahr01qtpsm11kc0d7r4hahr01qtpsm11kcg"}\"")
         buildConfigField("String", "SENDGRID_API_KEY", "\"${System.getenv("SENDGRID_API_KEY") ?: localProperties.getProperty("sendgrid.apikey") ?: "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"}\"")
         buildConfigField("String", "MASSIVE_API_KEY", "\"${System.getenv("MASSIVE_API_KEY") ?: localProperties.getProperty("massive.apikey") ?: "zPU6h2XRAOSstyW6n72T4xVL0yD13jp6"}\"")
+        buildConfigField("String", "BACKEND_URL", "\"${System.getenv("BACKEND_URL") ?: localProperties.getProperty("backend.url") ?: "http://10.0.2.2:3000/"}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
