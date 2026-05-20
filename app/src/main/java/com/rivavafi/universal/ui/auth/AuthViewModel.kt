@@ -439,13 +439,24 @@ class AuthViewModel @Inject constructor(
 
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
-            val result = repository.sendOtp(phoneNumber)
-            if (result.isSuccess) {
-                _phoneAuthState.value = PhoneAuthState.CODE_SENT
-                _authState.value = AuthState.IDLE
-                onCodeSentCallback(phoneNumber)
-            } else {
-                _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to send OTP"
+            try {
+                Log.d("AuthViewModel", "Initiating send OTP API request for phone: $phoneNumber")
+                val result = repository.sendOtp(phoneNumber)
+                if (result.isSuccess) {
+                    Log.d("AuthViewModel", "Successfully sent OTP to $phoneNumber")
+                    _phoneAuthState.value = PhoneAuthState.CODE_SENT
+                    _authState.value = AuthState.IDLE
+                    onCodeSentCallback(phoneNumber)
+                } else {
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Failed to send OTP due to an unknown API error"
+                    Log.e("AuthViewModel", "API failure when sending OTP: $errorMsg", result.exceptionOrNull())
+                    _errorMessage.value = errorMsg
+                    _phoneAuthState.value = PhoneAuthState.ERROR
+                    _authState.value = AuthState.IDLE
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Network or unexpected exception during send OTP: ${e.message}", e)
+                _errorMessage.value = "Network error: unable to send OTP. Please try again."
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
             }
@@ -459,13 +470,24 @@ class AuthViewModel @Inject constructor(
         }
         _authState.value = AuthState.LOADING
         viewModelScope.launch {
-            val result = repository.sendOtp(phoneNumber)
-            if (result.isSuccess) {
-                _phoneAuthState.value = PhoneAuthState.CODE_SENT
-                _authState.value = AuthState.IDLE
-                onCodeSentCallback(phoneNumber)
-            } else {
-                _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to resend OTP"
+            try {
+                Log.d("AuthViewModel", "Initiating resend OTP API request for phone: $phoneNumber")
+                val result = repository.sendOtp(phoneNumber)
+                if (result.isSuccess) {
+                    Log.d("AuthViewModel", "Successfully resent OTP to $phoneNumber")
+                    _phoneAuthState.value = PhoneAuthState.CODE_SENT
+                    _authState.value = AuthState.IDLE
+                    onCodeSentCallback(phoneNumber)
+                } else {
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Failed to resend OTP due to an unknown API error"
+                    Log.e("AuthViewModel", "API failure when resending OTP: $errorMsg", result.exceptionOrNull())
+                    _errorMessage.value = errorMsg
+                    _phoneAuthState.value = PhoneAuthState.ERROR
+                    _authState.value = AuthState.IDLE
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Network or unexpected exception during resend OTP: ${e.message}", e)
+                _errorMessage.value = "Network error: unable to resend OTP. Please try again."
                 _phoneAuthState.value = PhoneAuthState.ERROR
                 _authState.value = AuthState.IDLE
             }
