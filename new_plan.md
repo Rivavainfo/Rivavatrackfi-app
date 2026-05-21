@@ -1,7 +1,16 @@
-1. Implement a robust phone normalization in `AuthViewModel` (or a helper object) that reliably processes phone numbers to standard E.164 strings. Wait to remove previous ad-hoc formatting inside `AuthActivity.kt`.
-2. Introduce explicitly valid/invalid outcomes so `AuthActivity` acts on accurate formats and rejects malformed inputs before calling the backend.
-3. Keep the "India +91 fallback" logic consistent with the backend API `sanitizePhone`. Since the backend adds `+91` to 10-digit lengths and prepends `+` otherwise, replicate this precisely locally while enforcing minimum sanity checks.
-4. Ensure the same normalized valid string is used consistently for the UI prompt, send OTP request, and verify OTP flow.
-5. Create unit tests for the phone validation and normalizer (add a new Test file for AuthViewModel or PhoneNormalizer) to explicitly check edge cases.
-6. Verify fixes compile and tests pass via `./gradlew testDebugUnitTest`.
-7. Pre-commit check and submission.
+The user wants to ensure:
+1. The OTP is sent properly (already handled in previous PR and current state: using backend `RetrofitClient` with try/catch and logging, updating `PhoneAuthState` directly to `CODE_SENT`).
+2. The OTP input stays above the keyboard. Currently in Compose, `Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center, ...)` will push the content up when the keyboard appears *if* `imePadding()` is added, or if `WindowCompat.setDecorFitsSystemWindows(window, false)` + `imePadding()` is used. Alternatively, changing `Arrangement.Center` to a scrolling view `verticalScroll` or adding `imePadding()` ensures the keyboard doesn't overlap.
+Let's add `Modifier.imePadding()` to the `Column` in `OtpActivity` and ensure we add `Modifier.verticalScroll(rememberScrollState())` to prevent the UI from being pushed completely off-screen and becoming unscrollable on smaller screens.
+
+Wait, `OtpActivity` uses:
+```kotlin
+        setContent {
+            TrackFiTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = AmoledBlack
+                ) {
+                    OtpScreenContent(...)
+```
+I can add `imePadding()` to `OtpScreenContent`'s `Column` and `verticalScroll` to ensure it pushes up when the keyboard is open and remains fully accessible.
