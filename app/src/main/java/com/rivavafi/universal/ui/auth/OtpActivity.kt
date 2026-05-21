@@ -9,6 +9,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -97,7 +99,9 @@ fun OtpScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .imePadding()
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -160,7 +164,6 @@ fun OtpScreenContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val context = androidx.compose.ui.platform.LocalContext.current
         TextButton(
             onClick = {
                 timer = 60
