@@ -14,6 +14,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import android.content.Context
 import com.rivavafi.universal.data.model.User
 import com.rivavafi.universal.data.repository.UserRepository
+import com.rivavafi.universal.data.repository.FirebaseUserManager
+import com.rivavafi.universal.data.model.UserModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,7 +49,8 @@ class AuthViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val userEntitlementRepository: UserEntitlementRepository,
     private val userRepository: UserRepository,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val firebaseUserManager: FirebaseUserManager
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState.IDLE)
@@ -153,7 +156,21 @@ class AuthViewModel @Inject constructor(
                 userRepository.saveUserToFirestore(user)
                 userRepository.cacheUserLocally(context, user)
 
+
                 Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
+
+                // SAVE TO THEDATA
+                val theDataUser = UserModel(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    phone = repository.auth.currentUser?.phoneNumber,
+                    profileImage = photoUrl.ifBlank { null },
+                    loginProvider = "google",
+                    isPhoneVerified = false
+                )
+                firebaseUserManager.saveUserToFirestore(theDataUser)
+
                 val sessionState = repository.saveUserToFirestore(
                     uid = uid,
                     name = name,
@@ -231,8 +248,19 @@ class AuthViewModel @Inject constructor(
                 repository.auth.signInWithEmailAndPassword(email, pass).await()
                 Log.d("AuthViewModel", "Email login successful")
 
+
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
+
+                // SAVE TO THEDATA (handles both create if not exists and update lastLoginAt if exists)
+                val theDataUser = UserModel(
+                    uid = uid,
+                    email = email,
+                    loginProvider = "email",
+                    isPhoneVerified = false
+                )
+                firebaseUserManager.saveUserToFirestore(theDataUser)
+
                 if (isVerified) {
 
                     val sessionState = repository.saveUserToFirestore(
@@ -321,7 +349,19 @@ class AuthViewModel @Inject constructor(
                 val result = repository.auth.createUserWithEmailAndPassword(email, pass).await()
                 val uid = result.user?.uid ?: throw Exception("Failed to retrieve UID")
 
+
                 Log.d("AuthViewModel", "Registration successful. Saving to Firestore and Sheets...")
+
+                // SAVE TO THEDATA
+                val theDataUser = UserModel(
+                    uid = uid,
+                    name = name.ifBlank { null },
+                    email = email,
+                    loginProvider = "email",
+                    isPhoneVerified = false
+                )
+                firebaseUserManager.saveUserToFirestore(theDataUser)
+
                 repository.saveUserToFirestore(
                     uid = uid,
                     name = name.ifBlank { null },
@@ -543,7 +583,19 @@ class AuthViewModel @Inject constructor(
                     Log.d("AuthViewModel", "OTP verified successfully. Retrieving UID...")
                     val uid = result.getOrNull() ?: throw Exception("Failed to retrieve UID")
 
+
                     Log.d("AuthViewModel", "UID retrieved: $uid. Saving user to Firestore...")
+
+                    // SAVE TO THEDATA
+                    val theDataUser = UserModel(
+                        uid = uid,
+                        email = email,
+                        phone = phoneNumber,
+                        loginProvider = "phone",
+                        isPhoneVerified = true
+                    )
+                    firebaseUserManager.saveUserToFirestore(theDataUser)
+
                     val sessionState = repository.saveUserToFirestore(
                         uid = uid,
                         name = null,

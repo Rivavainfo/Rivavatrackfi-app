@@ -156,7 +156,10 @@ fun AuthScreenContent(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val phoneAuthState by viewModel.phoneAuthState.collectAsState()
     val isNewUser by viewModel.isNewUser.collectAsState()
+
+    var showPhoneConfirmDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
     var authMethod by remember { mutableStateOf("INITIAL") }
     var phoneNumber by remember { mutableStateOf("") }
 
@@ -341,6 +344,43 @@ fun AuthScreenContent(
                     Spacer(modifier = Modifier.height(16.dp))
 
 
+
+
+                    if (showPhoneConfirmDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showPhoneConfirmDialog = false },
+                            title = {
+                                Text(text = "Confirm Phone Number", fontWeight = FontWeight.Bold)
+                            },
+                            text = {
+                                Column {
+                                    Text(text = "Is this your correct phone number?", fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(text = phoneNumber, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimarySky)
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showPhoneConfirmDialog = false
+                                    viewModel.startPhoneVerification(phoneNumber) {
+                                        // Handled by launched effect
+                                    }
+                                }) {
+                                    Text("YES CONTINUE", fontWeight = FontWeight.Bold, color = PrimarySky)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showPhoneConfirmDialog = false }) {
+                                    Text("EDIT NUMBER", color = Color.Gray)
+                                }
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            containerColor = AmoledBlack,
+                            titleContentColor = Color.White,
+                            textContentColor = Color.White
+                        )
+                    }
+
                     if (authMethod == "INITIAL") {
                         // Google Login Button
                         Button(
@@ -426,9 +466,7 @@ fun AuthScreenContent(
                                 val normalized = viewModel.normalizePhoneNumber(phoneNumber)
                                 if (normalized != null) {
                                     phoneNumber = normalized
-                                    viewModel.startPhoneVerification(normalized) {
-                                        // Handled by launched effect
-                                    }
+                                    showPhoneConfirmDialog = true
                                 } else {
                                     Toast.makeText(context, "Invalid phone number format.", Toast.LENGTH_SHORT).show()
                                 }
