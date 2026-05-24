@@ -63,17 +63,6 @@ fun OtpVerificationScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Enter OTP",
-            style = MaterialTheme.typography.displaySmall.copy(
-                fontWeight = FontWeight.ExtraBold,
-                color = Color.White
-            ),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
             text = "We have sent a verification code to your number.",
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = Color.White.copy(alpha = 0.7f),
