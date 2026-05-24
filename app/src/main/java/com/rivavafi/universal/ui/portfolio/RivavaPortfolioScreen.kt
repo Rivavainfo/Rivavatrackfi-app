@@ -209,8 +209,7 @@ fun RivavaPortfolioScreen(
                         PremiumUnlockDialog(
                             onDismiss = { showSecretDialog = false },
                             onUnlockSuccess = {
-                                val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
-                                prefs.edit().putBoolean("portfolio_unlocked", true).apply()
+                                premiumViewModel.unlockWithSecretKey()
                                 showSecretDialog = false
                             },
                             onPayClick = {
