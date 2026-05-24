@@ -84,6 +84,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Welcome : Screen("welcome", "Welcome", Icons.Outlined.Home)
     object Greeting : Screen("greeting", "Greeting", Icons.Outlined.Home)
     object PhoneInput : Screen("phone_input", "Phone Input", Icons.Outlined.Home)
+    object OtpVerification : Screen("otp_verification", "OTP Verification", Icons.Outlined.Home)
     object SmsOptIn : Screen("sms_opt_in", "SmsOptIn", Icons.Outlined.Home)
     object Scanning : Screen("scanning", "Scanning", Icons.Outlined.Home)
     object Home : Screen("home", "Home", Icons.Outlined.Home)
@@ -246,8 +247,15 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.SmsOptIn.route) {
+                    navController.navigate(Screen.OtpVerification.route) {
                         popUpTo(Screen.PhoneInput.route) { inclusive = true }
+                    }
+                })
+            }
+            composable(Screen.OtpVerification.route) {
+                com.rivavafi.universal.ui.onboarding.OtpVerificationScreen(onNavigateNext = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.OtpVerification.route) { inclusive = true }
                     }
                 })
             }

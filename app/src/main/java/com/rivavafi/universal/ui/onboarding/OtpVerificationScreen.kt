@@ -1,5 +1,6 @@
 package com.rivavafi.universal.ui.onboarding
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,29 +18,35 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rivavafi.universal.ui.theme.AmoledBlack
-import com.rivavafi.universal.ui.theme.PrimarySky
-import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 import com.rivavafi.universal.ui.components.RivavaBrandDisplay
+import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PhoneInputScreen(
+fun OtpVerificationScreen(
     onNavigateNext: () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel()
 ) {
-    var phoneNumber by remember { mutableStateOf("") }
+    var otpCode by remember { mutableStateOf("") }
+    var timeLeft by remember { mutableStateOf(30) }
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    var showConfirmDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
             if (it.isNotEmpty()) {
-                android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show()
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                 viewModel.clearError()
             }
+        }
+    }
+
+    LaunchedEffect(timeLeft) {
+        if (timeLeft > 0) {
+            delay(1000)
+            timeLeft -= 1
         }
     }
 
@@ -56,7 +63,7 @@ fun PhoneInputScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "Add your number",
+            text = "Enter OTP",
             style = MaterialTheme.typography.displaySmall.copy(
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
@@ -67,7 +74,7 @@ fun PhoneInputScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Kindly add the correct phone no. else the data can be degraded.",
+            text = "We have sent a verification code to your number.",
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = Color.White.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium
@@ -78,14 +85,14 @@ fun PhoneInputScreen(
         Spacer(modifier = Modifier.height(48.dp))
 
         OutlinedTextField(
-            value = phoneNumber,
+            value = otpCode,
             onValueChange = {
                 val digitsOnly = it.filter { char -> char.isDigit() }
-                if (digitsOnly.length <= 10) {
-                    phoneNumber = digitsOnly
+                if (digitsOnly.length <= 6) {
+                    otpCode = digitsOnly
                 }
             },
-            label = { Text("Phone Number (10 digits)", color = Color.White.copy(0.7f)) },
+            label = { Text("6-digit Code", color = Color.White.copy(0.7f)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
             colors = OutlinedTextFieldDefaults.colors(
@@ -102,9 +109,12 @@ fun PhoneInputScreen(
 
         Button(
             onClick = {
-                val formattedNumber = phoneNumber.trim()
-                if (formattedNumber.length == 10) {
-                    showConfirmDialog = true
+                if (otpCode.length == 6) {
+                    viewModel.verifyOtp(otpCode) {
+                        onNavigateNext()
+                    }
+                } else {
+                    Toast.makeText(context, "Please enter 6 digit code", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
@@ -116,52 +126,34 @@ fun PhoneInputScreen(
                 disabledContainerColor = Color(0xFF005D8A),
                 disabledContentColor = Color.White.copy(alpha = 0.75f)
             ),
-            enabled = phoneNumber.length == 10 && !isLoading,
+            enabled = otpCode.length == 6 && !isLoading,
             shape = RoundedCornerShape(20.dp)
         ) {
             Text(
-                "Continue",
+                "Verify",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold
                 )
             )
         }
-    }
 
+        Spacer(modifier = Modifier.height(16.dp))
 
-
-    if (showConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showConfirmDialog = false },
-            title = {
-                Text(text = "Confirm Number", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Column {
-                    Text(text = "Is this your correct phone number?", fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "+91 $phoneNumber", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimarySky)
+        TextButton(
+            onClick = {
+                if (timeLeft == 0) {
+                    viewModel.resendOtp()
+                    timeLeft = 30
                 }
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    showConfirmDialog = false
-                    viewModel.startPhoneVerification(phoneNumber)
-                    onNavigateNext()
-                }) {
-                    Text("Yes, Continue", fontWeight = FontWeight.Bold, color = PrimarySky)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Edit Number", color = Color.Gray)
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = AmoledBlack,
-            titleContentColor = Color.White,
-            textContentColor = Color.White
-        )
+            enabled = timeLeft == 0 && !isLoading
+        ) {
+            Text(
+                text = if (timeLeft > 0) "Resend code in ${timeLeft}s" else "Resend Code",
+                color = if (timeLeft > 0) Color.Gray else Color(0xFF00A3FF),
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 
     RivavaLoadingOverlay(isLoading = isLoading)
