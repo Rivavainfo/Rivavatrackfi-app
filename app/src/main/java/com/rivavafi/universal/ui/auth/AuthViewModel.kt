@@ -62,6 +62,10 @@ class AuthViewModel @Inject constructor(
     private val _phoneAuthState = MutableStateFlow(PhoneAuthState.IDLE)
     val phoneAuthState: StateFlow<PhoneAuthState> = _phoneAuthState.asStateFlow()
 
+
+    private val _requiresProfileCompletion = MutableStateFlow(false)
+    val requiresProfileCompletion: StateFlow<Boolean> = _requiresProfileCompletion.asStateFlow()
+
     private val _isNewUser = MutableStateFlow<Boolean?>(null)
     val isNewUser: StateFlow<Boolean?> = _isNewUser.asStateFlow()
 
@@ -137,6 +141,7 @@ class AuthViewModel @Inject constructor(
         return userRepository.getCachedUser(context)
     }
 
+
     fun onGoogleSignInSuccess(idToken: String, name: String, email: String, photoUrl: String = "") {
         viewModelScope.launch {
             _authState.value = AuthState.LOADING
@@ -145,8 +150,52 @@ class AuthViewModel @Inject constructor(
                 val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
                 val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
 
-                // Set state back to IDLE so the UI can proceed to PROFILE_COMPLETION
-                _authState.value = AuthState.IDLE
+                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
+
+                // Check if user exists in THEDATA
+                val doc = firebaseUserManager.getCurrentUserData(uid)
+                if (doc != null) {
+                    // Existing user, log them in directly
+                    val sessionState = repository.saveUserToFirestore(
+                        uid = uid,
+                        name = name,
+                        email = email,
+                        phoneNumber = doc.phone,
+                        authProvider = "google",
+                        isVerified = true,
+                        photoUrl = photoUrl
+                    )
+
+                    val isNew = sessionState.isNewUser
+                    _isNewUser.value = isNew
+
+                    userPreferencesRepository.saveUserName(name)
+                    if (photoUrl.isNotBlank()) {
+                        userPreferencesRepository.setProfileImageUri(photoUrl)
+                    }
+
+                    val appUser = User(
+                        uid = uid,
+                        name = name,
+                        email = email,
+                        photo = photoUrl.ifBlank { null },
+                        phone = doc.phone
+                    )
+                    userRepository.saveUserToFirestore(appUser)
+                    userRepository.cacheUserLocally(context, appUser)
+
+                    if (sessionState.onboardingCompleted) {
+                        userPreferencesRepository.setOnboardingCompleted(true)
+                    }
+
+                    userEntitlementRepository.syncEntitlement()
+                    _authState.value = AuthState.SUCCESS
+                } else {
+                    // New user, return to IDLE so UI can show PROFILE_COMPLETION
+                    _requiresProfileCompletion.value = true
+                    _authState.value = AuthState.IDLE
+                }
+
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Google Sign-in failed", e)
                 _errorMessage.value = e.message ?: "Login failed"
@@ -154,6 +203,7 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
 
     fun saveUserProfileCompletion(name: String, phone: String, preference: String, email: String, photoUrl: String, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
@@ -184,7 +234,7 @@ class AuthViewModel @Inject constructor(
                     photoUrl = photoUrl
                 )
 
-                val isNew = sessionState.isNewUser
+                val isNew = sessionState.isNewUser || repository.auth.currentUser?.metadata?.creationTimestamp == repository.auth.currentUser?.metadata?.lastSignInTimestamp
                 _isNewUser.value = isNew
 
                 userPreferencesRepository.saveUserName(name)

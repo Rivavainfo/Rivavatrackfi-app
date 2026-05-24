@@ -8,6 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -145,6 +147,7 @@ fun AuthScreenContent(
     onNavigateToReset: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
+    val requiresProfileCompletion by viewModel.requiresProfileCompletion.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val phoneAuthState by viewModel.phoneAuthState.collectAsState()
     val isNewUser by viewModel.isNewUser.collectAsState()
@@ -166,6 +169,13 @@ fun AuthScreenContent(
         }
     }
 
+
+    LaunchedEffect(requiresProfileCompletion) {
+        if (requiresProfileCompletion) {
+            authMethod = "PROFILE_COMPLETION"
+        }
+    }
+
     LaunchedEffect(authState) {
 
         if (authState == AuthState.SUCCESS) {
@@ -184,7 +194,6 @@ fun AuthScreenContent(
     var tempName by remember { mutableStateOf("") }
     var tempEmail by remember { mutableStateOf("") }
     var tempPhotoUrl by remember { mutableStateOf("") }
-
     val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -192,17 +201,22 @@ fun AuthScreenContent(
         try {
             val account = task.getResult(ApiException::class.java)
             if (account != null && account.idToken != null) {
-                // Verify with Firebase
+                tempName = account.displayName ?: "User"
+                tempEmail = account.email ?: ""
+                tempPhotoUrl = account.photoUrl?.toString() ?: ""
+
                 viewModel.onGoogleSignInSuccess(
                     idToken = account.idToken!!,
                     name = account.displayName ?: "User",
                     email = account.email ?: "",
                     photoUrl = account.photoUrl?.toString() ?: ""
                 )
-                tempName = account.displayName ?: "User"
-                tempEmail = account.email ?: ""
-                tempPhotoUrl = account.photoUrl?.toString() ?: ""
-                authMethod = "PROFILE_COMPLETION"
+
+                // We rely on AuthState.SUCCESS to navigate away if existing.
+                // If it goes back to IDLE, it means it's a new user, we set authMethod
+                // But we need a better way to distinguish IDLE (error) vs IDLE (needs completion)
+                // Let's use a new variable for profile completion trigger
+
             } else {
                 viewModel.setErrorMessage("Sign-in failed: ID Token is null")
             }
@@ -215,6 +229,8 @@ fun AuthScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0A0A0A))
+            .imePadding()
+            .verticalScroll(rememberScrollState())
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -559,84 +575,8 @@ fun AuthScreenContent(
                             Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Phone Login Button
-                        Button(
-                            onClick = { authMethod = "PHONE" },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                            shape = RoundedCornerShape(20.dp),
-                            enabled = authState != AuthState.LOADING
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Phone,
-                                contentDescription = "Phone",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("Continue with Phone", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        }
-                    } else if (authMethod == "PHONE") {
-                        Text(
-                            text = "Phone Sign In",
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
-                            value = phoneNumber,
-                            onValueChange = { phoneNumber = it },
-                            label = { Text("Phone Number", color = Color.White.copy(0.7f)) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF3B82F6),
-                                unfocusedBorderColor = Color.White.copy(0.2f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = {
-                                Text("+91", modifier = Modifier.padding(start = 16.dp, end = 8.dp), color = Color.White)
-                            },
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = {
-                                val normalized = viewModel.normalizePhoneNumber(phoneNumber)
-                                if (normalized != null) {
-                                    phoneNumber = normalized
-                                    showPhoneConfirmDialog = true
-                                } else {
-                                    Toast.makeText(context, "Invalid phone number format.", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            enabled = authState != AuthState.LOADING,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            if (authState == AuthState.LOADING) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            } else {
-                                Text("Send OTP", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-                            }
-                        }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        TextButton(onClick = { authMethod = "INITIAL" }) {
-                            Text("Back to options", color = Color.White.copy(alpha = 0.7f))
-                        }
                     }
 
                 }
