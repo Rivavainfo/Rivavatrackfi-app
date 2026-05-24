@@ -32,6 +32,7 @@ fun PhoneInputScreen(
     val context = LocalContext.current
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(errorMessage) {
         errorMessage?.let {
@@ -103,9 +104,7 @@ fun PhoneInputScreen(
             onClick = {
                 val formattedNumber = phoneNumber.trim()
                 if (formattedNumber.length == 10) {
-                    viewModel.savePhoneNumber(formattedNumber) {
-                        onNavigateNext()
-                    }
+                    showConfirmDialog = true
                 }
             },
             modifier = Modifier
@@ -127,6 +126,42 @@ fun PhoneInputScreen(
                 )
             )
         }
+    }
+
+
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = {
+                Text(text = "Confirm Number", fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column {
+                    Text(text = "Is this your correct phone number?", fontSize = 16.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "+91 $phoneNumber", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimarySky)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmDialog = false
+                    viewModel.startPhoneVerification(phoneNumber)
+                    onNavigateNext()
+                }) {
+                    Text("Yes, Continue", fontWeight = FontWeight.Bold, color = PrimarySky)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("Edit Number", color = Color.Gray)
+                }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = AmoledBlack,
+            titleContentColor = Color.White,
+            textContentColor = Color.White
+        )
     }
 
     RivavaLoadingOverlay(isLoading = isLoading)

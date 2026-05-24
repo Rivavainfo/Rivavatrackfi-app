@@ -147,16 +147,15 @@ fun AuthScreenContent(
     onNavigateToReset: () -> Unit
 ) {
     val authState by viewModel.authState.collectAsState()
-    val requiresProfileCompletion by viewModel.requiresProfileCompletion.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val phoneAuthState by viewModel.phoneAuthState.collectAsState()
     val isNewUser by viewModel.isNewUser.collectAsState()
 
-    var showPhoneConfirmDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
 
-    var authMethod by remember { mutableStateOf("INITIAL") }
-    var phoneNumber by remember { mutableStateOf("") }
+
+
 
 
     BackHandler(enabled = authState == AuthState.LOADING) {
@@ -164,17 +163,10 @@ fun AuthScreenContent(
     }
 
 
-    LaunchedEffect(phoneAuthState) {
-        if (phoneAuthState == PhoneAuthState.CODE_SENT) {
-        }
-    }
 
 
-    LaunchedEffect(requiresProfileCompletion) {
-        if (requiresProfileCompletion) {
-            authMethod = "PROFILE_COMPLETION"
-        }
-    }
+
+
 
     LaunchedEffect(authState) {
 
@@ -191,9 +183,9 @@ fun AuthScreenContent(
             }
         }
     }
-    var tempName by remember { mutableStateOf("") }
-    var tempEmail by remember { mutableStateOf("") }
-    var tempPhotoUrl by remember { mutableStateOf("") }
+
+
+
     val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -201,9 +193,6 @@ fun AuthScreenContent(
         try {
             val account = task.getResult(ApiException::class.java)
             if (account != null && account.idToken != null) {
-                tempName = account.displayName ?: "User"
-                tempEmail = account.email ?: ""
-                tempPhotoUrl = account.photoUrl?.toString() ?: ""
 
                 viewModel.onGoogleSignInSuccess(
                     idToken = account.idToken!!,
@@ -361,190 +350,7 @@ fun AuthScreenContent(
 
 
 
-                    if (showPhoneConfirmDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showPhoneConfirmDialog = false },
-                            title = {
-                                Text(text = "Confirm Phone Number", fontWeight = FontWeight.Bold)
-                            },
-                            text = {
-                                Column {
-                                    Text(text = "Is this your correct phone number?", fontSize = 16.sp)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(text = phoneNumber, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimarySky)
-                                }
-                            },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    showPhoneConfirmDialog = false
-                                    viewModel.startPhoneVerification(phoneNumber) {
-                                        // Handled by launched effect
-                                    }
-                                }) {
-                                    Text("YES CONTINUE", fontWeight = FontWeight.Bold, color = PrimarySky)
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showPhoneConfirmDialog = false }) {
-                                    Text("EDIT NUMBER", color = Color.Gray)
-                                }
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            containerColor = AmoledBlack,
-                            titleContentColor = Color.White,
-                            textContentColor = Color.White
-                        )
-                    }
-
-
-                    if (authMethod == "PROFILE_COMPLETION") {
-                        var preference by remember { mutableStateOf("Rivava Portfolio") }
-                        var showConfirmDialog by remember { mutableStateOf(false) }
-
-                        Text(
-                            text = "Complete Profile",
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        OutlinedTextField(
-                            value = tempName,
-                            onValueChange = { tempName = it },
-                            label = { Text("Full Name", color = Color.White.copy(0.7f)) },
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF3B82F6),
-                                unfocusedBorderColor = Color.White.copy(0.2f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-
-                        OutlinedTextField(
-                            value = phoneNumber,
-                            onValueChange = {
-                                val filtered = it.filter { char -> char.isDigit() }
-                                if (filtered.length <= 10) phoneNumber = filtered
-                            },
-                            label = { Text("Phone Number", color = Color.White.copy(0.7f)) },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF3B82F6),
-                                unfocusedBorderColor = Color.White.copy(0.2f),
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = {
-                                Text("+91", modifier = Modifier.padding(start = 16.dp, end = 8.dp), color = Color.White)
-                            },
-                            shape = RoundedCornerShape(16.dp)
-                        )
-
-                        // Dropdown for Preference
-                        var expanded by remember { mutableStateOf(false) }
-                        val options = listOf("Rivava Portfolio", "Rivava Elite", "Both")
-
-                        Box(modifier = Modifier.fillMaxWidth()) {
-                            OutlinedTextField(
-                                value = preference,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Preference", color = Color.White.copy(0.7f)) },
-                                trailingIcon = {
-                                    IconButton(onClick = { expanded = !expanded }) {
-                                        Icon(if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown, "dropdown", tint=Color.White)
-                                    }
-                                },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF3B82F6),
-                                    unfocusedBorderColor = Color.White.copy(0.2f),
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                ),
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier.background(Color(0xFF131313))
-                            ) {
-                                options.forEach { selectionOption ->
-                                    DropdownMenuItem(
-                                        text = { Text(selectionOption, color = Color.White) },
-                                        onClick = {
-                                            preference = selectionOption
-                                            expanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Button(
-                            onClick = {
-                                if (phoneNumber.length == 10 && tempName.isNotBlank()) {
-                                    showConfirmDialog = true
-                                } else {
-                                    Toast.makeText(context, "Please enter a valid 10-digit number and name.", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            enabled = authState != AuthState.LOADING,
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF34D399), contentColor = Color.White),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text("Continue", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
-                        }
-
-                        if (showConfirmDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showConfirmDialog = false },
-                                title = { Text("Confirm Number", fontWeight = FontWeight.Bold) },
-                                text = {
-                                    Column {
-                                        Text("Is this your correct phone number?", fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text("+91 $phoneNumber", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimarySky)
-                                    }
-                                },
-                                confirmButton = {
-                                    TextButton(onClick = {
-                                        showConfirmDialog = false
-                                        viewModel.saveUserProfileCompletion(
-                                            name = tempName,
-                                            phone = "+91$phoneNumber",
-                                            preference = preference,
-                                            email = tempEmail,
-                                            photoUrl = tempPhotoUrl
-                                        ) { isNew ->
-                                            onLoginSuccess(isNew)
-                                        }
-                                    }) {
-                                        Text("Yes, Continue", fontWeight = FontWeight.Bold, color = PrimarySky)
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { showConfirmDialog = false }) {
-                                        Text("Edit Number", color = Color.Gray)
-                                    }
-                                },
-                                shape = RoundedCornerShape(16.dp),
-                                containerColor = AmoledBlack,
-                                titleContentColor = Color.White,
-                                textContentColor = Color.White
-                            )
-                        }
-                    } else if (authMethod == "INITIAL") {
-
-                        // Google Login Button
+                                            // Google Login Button
                         Button(
                             onClick = {
                                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -574,10 +380,6 @@ fun AuthScreenContent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
-
-
-
-                    }
 
                 }
             }

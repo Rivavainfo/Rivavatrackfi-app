@@ -90,27 +90,9 @@ fun RivavaPortfolioScreen(
 ) {
     val context = LocalContext.current
     val premiumState by premiumViewModel.premiumState.collectAsState()
-    val paymentState by premiumViewModel.paymentState.collectAsState()
+    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    var showWhatsAppDialog by remember { mutableStateOf(false) }
     var premiumKeyInput by remember { mutableStateOf("") }
-
-    val paymentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val orderId = paymentState.orderData?.orderId
-            if (orderId != null) {
-                premiumViewModel.verifyUroPayPayment(orderId)
-            } else {
-                premiumViewModel.clearPaymentError()
-            }
-        } else {
-            premiumViewModel.clearPaymentError()
-        }
-    }
-
-    LaunchedEffect(paymentState.uiState) {
-        if (paymentState.uiState == PaymentUiState.CHECKOUT_READY) {
-            premiumViewModel.clearPaymentError()
-        }
-    }
 
     if (premiumState.status == EntitlementStatus.LOADING) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -179,43 +161,100 @@ fun RivavaPortfolioScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(32.dp))
-                    val isProcessing = paymentState.uiState == PaymentUiState.CREATING_ORDER || paymentState.uiState == PaymentUiState.VERIFYING
+
                     Button(
-                        onClick = { premiumViewModel.startPremiumPurchase(1100) },
-                        enabled = !isProcessing,
+                        onClick = {
+                            com.rivavafi.universal.utils.WhatsAppUtils.openWhatsAppForAdvisor(
+                                context = context,
+                                username = auth.currentUser?.displayName ?: "User",
+                                email = auth.currentUser?.email ?: "",
+                                phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                preference = "Not Selected",
+                                premiumStatus = false
+                            )
+                            showWhatsAppDialog = true
+                        },
                         modifier = Modifier
                             .widthIn(min = 220.dp)
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF4C91),
-                            contentColor = Color.White,
-                            disabledContainerColor = Color(0xFFFF4C91).copy(alpha = 0.5f),
-                            disabledContentColor = Color.White.copy(alpha = 0.5f)
+                            containerColor = Color(0xFFD4AF37),
+                            contentColor = Color.Black
                         ),
                         shape = RoundedCornerShape(20.dp),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                     ) {
-                        if (isProcessing) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (paymentState.uiState == PaymentUiState.VERIFYING) "Verifying..." else "Please wait...")
-                        } else {
-                            Text(
-                                if (paymentState.uiState == PaymentUiState.ERROR) "Retry Payment" else "Unlock Premium",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
+                        Text(
+                            "Call With Advisor",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
                             )
-                        }
+                        )
                     }
 
-                    if (paymentState.uiState == PaymentUiState.ERROR && paymentState.errorMessage != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = paymentState.errorMessage!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    var showSecretDialog by remember { mutableStateOf(false) }
+
+                    OutlinedButton(
+                        onClick = { showSecretDialog = true },
+                        modifier = Modifier.widthIn(min = 220.dp).height(50.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha=0.5f))
+                    ) {
+                        Text("Enter Secret Key", color = Color.White)
+                    }
+
+                    if (showSecretDialog) {
+                        PremiumUnlockDialog(
+                            onDismiss = { showSecretDialog = false },
+                            onUnlockSuccess = {
+                                val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
+                                prefs.edit().putBoolean("portfolio_unlocked", true).apply()
+                                showSecretDialog = false
+                            },
+                            onPayClick = {
+                                com.rivavafi.universal.utils.WhatsAppUtils.openWhatsAppForAdvisor(
+                                    context = context,
+                                    username = auth.currentUser?.displayName ?: "User",
+                                    email = auth.currentUser?.email ?: "",
+                                    phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                    preference = "Not Selected",
+                                    premiumStatus = false
+                                )
+                                showWhatsAppDialog = true
+                            }
+                        )
+                    }
+
+                    if (showWhatsAppDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showWhatsAppDialog = false },
+                            title = { Text("Contact Advisor", fontWeight = FontWeight.Bold) },
+                            text = { Text("Did you connect with the advisor successfully?") },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    showWhatsAppDialog = false
+                                    com.rivavafi.universal.utils.WhatsAppUtils.openWhatsAppForAdvisor(
+                                        context = context,
+                                        username = auth.currentUser?.displayName ?: "User",
+                                        email = auth.currentUser?.email ?: "",
+                                        phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                        preference = "Not Selected",
+                                        premiumStatus = false
+                                    )
+                                }) {
+                                    Text("Contact Again", color = Color(0xFFD4AF37))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showWhatsAppDialog = false }) {
+                                    Text("Close", color = Color.Gray)
+                                }
+                            },
+                            containerColor = Color(0xFF1E1E1E),
+                            titleContentColor = Color.White,
+                            textContentColor = Color.White
                         )
                     }
                 }

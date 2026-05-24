@@ -63,8 +63,7 @@ class AuthViewModel @Inject constructor(
     val phoneAuthState: StateFlow<PhoneAuthState> = _phoneAuthState.asStateFlow()
 
 
-    private val _requiresProfileCompletion = MutableStateFlow(false)
-    val requiresProfileCompletion: StateFlow<Boolean> = _requiresProfileCompletion.asStateFlow()
+
 
     private val _isNewUser = MutableStateFlow<Boolean?>(null)
     val isNewUser: StateFlow<Boolean?> = _isNewUser.asStateFlow()
@@ -191,9 +190,9 @@ class AuthViewModel @Inject constructor(
                     userEntitlementRepository.syncEntitlement()
                     _authState.value = AuthState.SUCCESS
                 } else {
-                    // New user, return to IDLE so UI can show PROFILE_COMPLETION
-                    _requiresProfileCompletion.value = true
-                    _authState.value = AuthState.IDLE
+                    // New user, navigate to Welcome
+                    _isNewUser.value = true
+                    _authState.value = AuthState.SUCCESS
                 }
 
             } catch (e: Exception) {
@@ -204,68 +203,6 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-
-    fun saveUserProfileCompletion(name: String, phone: String, preference: String, email: String, photoUrl: String, onComplete: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            _authState.value = AuthState.LOADING
-            try {
-                val user = repository.auth.currentUser ?: throw Exception("User not authenticated")
-                val uid = user.uid
-
-                val theDataUser = UserModel(
-                    uid = uid,
-                    name = name,
-                    email = email,
-                    phone = phone,
-                    preference = preference,
-                    profileImage = photoUrl.ifBlank { null },
-                    loginProvider = "google",
-                    isPhoneVerified = false // By default from Google
-                )
-                firebaseUserManager.saveUserToFirestore(theDataUser)
-
-                val sessionState = repository.saveUserToFirestore(
-                    uid = uid,
-                    name = name,
-                    email = email,
-                    phoneNumber = phone,
-                    authProvider = "google",
-                    isVerified = true,
-                    photoUrl = photoUrl
-                )
-
-                val isNew = sessionState.isNewUser || repository.auth.currentUser?.metadata?.creationTimestamp == repository.auth.currentUser?.metadata?.lastSignInTimestamp
-                _isNewUser.value = isNew
-
-                userPreferencesRepository.saveUserName(name)
-                if (photoUrl.isNotBlank()) {
-                    userPreferencesRepository.setProfileImageUri(photoUrl)
-                }
-
-                val appUser = User(
-                    uid = uid,
-                    name = name,
-                    email = email,
-                    photo = photoUrl.ifBlank { null },
-                    phone = phone
-                )
-                userRepository.saveUserToFirestore(appUser)
-                userRepository.cacheUserLocally(context, appUser)
-
-                if (sessionState.onboardingCompleted) {
-                    userPreferencesRepository.setOnboardingCompleted(true)
-                }
-
-                userEntitlementRepository.syncEntitlement()
-                _authState.value = AuthState.SUCCESS
-                onComplete(isNew)
-            } catch (e: Exception) {
-                Log.e("AuthViewModel", "Profile completion failed", e)
-                _errorMessage.value = e.message ?: "Failed to save profile"
-                _authState.value = AuthState.IDLE
-            }
-        }
-    }
 
     fun onEmailLogin(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {

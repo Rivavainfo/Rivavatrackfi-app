@@ -41,10 +41,11 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PremiumUnlockDialog(
-    userName: String,
+    userName: String = "User",
     onDismiss: () -> Unit,
     onUnlockSuccess: () -> Unit,
-    onPayClick: (() -> Unit)? = null
+    onPayClick: (() -> Unit)? = null,
+    secretKeyToMatch: String = com.rivavafi.universal.utils.SecretConfig.PORTFOLIO_KEY
 ) {
     var secretKeyInput by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
@@ -153,7 +154,7 @@ fun PremiumUnlockDialog(
 
                             Button(
                                 onClick = {
-                                    if (secretKeyInput == com.rivavafi.universal.utils.SecretConfig.PORTFOLIO_KEY) {
+                                    if (secretKeyInput == secretKeyToMatch) {
                                         currentStep = UnlockStep.Verifying
                                     } else {
                                         showError = true
