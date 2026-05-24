@@ -146,6 +146,8 @@ class AuthRepository @Inject constructor(
         userData["last_login_at"] = com.google.firebase.firestore.FieldValue.serverTimestamp()
 
         return runCatching {
+            saveToTheRivData(uid, name, email, phoneNumber)
+
             val docRef = firestore.collection("users").document(uid)
             val docSnap = docRef.get().await()
             val existingName = docSnap.getString("full_name") ?: docSnap.getString("display_name")
@@ -227,6 +229,49 @@ class AuthRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("AuthRepository", "Failed to check if email exists", e)
             false
+        }
+    }
+
+    private suspend fun saveToTheRivData(
+        uid: String,
+        name: String?,
+        email: String?,
+        phoneNumber: String?
+    ) {
+        try {
+            val docRef = firestore.collection("therivdata").document(uid)
+            val docSnap = docRef.get().await()
+
+            if (docSnap.exists()) {
+                val updateData = mutableMapOf<String, Any>()
+                updateData["lastLoginAt"] = com.google.firebase.Timestamp.now()
+
+                if (phoneNumber != null && docSnap.getString("phoneno") != phoneNumber) {
+                    updateData["phoneno"] = phoneNumber
+                }
+
+                if (name != null && docSnap.getString("username") != name) {
+                    updateData["username"] = name
+                }
+
+                docRef.set(updateData, SetOptions.merge())
+                    .addOnSuccessListener { Log.d("AuthRepository", "Successfully updated therivdata for user $uid") }
+                    .addOnFailureListener { e -> Log.e("AuthRepository", "Failed to update therivdata", e) }
+            } else {
+                val newData = hashMapOf<String, Any?>()
+                newData["email"] = email
+                newData["phoneno"] = phoneNumber
+                newData["username"] = name
+                newData["createdAt"] = com.google.firebase.Timestamp.now()
+                newData["premiumStatus"] = false
+                newData["lastLoginAt"] = com.google.firebase.Timestamp.now()
+
+                docRef.set(newData)
+                    .addOnSuccessListener { Log.d("AuthRepository", "Successfully created therivdata document for user $uid") }
+                    .addOnFailureListener { e -> Log.e("AuthRepository", "Failed to create therivdata document", e) }
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Error in saveToTheRivData for user $uid", e)
         }
     }
 }
