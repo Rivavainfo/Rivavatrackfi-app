@@ -146,8 +146,9 @@ fun PhoneInputScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showConfirmDialog = false
-                    viewModel.startPhoneVerification(phoneNumber)
-                    onNavigateNext()
+                    viewModel.savePhoneAndCompleteOnboarding(phoneNumber) {
+                        onNavigateNext()
+                    }
                 }) {
                     Text("Yes, Continue", fontWeight = FontWeight.Bold, color = PrimarySky)
                 }
