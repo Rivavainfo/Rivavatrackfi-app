@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.*
@@ -35,7 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.rivavafi.universal.ui.theme.EmeraldGreen
+import com.rivavafi.universal.utils.SecretKeyValidator
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +57,7 @@ fun PremiumUnlockDialog(
     var paymentReferenceInput by remember { mutableStateOf("") }
     var showPaymentError by remember { mutableStateOf(false) }
     var currentStep by remember { mutableStateOf(UnlockStep.Main) }
+    var passwordVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Dialog(
@@ -135,7 +141,15 @@ fun PremiumUnlockDialog(
                                 onValueChange = { secretKeyInput = it; showError = false },
                                 label = { Text("Secret Key", color = Color.White.copy(0.7f)) },
                                 singleLine = true,
-                                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                                    val description = if (passwordVisible) "Hide password" else "Show password"
+
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(imageVector = image, contentDescription = description, tint = Color.White.copy(0.7f))
+                                    }
+                                },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = Color(0xFF3B82F6),
                                     unfocusedBorderColor = Color.White.copy(0.2f),
@@ -147,14 +161,14 @@ fun PremiumUnlockDialog(
                                 isError = showError
                             )
                             if (showError) {
-                                Text("Invalid Key", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                                Text("Invalid Secret Access Key", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Button(
                                 onClick = {
-                                    if (secretKeyInput == secretKeyToMatch) {
+                                    if (SecretKeyValidator.isValid(secretKeyInput)) {
                                         currentStep = UnlockStep.Verifying
                                     } else {
                                         showError = true
@@ -185,7 +199,7 @@ fun PremiumUnlockDialog(
                                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6B7280))
                             ) {
                                 Text(
-                                    "Maybe Later",
+                                    "Cancel",
                                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                                     color = Color(0xFF9CA3AF)
                                 )

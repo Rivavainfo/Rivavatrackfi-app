@@ -161,18 +161,59 @@ class OnboardingViewModel @Inject constructor(
 
                 firestore.collection("therivavadata").document(uid)
                     .set(userData, com.google.firebase.firestore.SetOptions.merge())
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            viewModelScope.launch {
-                                preferencesRepository.setOnboardingCompleted(true)
-                                _isLoading.value = false
-                                onSuccess()
-                            }
-                        } else {
-                            _errorMessage.value = task.exception?.message ?: "Failed to save data"
-                            _isLoading.value = false
+
+                // Also save to the newly created therivdata collection
+                val theRivDocRef = firestore.collection("therivdata").document(uid)
+                theRivDocRef.get().addOnSuccessListener { docSnap ->
+                    if (docSnap.exists()) {
+                        val updateData = mutableMapOf<String, Any>()
+                        updateData["lastLoginAt"] = com.google.firebase.Timestamp.now()
+                        if (phone.isNotBlank() && docSnap.getString("phoneno") != phone) {
+                            updateData["phoneno"] = phone
                         }
+                        if (name.isNotBlank() && docSnap.getString("username") != name) {
+                            updateData["username"] = name
+                        }
+                        theRivDocRef.set(updateData, com.google.firebase.firestore.SetOptions.merge())
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    viewModelScope.launch {
+                                        preferencesRepository.setOnboardingCompleted(true)
+                                        _isLoading.value = false
+                                        onSuccess()
+                                    }
+                                } else {
+                                    _errorMessage.value = task.exception?.message ?: "Failed to save data"
+                                    _isLoading.value = false
+                                }
+                            }
+                    } else {
+                        val theRivData = hashMapOf<String, Any?>()
+                        theRivData["email"] = email
+                        theRivData["phoneno"] = phone
+                        theRivData["username"] = name
+                        theRivData["createdAt"] = com.google.firebase.Timestamp.now()
+                        theRivData["premiumStatus"] = false
+                        theRivData["lastLoginAt"] = com.google.firebase.Timestamp.now()
+
+                        theRivDocRef.set(theRivData)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    viewModelScope.launch {
+                                        preferencesRepository.setOnboardingCompleted(true)
+                                        _isLoading.value = false
+                                        onSuccess()
+                                    }
+                                } else {
+                                    _errorMessage.value = task.exception?.message ?: "Failed to save data"
+                                    _isLoading.value = false
+                                }
+                            }
                     }
+                }.addOnFailureListener {
+                    _errorMessage.value = it.message ?: "Failed to check existing data"
+                    _isLoading.value = false
+                }
 
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Failed to complete onboarding"
