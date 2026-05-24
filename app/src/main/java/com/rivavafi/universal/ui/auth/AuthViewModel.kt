@@ -144,30 +144,33 @@ class AuthViewModel @Inject constructor(
                 Log.d("AuthViewModel", "Successfully extracted ID Token, exchanging with Firebase...")
                 val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
                 val authResult = repository.auth.signInWithCredential(firebaseCredential).await()
-                val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                val user = User(
-                    uid = uid,
-                    name = name,
-                    email = email,
-                    photo = photoUrl.ifBlank { null },
-                    phone = repository.auth.currentUser?.phoneNumber
-                )
-                userRepository.saveUserToFirestore(user)
-                userRepository.cacheUserLocally(context, user)
+                // Set state back to IDLE so the UI can proceed to PROFILE_COMPLETION
+                _authState.value = AuthState.IDLE
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Google Sign-in failed", e)
+                _errorMessage.value = e.message ?: "Login failed"
+                _authState.value = AuthState.IDLE
+            }
+        }
+    }
 
+    fun saveUserProfileCompletion(name: String, phone: String, preference: String, email: String, photoUrl: String, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            _authState.value = AuthState.LOADING
+            try {
+                val user = repository.auth.currentUser ?: throw Exception("User not authenticated")
+                val uid = user.uid
 
-                Log.d("AuthViewModel", "Firebase auth successful. Saving to Firestore and Sheets...")
-
-                // SAVE TO THEDATA
                 val theDataUser = UserModel(
                     uid = uid,
                     name = name,
                     email = email,
-                    phone = repository.auth.currentUser?.phoneNumber,
+                    phone = phone,
+                    preference = preference,
                     profileImage = photoUrl.ifBlank { null },
                     loginProvider = "google",
-                    isPhoneVerified = false
+                    isPhoneVerified = false // By default from Google
                 )
                 firebaseUserManager.saveUserToFirestore(theDataUser)
 
@@ -175,42 +178,29 @@ class AuthViewModel @Inject constructor(
                     uid = uid,
                     name = name,
                     email = email,
-                    phoneNumber = null,
+                    phoneNumber = phone,
                     authProvider = "google",
                     isVerified = true,
                     photoUrl = photoUrl
                 )
-                val firebaseNew = authResult.additionalUserInfo?.isNewUser == true
-                val isNew = firebaseNew || sessionState.isNewUser
+
+                val isNew = sessionState.isNewUser
                 _isNewUser.value = isNew
 
-                if (!sessionState.existingName.isNullOrBlank()) {
-                    userPreferencesRepository.saveUserName(sessionState.existingName)
-                } else {
-                    userPreferencesRepository.saveUserName(name)
-                }
-
-                if (!sessionState.photoUrl.isNullOrBlank()) {
-                    userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
-                } else if (photoUrl.isNotBlank()) {
+                userPreferencesRepository.saveUserName(name)
+                if (photoUrl.isNotBlank()) {
                     userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
 
-                if (isNew) {
-                    authResult.user?.let { repository.sendUserToSheet(it, "Google", name) }
-                }
-
-                if (!sessionState.existingName.isNullOrBlank()) {
-                    userPreferencesRepository.saveUserName(sessionState.existingName)
-                } else if (name.isNotBlank()) {
-                    userPreferencesRepository.saveUserName(name)
-                }
-
-                if (!sessionState.photoUrl.isNullOrBlank()) {
-                    userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
-                } else if (photoUrl.isNotBlank()) {
-                    userPreferencesRepository.setProfileImageUri(photoUrl)
-                }
+                val appUser = User(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    photo = photoUrl.ifBlank { null },
+                    phone = phone
+                )
+                userRepository.saveUserToFirestore(appUser)
+                userRepository.cacheUserLocally(context, appUser)
 
                 if (sessionState.onboardingCompleted) {
                     userPreferencesRepository.setOnboardingCompleted(true)
@@ -218,17 +208,10 @@ class AuthViewModel @Inject constructor(
 
                 userEntitlementRepository.syncEntitlement()
                 _authState.value = AuthState.SUCCESS
-            } catch (e: com.google.firebase.auth.FirebaseAuthException) {
-                Log.e("AuthViewModel", "FirebaseAuthException during Google Sign In: ${e.errorCode}", e)
-                _errorMessage.value = "Firebase Auth Error: ${e.message}"
-                _authState.value = AuthState.IDLE
-            } catch (e: com.google.android.gms.common.api.ApiException) {
-                Log.e("AuthViewModel", "ApiException during Google Sign In. Code: ${e.statusCode}", e)
-                _errorMessage.value = "Google API Error: ${e.message} (Code: ${e.statusCode})"
-                _authState.value = AuthState.IDLE
+                onComplete(isNew)
             } catch (e: Exception) {
-                Log.e("AuthViewModel", "Generic Exception during Google Sign In", e)
-                _errorMessage.value = e.message ?: "Authentication failed"
+                Log.e("AuthViewModel", "Profile completion failed", e)
+                _errorMessage.value = e.message ?: "Failed to save profile"
                 _authState.value = AuthState.IDLE
             }
         }

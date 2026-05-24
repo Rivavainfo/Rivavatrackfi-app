@@ -5,6 +5,7 @@ data class UserModel(
     val name: String? = null,
     val email: String? = null,
     val phone: String? = null,
+    val preference: String? = null,
     val profileImage: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val lastLoginAt: Long = System.currentTimeMillis(),

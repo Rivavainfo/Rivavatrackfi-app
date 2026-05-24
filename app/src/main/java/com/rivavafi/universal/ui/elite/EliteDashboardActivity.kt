@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
 import com.rivavafi.universal.data.repository.EliteRepository
-import com.rivavafi.universal.ui.portfolio.PaymentActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -82,10 +81,6 @@ class EliteDashboardActivity : ComponentActivity() {
             val orderResult = eliteRepository.createEliteOrder()
             if (orderResult.success && orderResult.orderId != null && orderResult.paymentUrl != null) {
                 currentOrderId = orderResult.orderId
-                val intent = Intent(this@EliteDashboardActivity, PaymentActivity::class.java).apply {
-                    putExtra("payment_url", orderResult.paymentUrl)
-                }
-                paymentLauncher.launch(intent)
             } else {
                 Toast.makeText(this@EliteDashboardActivity, "Failed to start payment: ${orderResult.error}", Toast.LENGTH_LONG).show()
                 finish()
