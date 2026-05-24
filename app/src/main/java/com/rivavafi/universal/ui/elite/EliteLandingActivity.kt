@@ -154,18 +154,17 @@ fun EliteLandingScreen(
     var showAfterDialog by remember { mutableStateOf(false) }
 
     val openWhatsApp = {
-        try {
-            logInquiry("whatsapp", "whatsapp_opened")
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("https://api.whatsapp.com/send?phone=919044761170&text=${Uri.encode(formattedMessage)}")
-                setPackage("com.whatsapp")
-            }
-            context.startActivity(intent)
-            logInquiry("whatsapp", "inquiry_completed")
-            showAfterDialog = true
-        } catch (e: Exception) {
-            Toast.makeText(context, "WhatsApp not installed.", Toast.LENGTH_SHORT).show()
-        }
+        logInquiry("whatsapp", "whatsapp_opened")
+        com.rivavafi.universal.utils.WhatsAppUtils.openWhatsAppForAdvisor(
+            context = context,
+            username = finalUserName,
+            email = finalUserEmail,
+            phoneNumber = auth.currentUser?.phoneNumber ?: "",
+            preference = "Rivava Elite",
+            premiumStatus = false
+        )
+        logInquiry("whatsapp", "inquiry_completed")
+        showAfterDialog = true
     }
 
     LaunchedEffect(isConnecting) {
@@ -254,9 +253,15 @@ fun EliteLandingScreen(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        context.startActivity(Intent(context, com.rivavafi.universal.ui.elite.EliteDashboardActivity::class.java).apply {
-                            putExtra("start_payment", true)
-                        })
+                        com.rivavafi.universal.utils.WhatsAppUtils.openWhatsAppForAdvisor(
+                            context = context,
+                            username = finalUserName,
+                            email = finalUserEmail,
+                            phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                            preference = "Rivava Elite",
+                            premiumStatus = false
+                        )
+                        isConnecting = false
                     },
                     enabled = !isConnecting && !isFull,
                     modifier = Modifier.fillMaxWidth().height(56.dp),

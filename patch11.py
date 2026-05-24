@@ -1,38 +1,17 @@
-package com.rivavafi.universal.ui.elite
+import re
+with open("app/src/main/java/com/rivavafi/universal/ui/elite/EliteDashboardActivity.kt", "r") as f:
+    content = f.read()
 
-import android.content.Intent
-import android.os.Bundle
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.lifecycleScope
-import com.rivavafi.universal.data.repository.EliteRepository
-
+imports = '''
 import com.rivavafi.universal.ui.portfolio.PremiumUnlockDialog
 import com.rivavafi.universal.utils.SecretConfig
 import com.rivavafi.universal.utils.WhatsAppUtils
 import com.google.firebase.auth.FirebaseAuth
+'''
 
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
-import javax.inject.Inject
+content = content.replace('import dagger.hilt.android.AndroidEntryPoint', imports + '\nimport dagger.hilt.android.AndroidEntryPoint')
 
-@AndroidEntryPoint
-class EliteDashboardActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var eliteRepository: EliteRepository
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+new_content = '''
         setContent {
             val auth = FirebaseAuth.getInstance()
             var showSecretDialog by remember { mutableStateOf(false) }
@@ -101,6 +80,13 @@ class EliteDashboardActivity : ComponentActivity() {
                 )
             }
         }
+'''
 
-    }
-}
+content = re.sub(r'\s*private var isProcessingPayment by mutableStateOf\(false\)[\s\S]*?private var currentOrderId: String\? = null', '', content)
+content = re.sub(r'\s*val startPayment = intent\.getBooleanExtra\("start_payment", false\)\s*if \(startPayment\) \{\s*startPaymentFlow\(\)\s*\}', '', content)
+content = re.sub(r'\s*private fun startPaymentFlow\(\) \{[\s\S]*?\}\n\s*\}', '', content)
+
+content = re.sub(r'\s*setContent \{[\s\S]*?\}\n\s*\}', new_content + '\n    }', content)
+
+with open("app/src/main/java/com/rivavafi/universal/ui/elite/EliteDashboardActivity.kt", "w") as f:
+    f.write(content)
