@@ -87,4 +87,10 @@ class PremiumViewModel @Inject constructor(
             _paymentState.value = PaymentState(uiState = PaymentUiState.IDLE)
         }
     }
+
+    fun unlockWithSecretKey() {
+        viewModelScope.launch {
+            repository.unlockWithSecretKey()
+        }
+    }
 }
