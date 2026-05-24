@@ -217,4 +217,38 @@ class UserEntitlementRepository @Inject constructor(
         userPreferencesRepository.setPremiumUserForCurrent(false)
         _premiumState.value = PremiumState(EntitlementStatus.LOCKED, false, null)
     }
+
+    suspend fun unlockWithSecretKey() {
+        val uid = auth.currentUser?.uid ?: return
+        try {
+            // Update users collection
+            val updates = mapOf(
+                "is_premium" to true,
+                "premium_status" to "active",
+                "premium_source" to "access_key",
+                "premium_unlocked_at" to FieldValue.serverTimestamp()
+            )
+            firestore.collection("users").document(uid).set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+
+            // Update therivdata and therivavadata collections
+            val statusUpdate = mapOf("premiumStatus" to true)
+            firestore.collection("therivdata").document(uid).set(statusUpdate, com.google.firebase.firestore.SetOptions.merge())
+            firestore.collection("therivavadata").document(uid).set(statusUpdate, com.google.firebase.firestore.SetOptions.merge())
+
+            // Update local prefs
+            val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putBoolean("isPremium", true)
+                .putBoolean("portfolio_unlocked", true)
+                .putString("premium_source", "access_key")
+                .apply()
+
+            userPreferencesRepository.setPremiumUserForCurrent(true)
+
+            _premiumState.value = PremiumState(EntitlementStatus.UNLOCKED, true, "access_key")
+
+        } catch (e: Exception) {
+            Log.e("UserEntitlement", "Failed to unlock with secret key in Firestore", e)
+        }
+    }
 }
