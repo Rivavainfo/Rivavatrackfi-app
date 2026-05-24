@@ -247,15 +247,8 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.OtpVerification.route) {
-                        popUpTo(Screen.PhoneInput.route) { inclusive = true }
-                    }
-                })
-            }
-            composable(Screen.OtpVerification.route) {
-                com.rivavafi.universal.ui.onboarding.OtpVerificationScreen(onNavigateNext = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.OtpVerification.route) { inclusive = true }
+                        popUpTo(Screen.PhoneInput.route) { inclusive = true }
                     }
                 })
             }

@@ -89,46 +89,10 @@ class OnboardingViewModel @Inject constructor(
     }
 
 
-    fun startPhoneVerification(phoneNumber: String) {
+    fun savePhoneAndCompleteOnboarding(phoneNumber: String, onSuccess: () -> Unit) {
         lastPhoneNumber = phoneNumber
         _isLoading.value = true
-        viewModelScope.launch {
-            try {
-                val result = authRepository.sendOtp(phoneNumber)
-                if (result.isSuccess) {
-                    _isLoading.value = false
-                } else {
-                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Failed to send OTP"
-                    _isLoading.value = false
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Network error: unable to send OTP."
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun verifyOtp(code: String, onSuccess: () -> Unit) {
-        val phone = lastPhoneNumber ?: return
-        _isLoading.value = true
-        viewModelScope.launch {
-            try {
-                val result = authRepository.verifyOtpAndSignIn(phone, code)
-                if (result.isSuccess) {
-                    saveUserToFirestoreAndComplete(onSuccess)
-                } else {
-                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Invalid OTP"
-                    _isLoading.value = false
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Network error: unable to verify OTP."
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun resendOtp() {
-        lastPhoneNumber?.let { startPhoneVerification(it) }
+        saveUserToFirestoreAndComplete(onSuccess)
     }
 
     private fun saveUserToFirestoreAndComplete(onSuccess: () -> Unit) {
