@@ -3,10 +3,11 @@ package com.rivavafi.universal.ui.elite
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import kotlinx.coroutines.tasks.await
+import android.widget.Toast
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material3.*
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,7 +85,7 @@ fun EliteLandingScreen(
     val isFull = seatsRemaining == 0
 
     var isConnecting by remember { mutableStateOf(false) }
-    var showFallbackDialog by remember { mutableStateOf(false) }
+
 
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
@@ -101,20 +103,39 @@ fun EliteLandingScreen(
     val message = """
         Hello Rivava Team,
 
-        I am interested in applying for Rivava Elite Membership.
+        A user wants to connect with an advisor.
 
         Details:
-        • Name: $finalUserName
-        • Email: $finalUserEmail
-        • User ID: $uid
-        • Plan: Rivava Elite ₹3300/month
-        • Timestamp: $currentTime
-        • Contact Number: $displayTargetNumber
+        Name: {fullName}
+        Username: {username}
+        Email: {email}
+        Phone: {phoneNumber}
+        Preference: {preference}
 
-        I would like to proceed with Elite enrollment and private fund manager access.
-
-        Please guide me with the next steps.
+        Please contact me.
     """.trimIndent()
+
+    var fullName by remember { mutableStateOf(finalUserName) }
+    var username by remember { mutableStateOf(finalUserName) }
+    var email by remember { mutableStateOf(finalUserEmail) }
+    var phoneNumber by remember { mutableStateOf("") }
+    var preference by remember { mutableStateOf("") }
+
+    LaunchedEffect(uid) {
+        try {
+            val doc = firestore.collection("THEDATA").document(uid).get().await()
+            if (doc.exists()) {
+                fullName = doc.getString("name") ?: finalUserName
+                username = doc.getString("name") ?: finalUserName
+                email = doc.getString("email") ?: finalUserEmail
+                phoneNumber = doc.getString("phone") ?: ""
+                preference = doc.getString("preference") ?: ""
+            }
+        } catch (e: Exception) {}
+    }
+
+    val formattedMessage = message.replace("{fullName}", fullName).replace("{username}", username).replace("{email}", email).replace("{phoneNumber}", phoneNumber).replace("{preference}", preference)
+
 
     val logInquiry = { method: String, eventType: String ->
         val inquiryData = hashMapOf(
@@ -130,73 +151,49 @@ fun EliteLandingScreen(
         firestore.collection("elite_inquiries").add(inquiryData)
     }
 
+    var showAfterDialog by remember { mutableStateOf(false) }
+
     val openWhatsApp = {
         try {
             logInquiry("whatsapp", "whatsapp_opened")
             val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("https://api.whatsapp.com/send?phone=$targetNumber&text=${Uri.encode(message)}")
+                data = Uri.parse("https://api.whatsapp.com/send?phone=919044761170&text=${Uri.encode(formattedMessage)}")
                 setPackage("com.whatsapp")
             }
             context.startActivity(intent)
             logInquiry("whatsapp", "inquiry_completed")
+            showAfterDialog = true
         } catch (e: Exception) {
-            showFallbackDialog = true
-        }
-    }
-
-    val openSms = {
-        try {
-            logInquiry("sms", "sms_opened")
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("sms:$targetNumber")
-                putExtra("sms_body", message)
-            }
-            context.startActivity(intent)
-            logInquiry("sms", "inquiry_completed")
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open SMS app.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "WhatsApp not installed.", Toast.LENGTH_SHORT).show()
         }
     }
 
     LaunchedEffect(isConnecting) {
         if (isConnecting) {
             logInquiry("whatsapp", "inquiry_started")
-            delay(2000) // Simulate connecting delay
+            delay(500)
             openWhatsApp()
             isConnecting = false
         }
     }
 
-    if (showFallbackDialog) {
+    if (showAfterDialog) {
         AlertDialog(
-            onDismissRequest = { showFallbackDialog = false },
-            title = { Text("WhatsApp not found", color = Color(0xFFD4AF37)) },
-            text = { Text("We couldn't find WhatsApp installed on your device. How would you like to proceed?", color = Color.White) },
+            onDismissRequest = { showAfterDialog = false },
+            title = { Text("Request Sent", color = Color(0xFFD4AF37)) },
+            text = { Text("Your request has been sent via WhatsApp.", color = Color.White) },
             containerColor = Color(0xFF131313),
             confirmButton = {
                 TextButton(onClick = {
-                    showFallbackDialog = false
-                    openSms()
+                    showAfterDialog = false
+                    openWhatsApp()
                 }) {
-                    Text("Send SMS", color = Color(0xFFD4AF37))
+                    Text("Contact Again", color = Color(0xFFD4AF37))
                 }
             },
             dismissButton = {
-                Row {
-                    TextButton(onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Phone Number", displayTargetNumber)
-                        clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, "Number copied to clipboard", Toast.LENGTH_SHORT).show()
-                        showFallbackDialog = false
-                    }) {
-                        Text("Copy Number", color = Color.White)
-                    }
-                    TextButton(onClick = {
-                        showFallbackDialog = false
-                    }) {
-                        Text("Cancel", color = Color.Gray)
-                    }
+                TextButton(onClick = { showAfterDialog = false }) {
+                    Text("Close", color = Color.Gray)
                 }
             }
         )
@@ -272,7 +269,7 @@ fun EliteLandingScreen(
                     if (isFull) {
                         Text("Membership Full", color = Color.LightGray, fontWeight = FontWeight.Bold)
                     } else {
-                        Text("Enroll & Pay Now", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Call With Advisor", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
 
@@ -289,7 +286,7 @@ fun EliteLandingScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Connecting...", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
                         } else {
-                            Text("Talk to an Advisor", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
+                            Text("Call With Advisor", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

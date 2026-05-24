@@ -108,10 +108,6 @@ fun RivavaPortfolioScreen(
 
     LaunchedEffect(paymentState.uiState) {
         if (paymentState.uiState == PaymentUiState.CHECKOUT_READY) {
-            val intent = Intent(context, PaymentActivity::class.java).apply {
-                putExtra("payment_url", paymentState.orderData?.paymentUrl)
-            }
-            paymentLauncher.launch(intent)
             premiumViewModel.clearPaymentError()
         }
     }

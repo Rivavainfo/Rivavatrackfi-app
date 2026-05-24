@@ -25,6 +25,7 @@ class FirebaseUserManager @Inject constructor() {
             userModel.name?.let { userMap["name"] = it }
             userModel.email?.let { userMap["email"] = it }
             userModel.phone?.let { userMap["phone"] = it }
+            userModel.preference?.let { userMap["preference"] = it }
             userModel.profileImage?.let { userMap["profileImage"] = it }
             userMap["createdAt"] = userModel.createdAt
             userMap["lastLoginAt"] = userModel.lastLoginAt
@@ -79,6 +80,7 @@ class FirebaseUserManager @Inject constructor() {
                     name = document.getString("name"),
                     email = document.getString("email"),
                     phone = document.getString("phone"),
+                    preference = document.getString("preference"),
                     profileImage = document.getString("profileImage"),
                     createdAt = document.getLong("createdAt") ?: System.currentTimeMillis(),
                     lastLoginAt = document.getLong("lastLoginAt") ?: System.currentTimeMillis(),
