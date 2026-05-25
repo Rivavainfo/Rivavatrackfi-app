@@ -23,14 +23,17 @@ class FirebaseUserManager @Inject constructor() {
             val userMap = hashMapOf<String, Any?>()
             userMap["uid"] = userModel.uid
             userModel.name?.let { userMap["name"] = it }
+            userModel.username?.let { userMap["username"] = it }
             userModel.email?.let { userMap["email"] = it }
             userModel.phone?.let { userMap["phone"] = it }
+            userModel.phoneno?.let { userMap["phoneno"] = it }
             userModel.preference?.let { userMap["preference"] = it }
             userModel.profileImage?.let { userMap["profileImage"] = it }
             userMap["createdAt"] = userModel.createdAt
             userMap["lastLoginAt"] = userModel.lastLoginAt
             userMap["loginProvider"] = userModel.loginProvider
             userMap["isPhoneVerified"] = userModel.isPhoneVerified
+            userMap["premiumStatus"] = userModel.premiumStatus
 
             val exists = checkIfUserExists(userModel.uid)
 
@@ -78,14 +81,17 @@ class FirebaseUserManager @Inject constructor() {
                 val user = UserModel(
                     uid = document.getString("uid") ?: uid,
                     name = document.getString("name"),
+                    username = document.getString("username"),
                     email = document.getString("email"),
                     phone = document.getString("phone"),
+                    phoneno = document.getString("phoneno"),
                     preference = document.getString("preference"),
                     profileImage = document.getString("profileImage"),
                     createdAt = document.getLong("createdAt") ?: System.currentTimeMillis(),
                     lastLoginAt = document.getLong("lastLoginAt") ?: System.currentTimeMillis(),
                     loginProvider = document.getString("loginProvider") ?: "",
-                    isPhoneVerified = document.getBoolean("isPhoneVerified") ?: false
+                    isPhoneVerified = document.getBoolean("isPhoneVerified") ?: false,
+                    premiumStatus = document.getBoolean("premiumStatus") ?: false
                 )
                 Log.d(TAG, "Successfully fetched user from THEDATA for UID: $uid")
                 user

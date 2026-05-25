@@ -561,6 +561,7 @@ class AuthViewModel @Inject constructor(
                         uid = uid,
                         email = email,
                         phone = phoneNumber,
+                        phoneno = phoneNumber,
                         loginProvider = "phone",
                         isPhoneVerified = true
                     )
