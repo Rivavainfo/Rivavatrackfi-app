@@ -277,24 +277,6 @@ fun EliteLandingScreen(
                         Text("Call With Advisor", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
-
-                if (!isFull) {
-                    OutlinedButton(
-                        onClick = { isConnecting = true },
-                        enabled = !isConnecting,
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, Color(0xFFD4AF37).copy(alpha = 0.5f))
-                    ) {
-                        if (isConnecting) {
-                            CircularProgressIndicator(color = Color(0xFFD4AF37), modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Connecting...", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
-                        } else {
-                            Text("Call With Advisor", color = Color(0xFFD4AF37), fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
             }
         }
 

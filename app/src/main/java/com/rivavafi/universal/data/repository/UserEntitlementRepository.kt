@@ -72,7 +72,7 @@ class UserEntitlementRepository @Inject constructor(
 
         try {
             snapshotListener?.remove()
-            snapshotListener = firestore.collection("users").document(uid)
+            snapshotListener = firestore.collection("therivdata").document(uid)
                 .addSnapshotListener { snapshot, e ->
                     if (e != null) {
                         Log.e("UserEntitlement", "Listen failed.", e)
@@ -80,12 +80,11 @@ class UserEntitlementRepository @Inject constructor(
                     }
 
                     if (snapshot != null && snapshot.exists()) {
-                        val isPremium = snapshot.getBoolean("is_premium") ?: false
-                        val status = snapshot.getString("premium_status") ?: if (isPremium) "active" else "locked"
+                        val isPremium = snapshot.getBoolean("premiumStatus") ?: false
 
-                        val validPremium = isPremium && status == "active"
+                        val validPremium = isPremium
                         val effectivePremium = validPremium || hasLocalKeyUnlock
-                        val effectiveSource = if (validPremium) snapshot.getString("premium_source") else "access_key"
+                        val effectiveSource = if (validPremium) "therivdata" else "access_key"
 
                         _premiumState.value = if (effectivePremium) {
                             PremiumState(EntitlementStatus.UNLOCKED, true, effectiveSource)
@@ -108,13 +107,12 @@ class UserEntitlementRepository @Inject constructor(
                         }
                     }
                 }
-            val docSnap = firestore.collection("users").document(uid).get().await()
-            val isPremium = docSnap.getBoolean("is_premium") ?: false
-            val status = docSnap.getString("premium_status") ?: if (isPremium) "active" else "locked"
+            val docSnap = firestore.collection("therivdata").document(uid).get().await()
+            val isPremium = docSnap.getBoolean("premiumStatus") ?: false
 
-            val validPremium = isPremium && status == "active"
+            val validPremium = isPremium
             val effectivePremium = validPremium || hasLocalKeyUnlock
-            val effectiveSource = if (validPremium) docSnap.getString("premium_source") else "access_key"
+            val effectiveSource = if (validPremium) "therivdata" else "access_key"
 
             _premiumState.value = if (effectivePremium) {
                 PremiumState(EntitlementStatus.UNLOCKED, true, effectiveSource)

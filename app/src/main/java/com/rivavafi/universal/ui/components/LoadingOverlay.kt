@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.input.pointer.pointerInput
 import com.rivavafi.universal.R
 
 @Composable
@@ -37,7 +38,15 @@ fun RivavaLoadingOverlay(isLoading: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0A).copy(alpha = 0.85f)),
+            .background(Color(0xFF0A0A0A).copy(alpha = 0.85f))
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        event.changes.forEach { it.consume() }
+                    }
+                }
+            },
         contentAlignment = Alignment.Center
     ) {
         Box(contentAlignment = Alignment.Center) {

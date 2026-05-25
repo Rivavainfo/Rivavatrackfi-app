@@ -350,26 +350,30 @@ fun AuthScreenContent(
 
 
 
-                                            // Google Login Button
-                        Button(
-                            onClick = {
-                                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                    .requestIdToken(context.getString(R.string.default_web_client_id))
-                                    .requestEmail()
-                                    .build()
-                                val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                                googleSignInClient.signOut().addOnCompleteListener {
-                                    launcher.launch(googleSignInClient.signInIntent)
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .shadow(elevation = 12.dp, spotColor = Color.White, shape = RoundedCornerShape(20.dp)),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-                            shape = RoundedCornerShape(20.dp),
-                            enabled = authState != AuthState.LOADING
+                    // Google Login Button
+                    Button(
+                        onClick = {
+                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                                .requestIdToken(context.getString(R.string.default_web_client_id))
+                                .requestEmail()
+                                .build()
+                            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                            googleSignInClient.signOut().addOnCompleteListener {
+                                launcher.launch(googleSignInClient.signInIntent)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp), // Stable height, no shadow to prevent jumpy layout on older APIs
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = authState != AuthState.LOADING
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.AccountCircle,
@@ -380,6 +384,7 @@ fun AuthScreenContent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Text("Continue with Google", color = AmoledBlack, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
+                    }
 
                 }
             }
