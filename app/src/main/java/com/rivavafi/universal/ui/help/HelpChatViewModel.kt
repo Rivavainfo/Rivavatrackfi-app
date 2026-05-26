@@ -43,6 +43,6 @@ class HelpChatViewModel @Inject constructor(
     }
 
     private fun getFallbackResponse(query: String): String {
-        return "Hi, I'm Rivava Assistant. How can I help you?"
+        return "Contact this number for support: 9044761170"
     }
 }
