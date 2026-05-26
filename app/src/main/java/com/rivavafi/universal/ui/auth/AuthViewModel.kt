@@ -88,27 +88,26 @@ class AuthViewModel @Inject constructor(
     }
 
     init {
-        val user = repository.auth.currentUser
-        if (user != null) {
-            // APP START LOGIC: If logged in, update cache
-            val appUser = User(
-                uid = user.uid,
-                name = user.displayName,
-                email = user.email,
-                photo = user.photoUrl?.toString(),
-                phone = user.phoneNumber
-            )
-            userRepository.cacheUserLocally(context, appUser)
+        viewModelScope.launch {
+            val user = repository.auth.currentUser
+            if (user != null) {
+                // APP START LOGIC: If logged in, update cache
+                val appUser = User(
+                    uid = user.uid,
+                    name = user.displayName,
+                    email = user.email,
+                    photo = user.photoUrl?.toString(),
+                    phone = user.phoneNumber
+                )
+                userRepository.cacheUserLocally(context, appUser)
 
-            _isNewUser.value = false // if already logged in, they are not a new user
-            viewModelScope.launch {
+                _isNewUser.value = false // if already logged in, they are not a new user
                 val providerId = user.providerData.firstOrNull()?.providerId
                 val isEmailAuth = providerId == "password" || providerId == "email"
 
                 if (isEmailAuth) {
                     val isVerified = repository.checkVerificationStatus(user.uid)
                     if (isVerified || user.isEmailVerified) {
-
                         userEntitlementRepository.syncEntitlement()
                         _authState.value = AuthState.SUCCESS
                     } else {
@@ -117,7 +116,6 @@ class AuthViewModel @Inject constructor(
                         _authState.value = AuthState.IDLE
                     }
                 } else {
-
                         userEntitlementRepository.syncEntitlement()
                         _authState.value = AuthState.SUCCESS
                 }
@@ -151,74 +149,43 @@ class AuthViewModel @Inject constructor(
 
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                // Check if user exists in THEDATA
                 val doc = firebaseUserManager.getCurrentUserData(uid)
-                if (doc != null) {
-                    // Existing user, log them in directly
-                    val sessionState = repository.saveUserToFirestore(
-                        uid = uid,
-                        name = name,
-                        email = email,
-                        phoneNumber = doc.phone,
-                        authProvider = "google",
-                        isVerified = true,
-                        photoUrl = photoUrl
-                    )
+                val phoneToSave = doc?.phone
 
-                    val isNew = sessionState.isNewUser
-                    _isNewUser.value = isNew
+                val sessionState = repository.saveUserToFirestore(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    phoneNumber = phoneToSave,
+                    authProvider = "google",
+                    isVerified = true,
+                    photoUrl = photoUrl
+                )
 
-                    userPreferencesRepository.saveUserName(name)
-                    if (photoUrl.isNotBlank()) {
-                        userPreferencesRepository.setProfileImageUri(photoUrl)
-                    }
+                val isNew = sessionState.isNewUser
+                _isNewUser.value = isNew
 
-                    val appUser = User(
-                        uid = uid,
-                        name = name,
-                        email = email,
-                        photo = photoUrl.ifBlank { null },
-                        phone = doc.phone
-                    )
-                    userRepository.saveUserToFirestore(appUser)
-                    userRepository.cacheUserLocally(context, appUser)
-
-                    if (sessionState.onboardingCompleted) {
-                        userPreferencesRepository.setOnboardingCompleted(true)
-                    }
-
-                    userEntitlementRepository.syncEntitlement()
-                    _authState.value = AuthState.SUCCESS
-                } else {
-                    // New user, navigate to Welcome
-                    val sessionState = repository.saveUserToFirestore(
-                        uid = uid,
-                        name = name,
-                        email = email,
-                        phoneNumber = null,
-                        authProvider = "google",
-                        isVerified = true,
-                        photoUrl = photoUrl
-                    )
-
-                    userPreferencesRepository.saveUserName(name)
-                    if (photoUrl.isNotBlank()) {
-                        userPreferencesRepository.setProfileImageUri(photoUrl)
-                    }
-
-                    val appUser = User(
-                        uid = uid,
-                        name = name,
-                        email = email,
-                        photo = photoUrl.ifBlank { null },
-                        phone = null
-                    )
-                    userRepository.saveUserToFirestore(appUser)
-                    userRepository.cacheUserLocally(context, appUser)
-
-                    _isNewUser.value = true
-                    _authState.value = AuthState.SUCCESS
+                userPreferencesRepository.saveUserName(name)
+                if (photoUrl.isNotBlank()) {
+                    userPreferencesRepository.setProfileImageUri(photoUrl)
                 }
+
+                val appUser = User(
+                    uid = uid,
+                    name = name,
+                    email = email,
+                    photo = photoUrl.ifBlank { null },
+                    phone = phoneToSave
+                )
+                userRepository.saveUserToFirestore(appUser)
+                userRepository.cacheUserLocally(context, appUser)
+
+                if (sessionState.onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
+
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
 
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Google Sign-in failed", e)
