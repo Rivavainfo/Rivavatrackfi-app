@@ -120,6 +120,7 @@ fun EliteLandingScreen(
     var email by remember { mutableStateOf(finalUserEmail) }
     var phoneNumber by remember { mutableStateOf("") }
     var preference by remember { mutableStateOf("") }
+    var userPremiumStatus by remember { mutableStateOf(false) }
 
     LaunchedEffect(uid) {
         try {
@@ -130,6 +131,12 @@ fun EliteLandingScreen(
                 email = doc.getString("email") ?: finalUserEmail
                 phoneNumber = doc.getString("phone") ?: ""
                 preference = doc.getString("preference") ?: ""
+                userPremiumStatus = doc.getBoolean("premiumStatus") ?: false
+            } else {
+                val theRivDoc = firestore.collection("therivdata").document(uid).get().await()
+                if (theRivDoc.exists()) {
+                    userPremiumStatus = theRivDoc.getBoolean("premiumStatus") ?: false
+                }
             }
         } catch (e: Exception) {}
     }
@@ -161,7 +168,7 @@ fun EliteLandingScreen(
             email = finalUserEmail,
             phoneNumber = auth.currentUser?.phoneNumber ?: "",
             preference = "Rivava Elite",
-            premiumStatus = false
+            premiumStatus = userPremiumStatus
         )
         logInquiry("whatsapp", "inquiry_completed")
         showAfterDialog = true
@@ -259,7 +266,7 @@ fun EliteLandingScreen(
                             email = finalUserEmail,
                             phoneNumber = auth.currentUser?.phoneNumber ?: "",
                             preference = "Rivava Elite",
-                            premiumStatus = false
+                            premiumStatus = userPremiumStatus
                         )
                         isConnecting = false
                     },

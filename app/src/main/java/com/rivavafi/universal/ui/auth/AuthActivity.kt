@@ -219,10 +219,11 @@ fun AuthScreenContent(
             .fillMaxSize()
             .background(Color(0xFF0A0A0A))
             .imePadding()
-            .verticalScroll(rememberScrollState())
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. Moving Image Carousel
@@ -260,7 +261,7 @@ fun AuthScreenContent(
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                             modifier = Modifier.fillMaxSize()
                         )
                         Box(
@@ -320,16 +321,27 @@ fun AuthScreenContent(
                 }
             }
 
+            var startAnimation by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { startAnimation = true }
+
             // Glassmorphism Login Container
-            androidx.compose.material3.Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
-                colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFF111111)),
-                elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+            androidx.compose.animation.AnimatedVisibility(
+                visible = startAnimation,
+                enter = androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(1000)) +
+                        androidx.compose.animation.slideInVertically(
+                            initialOffsetY = { 50 },
+                            animationSpec = androidx.compose.animation.core.tween(1000)
+                        )
             ) {
+                androidx.compose.material3.Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp)),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -386,6 +398,7 @@ fun AuthScreenContent(
                         }
                     }
 
+                }
                 }
             }
         }
