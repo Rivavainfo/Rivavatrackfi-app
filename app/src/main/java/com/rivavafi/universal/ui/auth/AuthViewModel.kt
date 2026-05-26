@@ -191,6 +191,31 @@ class AuthViewModel @Inject constructor(
                     _authState.value = AuthState.SUCCESS
                 } else {
                     // New user, navigate to Welcome
+                    val sessionState = repository.saveUserToFirestore(
+                        uid = uid,
+                        name = name,
+                        email = email,
+                        phoneNumber = null,
+                        authProvider = "google",
+                        isVerified = true,
+                        photoUrl = photoUrl
+                    )
+
+                    userPreferencesRepository.saveUserName(name)
+                    if (photoUrl.isNotBlank()) {
+                        userPreferencesRepository.setProfileImageUri(photoUrl)
+                    }
+
+                    val appUser = User(
+                        uid = uid,
+                        name = name,
+                        email = email,
+                        photo = photoUrl.ifBlank { null },
+                        phone = null
+                    )
+                    userRepository.saveUserToFirestore(appUser)
+                    userRepository.cacheUserLocally(context, appUser)
+
                     _isNewUser.value = true
                     _authState.value = AuthState.SUCCESS
                 }
