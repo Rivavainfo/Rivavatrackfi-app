@@ -110,17 +110,23 @@ class OnboardingViewModel @Inject constructor(
                 val name = preferencesRepository.getUserName() ?: ""
                 val phone = lastPhoneNumber ?: ""
 
+                val generatedUsername = generateUsername(name)
                 val userData = mapOf(
                     "uid" to uid,
-                    "username" to name,
+                    "name" to name,
+                    "username" to generatedUsername,
                     "email" to email,
+                    "phone" to phone,
                     "phoneNumber" to phone,
+                    "phoneno" to phone,
                     "preference" to "Not Selected",
                     "premiumStatus" to false,
                     "profileImage" to photoUrl,
                     "createdAt" to com.google.firebase.Timestamp.now(),
                     "lastLoginAt" to com.google.firebase.Timestamp.now(),
-                    "authProvider" to "google"
+                    "authProvider" to "google",
+                    "loginProvider" to "google",
+                    "isPhoneVerified" to true
                 )
 
                 firestore.collection("therivavadata").document(uid)
@@ -135,8 +141,11 @@ class OnboardingViewModel @Inject constructor(
                         if (phone.isNotBlank() && docSnap.getString("phoneno") != phone) {
                             updateData["phoneno"] = phone
                         }
-                        if (name.isNotBlank() && docSnap.getString("username") != name) {
-                            updateData["username"] = name
+                        if (name.isNotBlank() && docSnap.getString("username") != generatedUsername) {
+                            updateData["username"] = generatedUsername
+                        }
+                        if (name.isNotBlank() && docSnap.getString("name") != name) {
+                            updateData["name"] = name
                         }
                         theRivDocRef.set(updateData, com.google.firebase.firestore.SetOptions.merge())
                             .addOnCompleteListener { task ->
@@ -155,7 +164,10 @@ class OnboardingViewModel @Inject constructor(
                         val theRivData = hashMapOf<String, Any?>()
                         theRivData["email"] = email
                         theRivData["phoneno"] = phone
-                        theRivData["username"] = name
+                        theRivData["phone"] = phone
+                        theRivData["phoneNumber"] = phone
+                        theRivData["name"] = name
+                        theRivData["username"] = generatedUsername
                         theRivData["createdAt"] = com.google.firebase.Timestamp.now()
                         theRivData["premiumStatus"] = false
                         theRivData["lastLoginAt"] = com.google.firebase.Timestamp.now()

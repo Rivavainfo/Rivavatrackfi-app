@@ -38,7 +38,7 @@ fun RivavaLoadingOverlay(isLoading: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0A0A).copy(alpha = 0.85f))
+            .background(Color(0xFF0A0A0A).copy(alpha = 1.0f))
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
