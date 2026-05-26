@@ -247,7 +247,7 @@ fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Us
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.SmsOptIn.route) {
                         popUpTo(Screen.PhoneInput.route) { inclusive = true }
                     }
                 })

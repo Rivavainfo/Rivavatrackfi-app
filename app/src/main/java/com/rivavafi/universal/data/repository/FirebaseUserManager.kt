@@ -12,7 +12,7 @@ import javax.inject.Singleton
 class FirebaseUserManager @Inject constructor() {
     private val firestore = FirebaseFirestore.getInstance()
     private val TAG = "FirebaseUserManager"
-    private val COLLECTION_NAME = "THEDATA"
+    private val COLLECTION_NAME = "therivdata"
 
     suspend fun saveUserToFirestore(userModel: UserModel) {
         if (userModel.uid.isBlank()) {
@@ -41,7 +41,7 @@ class FirebaseUserManager @Inject constructor() {
                 firestore.collection(COLLECTION_NAME).document(userModel.uid)
                     .set(userMap)
                     .await()
-                Log.d(TAG, "THEDATA document created for UID: ${userModel.uid}")
+                Log.d(TAG, "therivdata document created for UID: ${userModel.uid}")
             } else {
                 // Remove createdAt and isPhoneVerified to avoid overwriting existing data
                 userMap.remove("createdAt")
@@ -53,10 +53,10 @@ class FirebaseUserManager @Inject constructor() {
                 firestore.collection(COLLECTION_NAME).document(userModel.uid)
                     .set(userMap, SetOptions.merge())
                     .await()
-                Log.d(TAG, "Existing user updated in THEDATA for UID: ${userModel.uid}")
+                Log.d(TAG, "Existing user updated in therivdata for UID: ${userModel.uid}")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Firestore save failed in THEDATA for UID: ${userModel.uid}", e)
+            Log.e(TAG, "Firestore save failed in therivdata for UID: ${userModel.uid}", e)
         }
     }
 
@@ -67,9 +67,9 @@ class FirebaseUserManager @Inject constructor() {
             firestore.collection(COLLECTION_NAME).document(uid)
                 .update(updateMap)
                 .await()
-            Log.d(TAG, "Successfully updated lastLoginAt for UID: $uid in THEDATA")
+            Log.d(TAG, "Successfully updated lastLoginAt for UID: $uid in therivdata")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update lastLoginAt for UID: $uid in THEDATA", e)
+            Log.e(TAG, "Failed to update lastLoginAt for UID: $uid in therivdata", e)
         }
     }
 
@@ -93,14 +93,14 @@ class FirebaseUserManager @Inject constructor() {
                     isPhoneVerified = document.getBoolean("isPhoneVerified") ?: false,
                     premiumStatus = document.getBoolean("premiumStatus") ?: false
                 )
-                Log.d(TAG, "Successfully fetched user from THEDATA for UID: $uid")
+                Log.d(TAG, "Successfully fetched user from therivdata for UID: $uid")
                 user
             } else {
-                Log.d(TAG, "User document does not exist in THEDATA for UID: $uid")
+                Log.d(TAG, "User document does not exist in therivdata for UID: $uid")
                 null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get current user data from THEDATA for UID: $uid", e)
+            Log.e(TAG, "Failed to get current user data from therivdata for UID: $uid", e)
             null
         }
     }
@@ -111,7 +111,7 @@ class FirebaseUserManager @Inject constructor() {
             val document = firestore.collection(COLLECTION_NAME).document(uid).get().await()
             document.exists()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to check if user exists in THEDATA for UID: $uid", e)
+            Log.e(TAG, "Failed to check if user exists in therivdata for UID: $uid", e)
             false
         }
     }

@@ -151,7 +151,7 @@ class AuthViewModel @Inject constructor(
 
                 val uid = authResult.user?.uid ?: throw Exception("Failed to retrieve UID")
 
-                // Check if user exists in THEDATA
+                // Check if user exists in therivdata
                 val doc = firebaseUserManager.getCurrentUserData(uid)
                 if (doc != null) {
                     // Existing user, log them in directly
@@ -222,7 +222,7 @@ class AuthViewModel @Inject constructor(
                 val uid = repository.auth.currentUser?.uid ?: throw Exception("Failed to retrieve UID")
                 val isVerified = repository.checkVerificationStatus(uid)
 
-                // SAVE TO THEDATA (handles both create if not exists and update lastLoginAt if exists)
+                // SAVE TO therivdata (handles both create if not exists and update lastLoginAt if exists)
                 val theDataUser = UserModel(
                     uid = uid,
                     email = email,
@@ -322,7 +322,7 @@ class AuthViewModel @Inject constructor(
 
                 Log.d("AuthViewModel", "Registration successful. Saving to Firestore and Sheets...")
 
-                // SAVE TO THEDATA
+                // SAVE TO therivdata
                 val theDataUser = UserModel(
                     uid = uid,
                     name = name.ifBlank { null },
@@ -556,7 +556,7 @@ class AuthViewModel @Inject constructor(
 
                     Log.d("AuthViewModel", "UID retrieved: $uid. Saving user to Firestore...")
 
-                    // SAVE TO THEDATA
+                    // SAVE TO therivdata
                     val theDataUser = UserModel(
                         uid = uid,
                         email = email,
