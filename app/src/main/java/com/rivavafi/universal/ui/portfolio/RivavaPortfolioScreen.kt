@@ -169,7 +169,7 @@ fun RivavaPortfolioScreen(
                                 username = auth.currentUser?.displayName ?: "User",
                                 email = auth.currentUser?.email ?: "",
                                 phoneNumber = auth.currentUser?.phoneNumber ?: "",
-                                preference = "Not Selected",
+                                preference = "No",
                                 premiumStatus = false
                             )
                             showWhatsAppDialog = true
@@ -218,7 +218,7 @@ fun RivavaPortfolioScreen(
                                     username = auth.currentUser?.displayName ?: "User",
                                     email = auth.currentUser?.email ?: "",
                                     phoneNumber = auth.currentUser?.phoneNumber ?: "",
-                                    preference = "Not Selected",
+                                    preference = "No",
                                     premiumStatus = false
                                 )
                                 showWhatsAppDialog = true
@@ -239,7 +239,7 @@ fun RivavaPortfolioScreen(
                                         username = auth.currentUser?.displayName ?: "User",
                                         email = auth.currentUser?.email ?: "",
                                         phoneNumber = auth.currentUser?.phoneNumber ?: "",
-                                        preference = "Not Selected",
+                                        preference = "No",
                                         premiumStatus = false
                                     )
                                 }) {

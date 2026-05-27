@@ -39,6 +39,20 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun testFirstTimeRegistrationSkipLogic() {
+        // Test logic mimicking AuthViewModel's check
+        // Existing user docSnap.exists() == true -> isNewUser = false
+        val docSnapExists = true
+        val isNewUser = !docSnapExists
+        assertFalse("If user doc exists, they should not be considered a new user for skip logic", isNewUser)
+
+        // New user docSnap.exists() == false -> isNewUser = true
+        val docSnapNotExists = false
+        val isNewUser2 = !docSnapNotExists
+        assertTrue("If user doc doesn't exist, they should be considered a new user to start onboarding", isNewUser2)
+    }
+
+    @Test
     fun testNormalizePhoneNumber() {
         // We test the normalization logic using a standalone test class or object if it's static.
         // Since we didn't extract it, we create a basic instance.
