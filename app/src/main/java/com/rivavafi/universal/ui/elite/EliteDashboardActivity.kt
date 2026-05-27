@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +36,13 @@ class EliteDashboardActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val auth = FirebaseAuth.getInstance()
+            val profileViewModel: com.rivavafi.universal.ui.profile.ProfileViewModel = hiltViewModel()
+
+            val profileState by profileViewModel.profileState.collectAsState()
+
+            val userModel = profileState.userModel
+
+            val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: userModel?.phoneno?.takeIf { it.isNotBlank() } ?: auth.currentUser?.phoneNumber ?: ""
             var showSecretDialog by remember { mutableStateOf(false) }
             val prefs = getSharedPreferences("RivavaElitePrefs", MODE_PRIVATE)
             var isEliteUnlocked by remember { mutableStateOf(prefs.getBoolean("elite_unlocked", false)) }
@@ -55,7 +63,7 @@ class EliteDashboardActivity : ComponentActivity() {
                                 context = this@EliteDashboardActivity,
                                 username = auth.currentUser?.displayName ?: "User",
                                 email = auth.currentUser?.email ?: "",
-                                phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                phoneNumber = userPhone,
                                 preference = "Rivava Elite",
                                 premiumStatus = false
                             )
@@ -77,7 +85,7 @@ class EliteDashboardActivity : ComponentActivity() {
                                     context = this@EliteDashboardActivity,
                                     username = auth.currentUser?.displayName ?: "User",
                                     email = auth.currentUser?.email ?: "",
-                                    phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                    phoneNumber = userPhone,
                                     preference = "Rivava Elite",
                                     premiumStatus = false
                                 )

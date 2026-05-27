@@ -494,7 +494,7 @@ fun HomeScreen(
                             .clip(RoundedCornerShape(16.dp))
                             .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                             .clickable {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+919044761170"))
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+918881176909"))
                                 context.startActivity(intent)
                             },
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
@@ -772,7 +772,7 @@ fun HomeScreen(
                             showVideoCallDialog = false
                             val message = "Hi, I want to schedule a video call.\nName: $name\nPreferred Time: $preferredTime\nContact: $contactInfo"
                             val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/919044761170?text=$encodedMessage"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/918881176909?text=$encodedMessage"))
                             try {
                                 context.startActivity(intent)
                             } catch (e: Exception) {

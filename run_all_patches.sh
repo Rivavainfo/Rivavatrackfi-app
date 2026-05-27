@@ -476,7 +476,7 @@ object WhatsAppUtils {
             """.trimIndent()
 
             val encodedMessage = URLEncoder.encode(message, "UTF-8")
-            val targetNumber = "919044761170"
+            val targetNumber = "918881176909"
 
             val url = "https://api.whatsapp.com/send?phone=$targetNumber&text=$encodedMessage"
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -667,7 +667,7 @@ content = re.sub(r'''val openWhatsApp = \{
         try \{
             logInquiry\("whatsapp", "whatsapp_opened"\)
             val intent = Intent\(Intent.ACTION_VIEW\)\.apply \{
-                data = Uri.parse\("https://api\.whatsapp\.com/send\?phone=919044761170&text=\$\{Uri\.encode\(formattedMessage\)\}"\)
+                data = Uri.parse\("https://api\.whatsapp\.com/send\?phone=918881176909&text=\$\{Uri\.encode\(formattedMessage\)\}"\)
                 setPackage\("com\.whatsapp"\)
             \}
             context\.startActivity\(intent\)
