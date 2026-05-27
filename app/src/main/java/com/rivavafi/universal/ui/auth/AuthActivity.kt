@@ -261,7 +261,7 @@ fun AuthScreenContent(
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
                         Box(
