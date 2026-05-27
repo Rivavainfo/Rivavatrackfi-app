@@ -151,7 +151,6 @@ class OnboardingViewModel @Inject constructor(
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     viewModelScope.launch {
-                                        preferencesRepository.setOnboardingCompleted(true)
                                         _isLoading.value = false
                                         onSuccess()
                                     }
@@ -176,7 +175,6 @@ class OnboardingViewModel @Inject constructor(
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     viewModelScope.launch {
-                                        preferencesRepository.setOnboardingCompleted(true)
                                         _isLoading.value = false
                                         onSuccess()
                                     }
