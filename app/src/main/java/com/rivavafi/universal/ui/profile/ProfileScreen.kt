@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.alpha
@@ -117,17 +118,37 @@ fun ProfileScreen(
                 coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
                         context.contentResolver.openInputStream(selectedUri)?.use { inputStream ->
-                            val bytes = inputStream.readBytes()
-                            val base64Image = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-                            val dataUri = "data:image/jpeg;base64,$base64Image"
+                            val originalBitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                            if (originalBitmap != null) {
+                                // Resize aggressively to keep under 1MB Firestore limit
+                                val maxDim = 200f
+                                val scale = Math.min(maxDim / originalBitmap.width, maxDim / originalBitmap.height)
+                                val resizedBitmap = if (scale < 1f) {
+                                    android.graphics.Bitmap.createScaledBitmap(
+                                        originalBitmap,
+                                        (originalBitmap.width * scale).toInt(),
+                                        (originalBitmap.height * scale).toInt(),
+                                        true
+                                    )
+                                } else {
+                                    originalBitmap
+                                }
 
-                            val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
-                            FileOutputStream(file).use { outputStream ->
-                                outputStream.write(bytes)
-                            }
-                            launch(kotlinx.coroutines.Dispatchers.Main) {
-                                viewModel.setProfileImageUri(file.absolutePath)
-                                profileViewModel.updateProfileImage(dataUri)
+                                val outputStream = java.io.ByteArrayOutputStream()
+                                resizedBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 60, outputStream)
+                                val bytes = outputStream.toByteArray()
+
+                                val base64Image = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                val dataUri = "data:image/jpeg;base64,$base64Image"
+
+                                val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
+                                FileOutputStream(file).use { fileOut ->
+                                    fileOut.write(bytes)
+                                }
+                                launch(kotlinx.coroutines.Dispatchers.Main) {
+                                    viewModel.setProfileImageUri(file.absolutePath)
+                                    profileViewModel.updateProfileImage(dataUri)
+                                }
                             }
                         }
                     } catch (e: Exception) {
@@ -208,12 +229,33 @@ fun ProfileScreen(
                                     )
                                 }
 
-                                coil.compose.AsyncImage(
-                                    model = profileImageUri,
-                                    contentDescription = "Avatar",
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
+                                val decodedBitmap = remember(profileImageUri) {
+                                    if (profileImageUri != null && profileImageUri.startsWith("data:image")) {
+                                        try {
+                                            val base64String = profileImageUri.substringAfter("base64,")
+                                            val imageBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+                                            android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                    } else null
+                                }
+
+                                if (decodedBitmap != null) {
+                                    androidx.compose.foundation.Image(
+                                        bitmap = decodedBitmap.asImageBitmap(),
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    coil.compose.AsyncImage(
+                                        model = profileImageUri,
+                                        contentDescription = "Avatar",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
                             }
                         } else {
                             androidx.compose.foundation.Image(

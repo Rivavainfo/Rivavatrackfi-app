@@ -23,10 +23,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun HelpCenterScreen(
     onBack: () -> Unit,
-    viewModel: HelpChatViewModel = hiltViewModel()
+    viewModel: HelpChatViewModel = hiltViewModel(),
+    profileViewModel: com.rivavafi.universal.ui.profile.ProfileViewModel = hiltViewModel()
 ) {
     val messages by viewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }
+
+    val profileState by profileViewModel.profileState.collectAsState()
+    val userModel = profileState.userModel
 
     Scaffold(
         topBar = {
@@ -102,7 +106,11 @@ fun HelpCenterScreen(
                 IconButton(
                     onClick = {
                         if (inputText.isNotBlank()) {
-                            viewModel.sendMessage(inputText)
+                            val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: "No Phone"
+                            val userName = userModel?.name?.takeIf { it.isNotBlank() } ?: "User"
+                            val userEmail = userModel?.email?.takeIf { it.isNotBlank() } ?: "No Email"
+                            val userInfo = "Name: $userName, Phone: $userPhone, Email: $userEmail"
+                            viewModel.sendMessage(inputText, userInfo)
                             inputText = ""
                         }
                     },

@@ -28,7 +28,7 @@ class HelpChatViewModelTest {
         assertEquals(true, messages[1].isUser)
 
         // Check bot reply
-        assertEquals("For any query, contact 9044761170.", messages[2].text)
+        assertEquals("For any query, contact 9044761170.\n\nInfo: profile page", messages[2].text)
         assertEquals(false, messages[2].isUser)
     }
 

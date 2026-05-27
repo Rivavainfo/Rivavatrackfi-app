@@ -75,11 +75,13 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.ui.graphics.asImageBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: com.rivavafi.universal.ui.profile.ProfileViewModel = hiltViewModel(),
     onNavigateToProfile: () -> Unit = {},
     onNavigateToTransactionDetail: (Long) -> Unit = {},
     onNavigateToRivavaPortfolio: () -> Unit = {}
@@ -95,14 +97,18 @@ fun HomeScreen(
     val eliteConfig by viewModel.eliteConfig.collectAsState()
     val eliteSubscription by viewModel.eliteSubscription.collectAsState()
 
+    val profileState by profileViewModel.profileState.collectAsState()
+    val userModel = profileState.userModel
+
     val context = LocalContext.current
     val cachedUser = remember { com.rivavafi.universal.utils.PrefsManager(context).getUser() }
     val authUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
 
-    val userName = viewModelUserName?.takeIf { it.isNotBlank() }
+    val userName = userModel?.name?.takeIf { it.isNotBlank() }
+        ?: viewModelUserName?.takeIf { it.isNotBlank() }
         ?: cachedUser?.name?.takeIf { it.isNotBlank() }
         ?: authUser?.displayName?.takeIf { it.isNotBlank() }
-    val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
+    val profileImageUri = userModel?.profileImage ?: viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
     var showAddSheet by remember { mutableStateOf(false) }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var showVideoCallDialog by remember { mutableStateOf(false) }
@@ -205,12 +211,33 @@ fun HomeScreen(
                                     )
                                 }
 
-                                coil.compose.AsyncImage(
-                                    model = profileImageUri,
-                                    contentDescription = "Profile Avatar",
-                                    modifier = Modifier.fillMaxSize().clip(CircleShape),
-                                    contentScale = ContentScale.Crop
-                                )
+                                val decodedBitmap = remember(profileImageUri) {
+                                    if (profileImageUri != null && profileImageUri.startsWith("data:image")) {
+                                        try {
+                                            val base64String = profileImageUri.substringAfter("base64,")
+                                            val imageBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
+                                            android.graphics.BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                        } catch (e: Exception) {
+                                            null
+                                        }
+                                    } else null
+                                }
+
+                                if (decodedBitmap != null) {
+                                    Image(
+                                        bitmap = decodedBitmap.asImageBitmap(),
+                                        contentDescription = "Profile Avatar",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    coil.compose.AsyncImage(
+                                        model = profileImageUri,
+                                        contentDescription = "Profile Avatar",
+                                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
                             }
                         } else {
                             Image(
