@@ -246,14 +246,6 @@ class AuthRepository @Inject constructor(
                 val updateData = mutableMapOf<String, Any>()
                 updateData["lastLoginAt"] = com.google.firebase.Timestamp.now()
 
-                if (phoneNumber != null && docSnap.getString("phoneno") != phoneNumber) {
-                    updateData["phoneno"] = phoneNumber
-                }
-
-                if (name != null && docSnap.getString("username") != name) {
-                    updateData["username"] = name
-                }
-
                 docRef.set(updateData, SetOptions.merge())
                     .addOnSuccessListener { Log.d("AuthRepository", "Successfully updated therivdata for user $uid") }
                     .addOnFailureListener { e -> Log.e("AuthRepository", "Failed to update therivdata", e) }
