@@ -53,8 +53,8 @@ fun EliteBottomSheet(
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
-    val targetNumber = "+919044761170"
-    val displayTargetNumber = "+91-9044761170"
+    val targetNumber = "+918881176909"
+    val displayTargetNumber = "+91-8881176909"
 
     val uid = auth.currentUser?.uid ?: "unknown"
     val finalUserName = userName?.takeIf { it.isNotBlank() } ?: auth.currentUser?.displayName ?: "User"

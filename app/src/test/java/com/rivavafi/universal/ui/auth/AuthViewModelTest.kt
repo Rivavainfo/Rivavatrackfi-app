@@ -70,9 +70,9 @@ class AuthViewModelTest {
         val authViewModel = org.mockito.Mockito.mock(com.rivavafi.universal.ui.auth.AuthViewModel::class.java)
         org.mockito.Mockito.`when`(authViewModel.normalizePhoneNumber(org.mockito.Mockito.anyString())).thenCallRealMethod()
 
-        org.junit.Assert.assertEquals("+919044761170", authViewModel.normalizePhoneNumber("9044761170"))
+        org.junit.Assert.assertEquals("+918881176909", authViewModel.normalizePhoneNumber("8881176909"))
         org.junit.Assert.assertEquals("+14155552671", authViewModel.normalizePhoneNumber("+14155552671"))
-        org.junit.Assert.assertEquals("+919044761170", authViewModel.normalizePhoneNumber(" 904 476 1170 "))
+        org.junit.Assert.assertEquals("+918881176909", authViewModel.normalizePhoneNumber(" 888 117 6909 "))
         org.junit.Assert.assertNull(authViewModel.normalizePhoneNumber("123"))
     }
 }

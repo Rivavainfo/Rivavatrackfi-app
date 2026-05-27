@@ -33,7 +33,7 @@ object WhatsAppUtils {
             """.trimIndent()
 
             val encodedMessage = URLEncoder.encode(message, "UTF-8")
-            val targetNumber = "919044761170"
+            val targetNumber = "918881176909"
 
             val url = "https://api.whatsapp.com/send?phone=$targetNumber&text=$encodedMessage"
             val intent = Intent(Intent.ACTION_VIEW).apply {

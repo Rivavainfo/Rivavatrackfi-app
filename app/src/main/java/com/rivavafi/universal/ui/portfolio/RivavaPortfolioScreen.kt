@@ -86,11 +86,17 @@ fun RivavaPortfolioScreen(
     onNavigateToDetail: (ticker: String, focus: String?) -> Unit,
     onBack: () -> Unit = {},
     viewModel: StockViewModel = hiltViewModel(),
-    cryptoViewModel: CryptoViewModel = hiltViewModel()
+    cryptoViewModel: CryptoViewModel = hiltViewModel(),
+    profileViewModel: com.rivavafi.universal.ui.profile.ProfileViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val premiumState by premiumViewModel.premiumState.collectAsState()
     val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    val profileState by profileViewModel.profileState.collectAsState()
+
+    val userModel = profileState.userModel
+
+    val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: userModel?.phoneno?.takeIf { it.isNotBlank() } ?: auth.currentUser?.phoneNumber ?: ""
     var showWhatsAppDialog by remember { mutableStateOf(false) }
     var premiumKeyInput by remember { mutableStateOf("") }
 
@@ -168,7 +174,7 @@ fun RivavaPortfolioScreen(
                                 context = context,
                                 username = auth.currentUser?.displayName ?: "User",
                                 email = auth.currentUser?.email ?: "",
-                                phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                phoneNumber = userPhone,
                                 preference = "No",
                                 premiumStatus = false
                             )
@@ -217,7 +223,7 @@ fun RivavaPortfolioScreen(
                                     context = context,
                                     username = auth.currentUser?.displayName ?: "User",
                                     email = auth.currentUser?.email ?: "",
-                                    phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                    phoneNumber = userPhone,
                                     preference = "No",
                                     premiumStatus = false
                                 )
@@ -238,7 +244,7 @@ fun RivavaPortfolioScreen(
                                         context = context,
                                         username = auth.currentUser?.displayName ?: "User",
                                         email = auth.currentUser?.email ?: "",
-                                        phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                                        phoneNumber = userPhone,
                                         preference = "No",
                                         premiumStatus = false
                                     )
