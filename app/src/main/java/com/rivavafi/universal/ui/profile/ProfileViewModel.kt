@@ -95,6 +95,13 @@ class ProfileViewModel @Inject constructor(
             return
         }
 
+        // Restrict editable fields to only allowed fields
+        val allowedFields = setOf("name", "username", "phone", "phoneno", "phoneNumber")
+        if (field !in allowedFields) {
+            Log.e(TAG, "Attempt to update restricted field: $field")
+            return
+        }
+
         viewModelScope.launch {
             try {
                 Log.d(TAG, "Updating profile field $field for UID: $uid")

@@ -162,7 +162,7 @@ class AuthViewModel @Inject constructor(
                     photoUrl = photoUrl
                 )
 
-                val isNew = sessionState.isNewUser
+                val isNew = !sessionState.onboardingCompleted
                 _isNewUser.value = isNew
 
                 userPreferencesRepository.saveUserName(name)
@@ -234,7 +234,7 @@ class AuthViewModel @Inject constructor(
                         isVerified = true
                     )
                     val firebaseNew = false
-                    val isNew = sessionState.isNewUser || firebaseNew
+                    val isNew = !sessionState.onboardingCompleted
                     _isNewUser.value = isNew
                     if (isNew) {
                         repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
@@ -395,7 +395,7 @@ class AuthViewModel @Inject constructor(
                             isVerified = true
                         )
                         val firebaseNew = false
-                        val isNew = sessionState.isNewUser || firebaseNew
+                        val isNew = !sessionState.onboardingCompleted
                         _isNewUser.value = isNew
                         if (isNew) {
                             repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
@@ -568,7 +568,7 @@ class AuthViewModel @Inject constructor(
                         isVerified = true
                     )
 
-                    val isNew = sessionState.isNewUser
+                    val isNew = !sessionState.onboardingCompleted
                     _isNewUser.value = isNew
                     if (phoneNumber.isNotBlank()) {
                         userPreferencesRepository.saveUserPhone(phoneNumber)
