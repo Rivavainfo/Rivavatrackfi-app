@@ -222,8 +222,8 @@ class HomeViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-            // Keep locally cached profile/onboarding data so returning users
-            // don't see their name and personalization reset after sign out.
+            // Clear cached profile data to ensure stale state is wiped
+            userPreferencesRepository.clearAllData()
             userEntitlementRepository.clearEntitlement()
         }
     }

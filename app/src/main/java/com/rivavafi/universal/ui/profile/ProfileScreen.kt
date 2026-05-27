@@ -80,26 +80,23 @@ fun ProfileScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToHelpCenter: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     stockViewModel: StockViewModel = hiltViewModel()
 ) {
-    val viewModelUserName by viewModel.userName.collectAsState()
-    val viewModelUserPhone by viewModel.userPhone.collectAsState()
-    val viewModelUsername by viewModel.username.collectAsState()
-    val isPremiumUser by viewModel.isPremiumUser.collectAsState()
-    val viewModelProfileImageUri by viewModel.profileImageUri.collectAsState()
     val summary by viewModel.summary.collectAsState()
+    val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val context = LocalContext.current
 
-    val prefsManager = remember { PrefsManager(context) }
-    val cachedUser = remember { prefsManager.getUser() }
-    val cachedUsername = remember { prefsManager.getUsername() }
-    val authUser = FirebaseAuth.getInstance().currentUser
+    val profileState by profileViewModel.profileState.collectAsState()
+    val userModel = profileState.userModel
 
-    val userName = viewModelUserName?.takeIf { it.isNotBlank() } ?: cachedUser?.name ?: authUser?.displayName
-    val userPhone = viewModelUserPhone?.takeIf { it.isNotBlank() } ?: cachedUser?.phone ?: authUser?.phoneNumber
-    val username = viewModelUsername?.takeIf { it.isNotBlank() } ?: cachedUsername ?: userName?.lowercase()?.replace(Regex("[^a-z0-9]+"), "_")?.trim('_')
-    val profileImageUri = viewModelProfileImageUri ?: cachedUser?.photo ?: authUser?.photoUrl?.toString()
+    val userName = userModel?.name ?: "No Name Provided"
+    val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: "No Phone Number"
+    val username = userModel?.username ?: "No Username"
+    val profileImageUri = userModel?.profileImage
+    val preference = userModel?.preference?.takeIf { it.isNotBlank() } ?: "No Preference Selected"
+    val isPremiumModel = userModel?.premiumStatus == true
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
     var screenshotsAllowed by remember { mutableStateOf(false) }
@@ -111,7 +108,7 @@ fun ProfileScreen(
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
     val premiumState by premiumViewModel.premiumState.collectAsState()
     val isPremiumPref = premiumState.status == com.rivavafi.universal.data.repository.EntitlementStatus.UNLOCKED
-    val finalIsPremium = isPremiumUser || isPremiumPref
+    val finalIsPremium = isPremiumModel || isPremiumPref || isPremiumUser
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -333,6 +330,33 @@ fun ProfileScreen(
                         )
                         Icon(Icons.Default.Edit, contentDescription = "Edit Phone", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+
+                // Divider
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                )
+
+                // Preference Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "PREFERENCE",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        letterSpacing = 1.5.sp
+                    )
+                    Text(
+                        text = preference,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 // Divider
@@ -644,7 +668,7 @@ fun ProfileScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         if (newName.isNotBlank()) {
-                            viewModel.updateUserName(newName.trim())
+                            profileViewModel.updateName(newName.trim())
                         }
                         showEditNameDialog = false
                     }) {
@@ -678,7 +702,7 @@ fun ProfileScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         if (newUsername.isNotBlank()) {
-                            viewModel.updateUsername(newUsername.trim('_'))
+                            profileViewModel.updateUsername(newUsername.trim('_'))
                         }
                         showEditUsernameDialog = false
                     }) {
@@ -709,7 +733,7 @@ fun ProfileScreen(
                 confirmButton = {
                     TextButton(onClick = {
                         if (newPhone.isNotBlank()) {
-                            viewModel.updateUserPhone(newPhone.trim())
+                            profileViewModel.updatePhone(newPhone.trim())
                         }
                         showEditPhoneDialog = false
                     }) {
