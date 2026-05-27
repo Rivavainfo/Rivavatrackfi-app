@@ -189,7 +189,7 @@ fun PremiumUnlockDialog(
                                 shape = RoundedCornerShape(20.dp),
                                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                             ) {
-                                Text("Call With Advisor", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                                Text("Chat With Advisor", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color.White))
                             }
 
                             OutlinedButton(

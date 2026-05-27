@@ -185,7 +185,7 @@ fun RivavaPortfolioScreen(
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
                     ) {
                         Text(
-                            "Call With Advisor",
+                            "Chat With Advisor",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold
                             )

@@ -281,7 +281,7 @@ fun EliteLandingScreen(
                     if (isFull) {
                         Text("Membership Full", color = Color.LightGray, fontWeight = FontWeight.Bold)
                     } else {
-                        Text("Call With Advisor", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Chat With Advisor", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }

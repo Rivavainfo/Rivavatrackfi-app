@@ -17,11 +17,11 @@ class HelpChatViewModel @Inject constructor() : ViewModel() {
     )
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
-    fun sendMessage(text: String) {
+    fun sendMessage(text: String, userProfileInfo: String = "profile page") {
         if (text.isBlank()) return
 
         val userMsg = ChatMessage(UUID.randomUUID().toString(), text, true)
-        val botMsg = ChatMessage(UUID.randomUUID().toString(), "For any query, contact 9044761170.", false)
+        val botMsg = ChatMessage(UUID.randomUUID().toString(), "For any query, contact 9044761170.\n\nInfo: $userProfileInfo", false)
 
         _messages.value = _messages.value + listOf(userMsg, botMsg)
     }
