@@ -151,7 +151,7 @@ class OnboardingViewModel @Inject constructor(
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     viewModelScope.launch {
-                                        preferencesRepository.setOnboardingCompleted(true)
+                                        // preferencesRepository.setOnboardingCompleted(true) - delayed to SMS opt in
                                         _isLoading.value = false
                                         onSuccess()
                                     }
@@ -176,7 +176,7 @@ class OnboardingViewModel @Inject constructor(
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     viewModelScope.launch {
-                                        preferencesRepository.setOnboardingCompleted(true)
+                                        // preferencesRepository.setOnboardingCompleted(true) - delayed to SMS opt in
                                         _isLoading.value = false
                                         onSuccess()
                                     }

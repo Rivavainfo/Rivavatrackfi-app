@@ -67,8 +67,16 @@ class ProfileViewModel @Inject constructor(
                         phoneno = snapshot.getString("phoneno") ?: snapshot.getString("phone"),
                         preference = snapshot.getString("preference"),
                         profileImage = snapshot.getString("profileImage"),
-                        createdAt = snapshot.getLong("createdAt") ?: System.currentTimeMillis(),
-                        lastLoginAt = snapshot.getLong("lastLoginAt") ?: System.currentTimeMillis(),
+                        createdAt = when (val c = snapshot.get("createdAt")) {
+                            is Long -> c
+                            is com.google.firebase.Timestamp -> c.toDate().time
+                            else -> System.currentTimeMillis()
+                        },
+                        lastLoginAt = when (val l = snapshot.get("lastLoginAt")) {
+                            is Long -> l
+                            is com.google.firebase.Timestamp -> l.toDate().time
+                            else -> System.currentTimeMillis()
+                        },
                         loginProvider = snapshot.getString("loginProvider") ?: "",
                         isPhoneVerified = snapshot.getBoolean("isPhoneVerified") ?: false,
                         premiumStatus = snapshot.getBoolean("premiumStatus") ?: false
