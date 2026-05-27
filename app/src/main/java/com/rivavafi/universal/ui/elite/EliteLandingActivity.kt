@@ -91,8 +91,8 @@ fun EliteLandingScreen(
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
 
-    val targetNumber = "+919044761170"
-    val displayTargetNumber = "+91-9044761170"
+    val targetNumber = "+918881176909"
+    val displayTargetNumber = "+91-8881176909"
 
     val uid = auth.currentUser?.uid ?: "unknown"
     val finalUserName = auth.currentUser?.displayName ?: "User"
@@ -166,7 +166,7 @@ fun EliteLandingScreen(
             context = context,
             username = finalUserName,
             email = finalUserEmail,
-            phoneNumber = auth.currentUser?.phoneNumber ?: "",
+            phoneNumber = phoneNumber,
             preference = "Rivava Elite",
             premiumStatus = userPremiumStatus
         )
@@ -264,7 +264,7 @@ fun EliteLandingScreen(
                             context = context,
                             username = finalUserName,
                             email = finalUserEmail,
-                            phoneNumber = auth.currentUser?.phoneNumber ?: "",
+                            phoneNumber = phoneNumber,
                             preference = "Rivava Elite",
                             premiumStatus = userPremiumStatus
                         )
