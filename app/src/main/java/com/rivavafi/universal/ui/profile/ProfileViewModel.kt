@@ -58,6 +58,13 @@ class ProfileViewModel @Inject constructor(
 
                 if (snapshot != null && snapshot.exists()) {
                     Log.d(TAG, "Current data: ${snapshot.data}")
+
+                    val createdAtAny = snapshot.get("createdAt")
+                    val createdAtVal = if (createdAtAny is com.google.firebase.Timestamp) createdAtAny.toDate().time else snapshot.getLong("createdAt") ?: System.currentTimeMillis()
+
+                    val lastLoginAtAny = snapshot.get("lastLoginAt")
+                    val lastLoginAtVal = if (lastLoginAtAny is com.google.firebase.Timestamp) lastLoginAtAny.toDate().time else snapshot.getLong("lastLoginAt") ?: System.currentTimeMillis()
+
                     val user = UserModel(
                         uid = snapshot.getString("uid") ?: uid,
                         name = snapshot.getString("name"),
@@ -67,8 +74,8 @@ class ProfileViewModel @Inject constructor(
                         phoneno = snapshot.getString("phoneno") ?: snapshot.getString("phone"),
                         preference = snapshot.getString("preference"),
                         profileImage = snapshot.getString("profileImage"),
-                        createdAt = snapshot.getLong("createdAt") ?: System.currentTimeMillis(),
-                        lastLoginAt = snapshot.getLong("lastLoginAt") ?: System.currentTimeMillis(),
+                        createdAt = createdAtVal,
+                        lastLoginAt = lastLoginAtVal,
                         loginProvider = snapshot.getString("loginProvider") ?: "",
                         isPhoneVerified = snapshot.getBoolean("isPhoneVerified") ?: false,
                         premiumStatus = snapshot.getBoolean("premiumStatus") ?: false
