@@ -119,7 +119,7 @@ class OnboardingViewModel @Inject constructor(
                     "phone" to phone,
                     "phoneNumber" to phone,
                     "phoneno" to phone,
-                    "preference" to "Not Selected",
+                    "preference" to "No",
                     "premiumStatus" to false,
                     "profileImage" to photoUrl,
                     "createdAt" to com.google.firebase.Timestamp.now(),

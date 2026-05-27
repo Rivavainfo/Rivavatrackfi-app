@@ -21,7 +21,7 @@ class HelpChatViewModel @Inject constructor() : ViewModel() {
         if (text.isBlank()) return
 
         val userMsg = ChatMessage(UUID.randomUUID().toString(), text, true)
-        val botMsg = ChatMessage(UUID.randomUUID().toString(), "+91 9044761170", false)
+        val botMsg = ChatMessage(UUID.randomUUID().toString(), "For any query, contact 9044761170.", false)
 
         _messages.value = _messages.value + listOf(userMsg, botMsg)
     }

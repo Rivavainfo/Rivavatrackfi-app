@@ -101,7 +101,14 @@ class AuthViewModel @Inject constructor(
                 )
                 userRepository.cacheUserLocally(context, appUser)
 
-                _isNewUser.value = false // if already logged in, they are not a new user
+                try {
+                    val docSnap = com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("therivdata").document(user.uid).get().await()
+                    _isNewUser.value = !docSnap.exists()
+                } catch (e: Exception) {
+                    Log.e("AuthViewModel", "Failed to check existing user data", e)
+                    _isNewUser.value = false // Default to false if network fails to avoid blocking login flow
+                }
+
                 val providerId = user.providerData.firstOrNull()?.providerId
                 val isEmailAuth = providerId == "password" || providerId == "email"
 

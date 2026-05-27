@@ -95,7 +95,7 @@ fun ProfileScreen(
     val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: "No Phone Number"
     val username = userModel?.username ?: "No Username"
     val profileImageUri = userModel?.profileImage
-    val preference = userModel?.preference?.takeIf { it.isNotBlank() } ?: "No Preference Selected"
+    val preference = userModel?.preference?.takeIf { it.isNotBlank() } ?: "No"
     val isPremiumModel = userModel?.premiumStatus == true
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
@@ -117,12 +117,17 @@ fun ProfileScreen(
                 coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
                         context.contentResolver.openInputStream(selectedUri)?.use { inputStream ->
+                            val bytes = inputStream.readBytes()
+                            val base64Image = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                            val dataUri = "data:image/jpeg;base64,$base64Image"
+
                             val file = File(context.filesDir, "profile_image_${System.currentTimeMillis()}.jpg")
                             FileOutputStream(file).use { outputStream ->
-                                inputStream.copyTo(outputStream)
+                                outputStream.write(bytes)
                             }
                             launch(kotlinx.coroutines.Dispatchers.Main) {
                                 viewModel.setProfileImageUri(file.absolutePath)
+                                profileViewModel.updateProfileImage(dataUri)
                             }
                         }
                     } catch (e: Exception) {

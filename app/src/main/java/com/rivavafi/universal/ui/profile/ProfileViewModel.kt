@@ -96,7 +96,7 @@ class ProfileViewModel @Inject constructor(
         }
 
         // Restrict editable fields to only allowed fields
-        val allowedFields = setOf("name", "username", "phone", "phoneno", "phoneNumber")
+        val allowedFields = setOf("name", "username", "phone", "phoneno", "phoneNumber", "profileImage")
         if (field !in allowedFields) {
             Log.e(TAG, "Attempt to update restricted field: $field")
             return
@@ -116,6 +116,10 @@ class ProfileViewModel @Inject constructor(
 
     fun updateName(name: String) {
         updateProfileField("name", name)
+    }
+
+    fun updateProfileImage(profileImage: String) {
+        updateProfileField("profileImage", profileImage)
     }
 
     fun updateUsername(username: String) {
