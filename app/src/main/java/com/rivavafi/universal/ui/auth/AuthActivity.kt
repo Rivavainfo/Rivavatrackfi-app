@@ -59,6 +59,7 @@ class AuthActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // We now rely on AuthViewModel's init block and LaunchedEffect(authState)
         // to handle the redirection safely after verifying backend status.
@@ -261,7 +262,7 @@ fun AuthScreenContent(
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                             modifier = Modifier.fillMaxSize()
                         )
                         Box(
