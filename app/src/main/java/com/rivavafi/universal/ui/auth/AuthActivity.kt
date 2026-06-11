@@ -219,6 +219,7 @@ fun AuthScreenContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0A0A0A))
+            .systemBarsPadding()
             .imePadding()
     ) {
         Column(
@@ -252,18 +253,17 @@ fun AuthScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
             ) {
                 androidx.compose.foundation.pager.HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth()
                 ) { page ->
-                    Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
-                            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize()
+                            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Box(
                             modifier = Modifier
