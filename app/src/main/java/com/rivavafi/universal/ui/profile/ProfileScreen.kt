@@ -834,10 +834,8 @@ fun ProfileScreen(
                         TextButton(onClick = {
                             screenshotsAllowed = !screenshotsAllowed
                             if (screenshotsAllowed) {
-                                activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
                                 android.widget.Toast.makeText(context, "Screenshots Enabled", android.widget.Toast.LENGTH_SHORT).show()
                             } else {
-                                activity?.window?.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
                                 android.widget.Toast.makeText(context, "Screenshots Disabled", android.widget.Toast.LENGTH_SHORT).show()
                             }
                         }) {
