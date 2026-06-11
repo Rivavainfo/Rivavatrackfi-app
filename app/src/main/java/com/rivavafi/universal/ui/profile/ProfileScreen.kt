@@ -100,7 +100,6 @@ fun ProfileScreen(
     val isPremiumModel = userModel?.premiumStatus == true
     val coroutineScope = rememberCoroutineScope()
     var showLogsDialog by remember { mutableStateOf(false) }
-    var screenshotsAllowed by remember { mutableStateOf(false) }
     var showEditNameDialog by remember { mutableStateOf(false) }
     var showEditPhoneDialog by remember { mutableStateOf(false) }
     var showEditUsernameDialog by remember { mutableStateOf(false) }
@@ -828,18 +827,6 @@ fun ProfileScreen(
                             }
                         }) {
                             Text("Capture Screenshot")
-                        }
-
-                        val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
-                        TextButton(onClick = {
-                            screenshotsAllowed = !screenshotsAllowed
-                            if (screenshotsAllowed) {
-                                android.widget.Toast.makeText(context, "Screenshots Enabled", android.widget.Toast.LENGTH_SHORT).show()
-                            } else {
-                                android.widget.Toast.makeText(context, "Screenshots Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                            }
-                        }) {
-                            Text(if (screenshotsAllowed) "Disable System SS" else "Enable System SS")
                         }
 
                         TextButton(onClick = { showLogsDialog = false }) {
