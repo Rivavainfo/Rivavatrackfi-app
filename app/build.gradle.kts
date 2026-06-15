@@ -11,7 +11,7 @@ import java.io.FileInputStream
 
 android {
     namespace = "com.rivavafi.universal"
-    compileSdk = 34
+    compileSdk = 35
 
     // Load local.properties for local builds
     val localProperties = Properties()
@@ -50,7 +50,7 @@ android {
     defaultConfig {
         applicationId = "com.rivavafi.universal"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 7
         versionName = "1.0.7"
 
