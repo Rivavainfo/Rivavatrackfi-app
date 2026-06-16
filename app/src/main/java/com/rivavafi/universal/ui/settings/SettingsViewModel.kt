@@ -1,6 +1,8 @@
 package com.rivavafi.universal.ui.settings
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -98,6 +100,9 @@ class SettingsViewModel @Inject constructor(
                 .requestEmail()
                 .build()
             GoogleSignIn.getClient(context, googleSignInOptions).signOut()
+            runCatching {
+                CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
+            }
             // Keep locally cached profile/onboarding data so returning users
             // don't lose their displayed name after sign out.
         }

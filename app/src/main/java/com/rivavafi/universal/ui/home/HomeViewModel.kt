@@ -1,6 +1,8 @@
 package com.rivavafi.universal.ui.home
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -228,6 +230,9 @@ class HomeViewModel @Inject constructor(
                 .requestEmail()
                 .build()
             GoogleSignIn.getClient(context, googleSignInOptions).signOut()
+            runCatching {
+                CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
+            }
             // Clear cached profile data to ensure stale state is wiped
             userPreferencesRepository.clearAllData()
             userEntitlementRepository.clearEntitlement()
