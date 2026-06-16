@@ -1,5 +1,6 @@
 package com.rivavafi.universal.ui.auth
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -190,25 +191,24 @@ fun AuthScreenContent(
     val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
+            viewModel.setErrorMessage("Google Sign-in was cancelled. Please try again.")
+            return@rememberLauncherForActivityResult
+        }
+
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
             val account = task.getResult(ApiException::class.java)
-            if (account != null && account.idToken != null) {
-
+            val idToken = account?.idToken
+            if (!idToken.isNullOrBlank()) {
                 viewModel.onGoogleSignInSuccess(
-                    idToken = account.idToken!!,
+                    idToken = idToken,
                     name = account.displayName ?: "User",
                     email = account.email ?: "",
                     photoUrl = account.photoUrl?.toString() ?: ""
                 )
-
-                // We rely on AuthState.SUCCESS to navigate away if existing.
-                // If it goes back to IDLE, it means it's a new user, we set authMethod
-                // But we need a better way to distinguish IDLE (error) vs IDLE (needs completion)
-                // Let's use a new variable for profile completion trigger
-
             } else {
-                viewModel.setErrorMessage("Sign-in failed: ID Token is null")
+                viewModel.setErrorMessage("Sign-in failed: Google did not return an ID token. Please try again.")
             }
         } catch (e: ApiException) {
             viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
@@ -371,9 +371,7 @@ fun AuthScreenContent(
                                 .requestEmail()
                                 .build()
                             val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                            googleSignInClient.signOut().addOnCompleteListener {
-                                launcher.launch(googleSignInClient.signInIntent)
-                            }
+                            launcher.launch(googleSignInClient.signInIntent)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
