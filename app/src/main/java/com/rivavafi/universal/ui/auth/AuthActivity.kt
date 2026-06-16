@@ -36,9 +36,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.universal.HomeActivity
 import com.rivavafi.universal.R
@@ -51,6 +48,13 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import android.util.Patterns
 import androidx.compose.foundation.shape.CircleShape
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -154,8 +158,8 @@ fun AuthScreenContent(
 
 
     val context = LocalContext.current
-
-
+    val coroutineScope = rememberCoroutineScope()
+    val credentialManager = remember(context) { CredentialManager.create(context) }
 
 
 
@@ -185,35 +189,6 @@ fun AuthScreenContent(
         }
     }
 
-
-
-    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            if (account != null && account.idToken != null) {
-
-                viewModel.onGoogleSignInSuccess(
-                    idToken = account.idToken!!,
-                    name = account.displayName ?: "User",
-                    email = account.email ?: "",
-                    photoUrl = account.photoUrl?.toString() ?: ""
-                )
-
-                // We rely on AuthState.SUCCESS to navigate away if existing.
-                // If it goes back to IDLE, it means it's a new user, we set authMethod
-                // But we need a better way to distinguish IDLE (error) vs IDLE (needs completion)
-                // Let's use a new variable for profile completion trigger
-
-            } else {
-                viewModel.setErrorMessage("Sign-in failed: ID Token is null")
-            }
-        } catch (e: ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -366,13 +341,37 @@ fun AuthScreenContent(
                     // Google Login Button
                     Button(
                         onClick = {
-                            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                                .requestIdToken(context.getString(R.string.default_web_client_id))
-                                .requestEmail()
-                                .build()
-                            val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                            googleSignInClient.signOut().addOnCompleteListener {
-                                launcher.launch(googleSignInClient.signInIntent)
+                            coroutineScope.launch {
+                                val googleIdOption = GetGoogleIdOption.Builder()
+                                    .setServerClientId(context.getString(R.string.default_web_client_id))
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setAutoSelectEnabled(false)
+                                    .build()
+                                val request = GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+
+                                try {
+                                    val result = credentialManager.getCredential(context, request)
+                                    val credential = result.credential
+                                    if (credential is CustomCredential &&
+                                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                                    ) {
+                                        val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                                        viewModel.onGoogleSignInSuccess(
+                                            idToken = googleCredential.idToken,
+                                            name = googleCredential.displayName ?: "User",
+                                            email = googleCredential.id,
+                                            photoUrl = googleCredential.profilePictureUri?.toString() ?: ""
+                                        )
+                                    } else {
+                                        viewModel.setErrorMessage("Google Sign-in failed: unsupported credential type.")
+                                    }
+                                } catch (e: GetCredentialCancellationException) {
+                                    viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
+                                } catch (e: GetCredentialException) {
+                                    viewModel.setErrorMessage("Google Sign-in failed: ${e.message ?: e.type}")
+                                }
                             }
                         },
                         modifier = Modifier
