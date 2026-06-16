@@ -51,8 +51,13 @@ android {
         applicationId = "com.rivavafi.universal"
         minSdk = 24
         targetSdk = 35
+<<<<<<< codex/fix-google-sign-in-issues-fp3hqd
         versionCode = 19
         versionName = "1.0.19"
+=======
+        versionCode = 18
+        versionName = "1.0.18"
+>>>>>>> main
 
         // API Key injection with safe fallbacks
         buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
