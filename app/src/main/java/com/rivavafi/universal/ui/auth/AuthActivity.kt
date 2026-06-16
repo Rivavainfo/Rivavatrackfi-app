@@ -273,17 +273,18 @@ fun AuthScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(280.dp)
             ) {
                 androidx.compose.foundation.pager.HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                 ) { page ->
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
                         coil.compose.AsyncImage(
                             model = images[page],
                             contentDescription = null,
-                            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth,
-                            modifier = Modifier.fillMaxWidth()
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                         Box(
                             modifier = Modifier
