@@ -1,6 +1,5 @@
 package com.rivavafi.universal.ui.auth
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -61,7 +60,9 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -178,17 +179,12 @@ fun AuthScreenContent(
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
-            viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
-            return@rememberLauncherForActivityResult
-        }
-
         try {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 .getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken.isNullOrBlank()) {
-                viewModel.setErrorMessage("Google Sign-in failed: missing ID token.")
+                viewModel.setErrorMessage("Google Sign-in failed: missing ID token. Please confirm the Web client ID in Firebase matches this app.")
             } else {
                 viewModel.onGoogleSignInSuccess(
                     idToken = idToken,
@@ -198,7 +194,16 @@ fun AuthScreenContent(
                 )
             }
         } catch (e: ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed: ${e.localizedMessage ?: "status ${e.statusCode}"}")
+            val message = when (e.statusCode) {
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED ->
+                    "Google Sign-in was cancelled because the account chooser was closed before an account was selected."
+                GoogleSignInStatusCodes.DEVELOPER_ERROR ->
+                    "Google Sign-in setup error: check the SHA certificate fingerprints and Web client ID in Firebase/Google Cloud."
+                CommonStatusCodes.NETWORK_ERROR ->
+                    "Google Sign-in failed because the device could not reach Google. Please check your connection and try again."
+                else -> "Google Sign-in failed (status ${e.statusCode}): ${e.localizedMessage ?: "Please try again."}"
+            }
+            viewModel.setErrorMessage(message)
         }
     }
 
@@ -414,7 +419,10 @@ fun AuthScreenContent(
                                         viewModel.setErrorMessage("Google Sign-in failed: unsupported credential type.")
                                     }
                                 } catch (e: GetCredentialCancellationException) {
-                                    viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
+                                    // Credential Manager can report cancellation when its bottom sheet is dismissed
+                                    // or cannot complete account selection. Fall back to the classic Google account
+                                    // picker so users still get a full sign-in surface instead of a dead end.
+                                    launchLegacyGoogleSignIn()
                                 } catch (e: NoCredentialException) {
                                     launchLegacyGoogleSignIn()
                                 } catch (e: GetCredentialException) {
