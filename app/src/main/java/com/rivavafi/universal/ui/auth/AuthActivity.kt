@@ -34,6 +34,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,8 +56,12 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -161,8 +167,46 @@ fun AuthScreenContent(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember(context) { CredentialManager.create(context) }
+    val googleSignInClient = remember(context) {
+        val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .requestProfile()
+            .build()
+        GoogleSignIn.getClient(context, signInOptions)
+    }
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode != Activity.RESULT_OK) {
+            viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
+            return@rememberLauncherForActivityResult
+        }
 
+        try {
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                .getResult(ApiException::class.java)
+            val idToken = account.idToken
+            if (idToken.isNullOrBlank()) {
+                viewModel.setErrorMessage("Google Sign-in failed: missing ID token.")
+            } else {
+                viewModel.onGoogleSignInSuccess(
+                    idToken = idToken,
+                    name = account.displayName ?: "User",
+                    email = account.email ?: account.id.orEmpty(),
+                    photoUrl = account.photoUrl?.toString() ?: ""
+                )
+            }
+        } catch (e: ApiException) {
+            viewModel.setErrorMessage("Google Sign-in failed: ${e.localizedMessage ?: "status ${e.statusCode}"}")
+        }
+    }
 
+    fun launchLegacyGoogleSignIn() {
+        googleSignInClient.signOut().addOnCompleteListener {
+            googleSignInLauncher.launch(googleSignInClient.signInIntent)
+        }
+    }
 
     BackHandler(enabled = authState == AuthState.LOADING) {
         viewModel.resetState()
@@ -370,8 +414,10 @@ fun AuthScreenContent(
                                     }
                                 } catch (e: GetCredentialCancellationException) {
                                     viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
+                                } catch (e: NoCredentialException) {
+                                    launchLegacyGoogleSignIn()
                                 } catch (e: GetCredentialException) {
-                                    viewModel.setErrorMessage("Google Sign-in failed: ${e.message ?: e.type}")
+                                    launchLegacyGoogleSignIn()
                                 }
                             }
                         },
