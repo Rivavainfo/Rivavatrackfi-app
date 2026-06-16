@@ -26,7 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Diamond
-import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Security
@@ -220,10 +219,6 @@ fun EliteLandingScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
                 SectionMembershipExperience()
-            }
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
-                SectionTestimonials()
             }
             item {
                 Spacer(modifier = Modifier.height(32.dp))
@@ -499,46 +494,6 @@ fun SectionMembershipExperience() {
                     color = if (index == 0) Color.White else Color.Gray,
                     modifier = Modifier.padding(top = 2.dp)
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun SectionTestimonials() {
-    Column {
-        Text(
-            "MEMBER STORIES",
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp),
-            color = Color(0xFFD4AF37),
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Icon(Icons.Default.FormatQuote, contentDescription = null, tint = Color(0xFFD4AF37), modifier = Modifier.size(32.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "The 1-on-1 private video calls with my fund manager transformed my portfolio. Elite is for serious wealth creation.",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "— Private Investor, Mumbai",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.Gray
-                    )
-                }
             }
         }
     }

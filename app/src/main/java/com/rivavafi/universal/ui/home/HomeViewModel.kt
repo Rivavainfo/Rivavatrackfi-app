@@ -1,7 +1,11 @@
 package com.rivavafi.universal.ui.home
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import androidx.lifecycle.viewModelScope
 import com.rivavafi.universal.data.local.TransactionEntity
 import com.rivavafi.universal.domain.usecase.AddTransactionUseCase
@@ -222,6 +226,13 @@ class HomeViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+            val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, googleSignInOptions).signOut()
+            runCatching {
+                CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest())
+            }
             // Clear cached profile data to ensure stale state is wiped
             userPreferencesRepository.clearAllData()
             userEntitlementRepository.clearEntitlement()
