@@ -3,12 +3,15 @@ package com.rivavafi.universal.ui.settings
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import androidx.lifecycle.viewModelScope
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.domain.repository.TransactionRepository
 import com.rivavafi.universal.domain.usecase.ExportCsvUseCase
 import com.rivavafi.universal.domain.usecase.ImportCsvUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +26,8 @@ class SettingsViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val exportCsvUseCase: ExportCsvUseCase,
     private val importCsvUseCase: ImportCsvUseCase,
-    private val userCorrectionDao: com.rivavafi.universal.data.local.UserCorrectionDao
+    private val userCorrectionDao: com.rivavafi.universal.data.local.UserCorrectionDao,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val isSmsTrackingEnabled = preferencesRepository.isSmsTrackingEnabledFlow.stateIn(
@@ -90,6 +94,10 @@ class SettingsViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+            val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build()
+            GoogleSignIn.getClient(context, googleSignInOptions).signOut()
             // Keep locally cached profile/onboarding data so returning users
             // don't lose their displayed name after sign out.
         }
