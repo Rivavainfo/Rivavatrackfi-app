@@ -39,6 +39,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.ExperimentalFoundationApi
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.universal.HomeActivity
@@ -191,12 +192,13 @@ fun AuthScreenContent(
     val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK || result.data == null) {
-            viewModel.setErrorMessage("Google Sign-in was cancelled. Please try again.")
+        val data = result.data
+        if (data == null) {
+            viewModel.setErrorMessage("Google Sign-in was cancelled before an account was selected. Please try again.")
             return@rememberLauncherForActivityResult
         }
 
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account?.idToken
@@ -211,7 +213,12 @@ fun AuthScreenContent(
                 viewModel.setErrorMessage("Sign-in failed: Google did not return an ID token. Please try again.")
             }
         } catch (e: ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed (Code: ${e.statusCode}): ${e.message}")
+            val message = when (e.statusCode) {
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Google Sign-in was cancelled. Please try again."
+                GoogleSignInStatusCodes.SIGN_IN_FAILED -> "Google Sign-in failed. Please check that Google Play Services is up to date and try again."
+                else -> "Google Sign-in failed (Code: ${e.statusCode}): ${e.message}"
+            }
+            viewModel.setErrorMessage(message)
         }
     }
 
