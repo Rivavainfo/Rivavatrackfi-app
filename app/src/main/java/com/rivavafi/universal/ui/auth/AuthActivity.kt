@@ -1,6 +1,5 @@
 package com.rivavafi.universal.ui.auth
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -48,20 +47,13 @@ import com.rivavafi.universal.ui.theme.glassMorphism
 import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import android.util.Patterns
 import androidx.compose.foundation.shape.CircleShape
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 
 @AndroidEntryPoint
 class AuthActivity : ComponentActivity() {
@@ -165,8 +157,6 @@ fun AuthScreenContent(
 
 
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val credentialManager = remember(context) { CredentialManager.create(context) }
     val googleSignInClient = remember(context) {
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
@@ -178,17 +168,12 @@ fun AuthScreenContent(
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
-            viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
-            return@rememberLauncherForActivityResult
-        }
-
         try {
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 .getResult(ApiException::class.java)
             val idToken = account.idToken
             if (idToken.isNullOrBlank()) {
-                viewModel.setErrorMessage("Google Sign-in failed: missing ID token.")
+                viewModel.setErrorMessage("Google Sign-in failed: missing ID token. Please confirm the Web client ID in Firebase matches this app.")
             } else {
                 viewModel.onGoogleSignInSuccess(
                     idToken = idToken,
@@ -198,11 +183,20 @@ fun AuthScreenContent(
                 )
             }
         } catch (e: ApiException) {
-            viewModel.setErrorMessage("Google Sign-in failed: ${e.localizedMessage ?: "status ${e.statusCode}"}")
+            val message = when (e.statusCode) {
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED ->
+                    "Google Sign-in was cancelled because the account chooser was closed before an account was selected."
+                GoogleSignInStatusCodes.DEVELOPER_ERROR ->
+                    "Google Sign-in setup error: check the SHA certificate fingerprints and Web client ID in Firebase/Google Cloud."
+                CommonStatusCodes.NETWORK_ERROR ->
+                    "Google Sign-in failed because the device could not reach Google. Please check your connection and try again."
+                else -> "Google Sign-in failed (status ${e.statusCode}): ${e.localizedMessage ?: "Please try again."}"
+            }
+            viewModel.setErrorMessage(message)
         }
     }
 
-    fun launchLegacyGoogleSignIn() {
+    fun launchGoogleSignIn() {
         googleSignInClient.signOut().addOnCompleteListener {
             googleSignInLauncher.launch(googleSignInClient.signInIntent)
         }
@@ -387,40 +381,7 @@ fun AuthScreenContent(
                     // Google Login Button
                     Button(
                         onClick = {
-                            coroutineScope.launch {
-                                val googleIdOption = GetGoogleIdOption.Builder()
-                                    .setServerClientId(context.getString(R.string.default_web_client_id))
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .setAutoSelectEnabled(false)
-                                    .build()
-                                val request = GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-
-                                try {
-                                    val result = credentialManager.getCredential(context, request)
-                                    val credential = result.credential
-                                    if (credential is CustomCredential &&
-                                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                                    ) {
-                                        val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                                        viewModel.onGoogleSignInSuccess(
-                                            idToken = googleCredential.idToken,
-                                            name = googleCredential.displayName ?: "User",
-                                            email = googleCredential.id,
-                                            photoUrl = googleCredential.profilePictureUri?.toString() ?: ""
-                                        )
-                                    } else {
-                                        viewModel.setErrorMessage("Google Sign-in failed: unsupported credential type.")
-                                    }
-                                } catch (e: GetCredentialCancellationException) {
-                                    viewModel.setErrorMessage("Google Sign-in was cancelled. Please choose a Google account to continue.")
-                                } catch (e: NoCredentialException) {
-                                    launchLegacyGoogleSignIn()
-                                } catch (e: GetCredentialException) {
-                                    launchLegacyGoogleSignIn()
-                                }
-                            }
+                            launchGoogleSignIn()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
