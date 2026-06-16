@@ -53,6 +53,7 @@ android {
         targetSdk = 35
         versionCode = 20
         versionName = "1.0.20"
+        main
 
         // API Key injection with safe fallbacks
         buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
