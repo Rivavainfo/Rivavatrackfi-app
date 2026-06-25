@@ -16,12 +16,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTransactionBottomSheet(
     categories: List<String>,
     onDismiss: () -> Unit,
-    onSave: (title: String, amount: Double, type: String, category: String) -> Unit,
+    onSave: (title: String, amount: Double, type: String, category: String, date: Long) -> Unit,
     onAddCategory: (String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -30,6 +37,11 @@ fun AddTransactionBottomSheet(
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "General") }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
+
+    var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -151,13 +163,56 @@ fun AddTransactionBottomSheet(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = dateFormatter.format(java.util.Date(selectedDateMillis)),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Date") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true },
+                enabled = false, // Disable typing, enable clicking via modifier
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+
+            if (showDatePicker) {
+                val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                selectedDateMillis = it
+                            }
+                            showDatePicker = false
+                        }) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
                     val parsedAmount = amount.toDoubleOrNull()
                     if (title.isNotBlank() && parsedAmount != null && parsedAmount > 0) {
-                        onSave(title, parsedAmount, if (isIncome) "INCOME" else "EXPENSE", selectedCategory)
+                        onSave(title, parsedAmount, if (isIncome) "INCOME" else "EXPENSE", selectedCategory, selectedDateMillis)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),

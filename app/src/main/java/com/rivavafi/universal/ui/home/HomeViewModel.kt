@@ -209,7 +209,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun addTransaction(title: String, amount: Double, type: String, category: String) {
+    fun addTransaction(title: String, amount: Double, type: String, category: String, date: Long) {
         viewModelScope.launch {
             addTransactionUseCase(
                 TransactionEntity(
@@ -217,7 +217,7 @@ class HomeViewModel @Inject constructor(
                     amount = amount,
                     type = type,
                     category = category,
-                    date = System.currentTimeMillis()
+                    date = date
                 )
             )
         }

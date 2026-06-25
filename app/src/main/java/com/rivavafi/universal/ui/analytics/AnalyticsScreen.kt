@@ -20,6 +20,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.Icons
+import java.text.SimpleDateFormat
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CloudOff
@@ -99,6 +103,27 @@ fun AnalyticsScreen(
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            // Month Selector
+            val selectedMonth by viewModel.selectedMonth.collectAsState()
+            val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { viewModel.previousMonth() }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Month")
+                }
+                Text(
+                    text = monthFormat.format(selectedMonth.time),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = { viewModel.nextMonth() }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month")
+                }
             }
 
             when (val state = uiState) {
