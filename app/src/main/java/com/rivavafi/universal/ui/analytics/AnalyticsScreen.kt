@@ -81,6 +81,7 @@ fun AnalyticsScreen(
 
     Scaffold(
         containerColor = Color(0xFF0A0A0A),
+        modifier = Modifier.systemBarsPadding(),
         topBar = { }
     ) { paddingValues ->
         Column(

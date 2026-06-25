@@ -62,6 +62,7 @@ fun TransactionDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .systemBarsPadding()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp),

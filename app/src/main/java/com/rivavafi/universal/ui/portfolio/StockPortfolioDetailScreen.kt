@@ -86,6 +86,7 @@ fun StockPortfolioDetailScreen(
 
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        modifier = Modifier.systemBarsPadding(),
         topBar = {
             TopAppBar(
                 title = { Text("$ticker ($exchange)") },
