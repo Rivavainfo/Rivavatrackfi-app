@@ -282,7 +282,8 @@ fun RivavaPortfolioScreen(
     // moved down
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.systemBarsPadding()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier

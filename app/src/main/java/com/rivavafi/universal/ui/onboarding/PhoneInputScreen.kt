@@ -49,6 +49,7 @@ fun PhoneInputScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
             .padding(24.dp)
             .imePadding()
             .verticalScroll(rememberScrollState()),

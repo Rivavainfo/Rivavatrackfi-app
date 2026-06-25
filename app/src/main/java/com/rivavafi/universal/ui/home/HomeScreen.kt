@@ -137,6 +137,7 @@ fun HomeScreen(
                 Icon(Icons.Default.Add, contentDescription = "Add Transaction", modifier = Modifier.size(32.dp))
             }
         },
+        modifier = Modifier.systemBarsPadding(),
         topBar = {
             // Removed header top bar as requested
         },

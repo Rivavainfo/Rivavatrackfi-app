@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Sort
 
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.ui.draw.blur
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.rotate
@@ -69,6 +69,7 @@ fun TransactionsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .padding(paddingValues)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -323,10 +324,12 @@ fun TransactionList(uiState: TransactionsUiState.Success, viewModel: Transaction
             }
 
             items(transactionsForDay, key = { it.id }) { transaction ->
+
+            // To prevent heavy work during flings on high refresh rates,
+            // only trigger side effects after settling, but since this is just UI swipe to edit:
             val swipeableState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { state ->
                     if (state == SwipeToDismissBoxValue.StartToEnd) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         selectedTransactionToEdit = transaction
                         false // don't dismiss
                     } else {
@@ -334,6 +337,13 @@ fun TransactionList(uiState: TransactionsUiState.Success, viewModel: Transaction
                     }
                 }
             )
+
+            // Trigger haptic feedback separate from the fling calculation path
+            LaunchedEffect(swipeableState.targetValue) {
+                if (swipeableState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+            }
 
             SwipeToDismissBox(
                 state = swipeableState,
@@ -459,14 +469,12 @@ fun TransactionsEmptyState() {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                    .blur(60.dp)
             )
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .size(128.dp)
                     .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.1f), CircleShape)
-                    .blur(40.dp)
             )
 
             // Central Iconography

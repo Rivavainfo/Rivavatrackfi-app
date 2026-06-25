@@ -110,7 +110,8 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        containerColor = Color(0xFF131313)
+        containerColor = Color(0xFF131313),
+        modifier = Modifier.systemBarsPadding()
     ) { paddingValues ->
         Column(
             modifier = Modifier
