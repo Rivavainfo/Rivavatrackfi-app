@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import android.view.WindowManager
 import android.content.ContextWrapper
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,6 +56,15 @@ fun StockPortfolioDetailScreen(
     val exchange = if (ticker == "RTX" || ticker == "WMT") "NYSE" else "NSE"
 
     val stockStates by viewModel.stockStates.collectAsState()
+
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     LaunchedEffect(ticker) {
         viewModel.startPolling(listOf(ticker))
