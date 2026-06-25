@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.util.Log
+import com.rivavafi.universal.data.preferences.UserPreferencesRepository
+import com.rivavafi.universal.domain.preferences.SmsTrackingMode
 
 data class ScanProgress(
     val inProgress: Boolean = false,
@@ -28,7 +30,8 @@ data class ScanProgress(
 class ScanSmsUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val parseAndSaveSmsUseCase: ParseAndSaveSmsUseCase,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
     operator fun invoke(): Flow<ScanProgress> = flow {
         emit(ScanProgress(inProgress = true, message = "Scanning SMS..."))
@@ -58,6 +61,8 @@ class ScanSmsUseCase @Inject constructor(
                 val bodyIndex = cursor.getColumnIndexOrThrow(Telephony.Sms.BODY)
                 val dateIndex = cursor.getColumnIndexOrThrow(Telephony.Sms.DATE)
 
+                val trackingMode = userPreferencesRepository.getSmsTrackingMode()
+
                 emit(ScanProgress(inProgress = true, message = "Building your transaction history..."))
 
                 do {
@@ -74,8 +79,14 @@ class ScanSmsUseCase @Inject constructor(
                             Log.d("TRACKFI_SMS", "Scanning historical SMS from: $sender")
                             val result = parseAndSaveSmsUseCase.parseAndReturn(sender, body, date, smsHashId)
                             if (result != null) {
+                                val shouldSave = when (trackingMode) {
+                                    SmsTrackingMode.INCOME_ONLY.name -> result.type == "INCOME"
+                                    SmsTrackingMode.EXPENSE_ONLY.name -> result.type != "INCOME"
+                                    else -> true
+                                }
+
                                 // Check explicit deduplication parameters before insert
-                                if (!transactionRepository.doesTransactionExist(result.date, result.amount, result.merchantName)) {
+                                if (shouldSave && !transactionRepository.doesTransactionExist(result.date, result.amount, result.merchantName)) {
                                     transactionRepository.addTransaction(result)
                                     transactionsFound++
                                     Log.d("TRACKFI_DATABASE", "Saved historical transaction: $result")
