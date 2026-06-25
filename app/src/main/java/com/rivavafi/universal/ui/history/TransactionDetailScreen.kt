@@ -56,13 +56,13 @@ fun TransactionDetailScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.systemBarsPadding()
     ) { paddingValues ->
         if (transaction != null) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .systemBarsPadding()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp),

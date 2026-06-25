@@ -233,9 +233,58 @@ fun AnalyticsScreen(
                     SubscriptionTrackerCard(transactions = state.transactions)
                     Spacer(modifier = Modifier.height(24.dp))
                     CategoryBreakdown(transactions = state.transactions)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ProjectedSpendCard(transactions = state.transactions)
                 }
             }
             Spacer(modifier = Modifier.height(120.dp))
+        }
+    }
+}
+
+@Composable
+fun ProjectedSpendCard(transactions: List<TransactionEntity>) {
+    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+
+    // Calculate deep analysis projected spend based on days passed in the month
+    val totalSpend = expenses.sumOf { it.amount }
+
+    val calendar = Calendar.getInstance()
+    // For simplicity, we assume we're looking at the current month's pacing
+    val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
+    val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+
+    val runRate = if (currentDay > 0) totalSpend / currentDay else 0.0
+    val projectedSpend = runRate * daysInMonth
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Deep Analysis: Projected Run Rate",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("Daily Average", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", runRate)} / day", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("Projected EOM", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", projectedSpend)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.error)
+                }
+            }
         }
     }
 }

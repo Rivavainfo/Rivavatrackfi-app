@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.unit.sp
 import com.rivavafi.universal.ui.components.PortfolioStockCard
 import com.rivavafi.universal.ui.theme.PrimaryContainerSky
@@ -99,6 +100,14 @@ fun RivavaPortfolioScreen(
     val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: userModel?.phoneno?.takeIf { it.isNotBlank() } ?: auth.currentUser?.phoneNumber ?: ""
     var showWhatsAppDialog by remember { mutableStateOf(false) }
     var premiumKeyInput by remember { mutableStateOf("") }
+
+    DisposableEffect(Unit) {
+        val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     if (premiumState.status == EntitlementStatus.LOADING) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -402,20 +411,6 @@ fun RivavaPortfolioScreen(
                                         }
                                     }) {
                                         Text("Capture Screenshot")
-                                    }
-
-                                    val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
-                                    TextButton(onClick = {
-                                        screenshotsAllowed = !screenshotsAllowed
-                                        if (screenshotsAllowed) {
-                                            activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
-                                            android.widget.Toast.makeText(context, "Screenshots Enabled", android.widget.Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            activity?.window?.setFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE, android.view.WindowManager.LayoutParams.FLAG_SECURE)
-                                            android.widget.Toast.makeText(context, "Screenshots Disabled", android.widget.Toast.LENGTH_SHORT).show()
-                                        }
-                                    }) {
-                                        Text(if (screenshotsAllowed) "Disable System SS" else "Enable System SS")
                                     }
 
                                     TextButton(onClick = { showLogsDialog = false }) {

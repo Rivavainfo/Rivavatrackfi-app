@@ -64,12 +64,12 @@ fun TransactionsScreen(
     Scaffold(
         topBar = {
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.systemBarsPadding()
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
                 .padding(paddingValues)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
