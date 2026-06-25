@@ -833,8 +833,8 @@ fun HomeScreen(
             AddTransactionBottomSheet(
                 categories = dynamicCategories.map { it.name }.ifEmpty { listOf("General") },
                 onDismiss = { showAddSheet = false },
-                onSave = { title, amount, type, category ->
-                    viewModel.addTransaction(title, amount, type, category)
+                onSave = { title, amount, type, category, date ->
+                    viewModel.addTransaction(title, amount, type, category, date)
                     showAddSheet = false
                 },
                 onAddCategory = { newCategoryName, type ->

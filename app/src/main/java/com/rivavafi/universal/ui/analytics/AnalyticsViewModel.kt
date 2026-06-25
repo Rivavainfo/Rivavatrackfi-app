@@ -6,6 +6,7 @@ import com.rivavafi.universal.domain.usecase.FinancialSummaryState
 import com.rivavafi.universal.domain.usecase.GetFinancialSummaryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import java.util.Calendar
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.rivavafi.universal.data.local.TransactionEntity
@@ -24,14 +25,49 @@ class AnalyticsViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase
 ) : ViewModel() {
 
+    private val _selectedMonth = MutableStateFlow(Calendar.getInstance())
+    val selectedMonth = _selectedMonth.asStateFlow()
+
+    fun previousMonth() {
+        val newCal = _selectedMonth.value.clone() as Calendar
+        newCal.add(Calendar.MONTH, -1)
+        _selectedMonth.value = newCal
+    }
+
+    fun nextMonth() {
+        val newCal = _selectedMonth.value.clone() as Calendar
+        newCal.add(Calendar.MONTH, 1)
+        _selectedMonth.value = newCal
+    }
+
     val uiState: StateFlow<AnalyticsUiState> = combine(
         getFinancialSummaryUseCase(),
-        getTransactionsUseCase()
-    ) { summary, transactions ->
-        if (summary.totalIncome == 0.0 && summary.totalExpense == 0.0 && transactions.isEmpty()) {
+        getTransactionsUseCase(),
+        _selectedMonth
+    ) { summary, allTransactions, monthCal ->
+
+        val selectedYear = monthCal.get(Calendar.YEAR)
+        val selectedMonthNum = monthCal.get(Calendar.MONTH)
+
+        val monthlyTransactions = allTransactions.filter { txn ->
+            val txnCal = Calendar.getInstance().apply { timeInMillis = txn.date }
+            txnCal.get(Calendar.YEAR) == selectedYear && txnCal.get(Calendar.MONTH) == selectedMonthNum
+        }
+
+        val monthlyIncome = monthlyTransactions.filter { it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
+        val monthlyExpense = monthlyTransactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+
+        // We override the global summary with the monthly specific one for the UI.
+        val monthlySummary = com.rivavafi.universal.domain.usecase.FinancialSummaryState(
+            totalIncome = monthlyIncome,
+            totalExpense = monthlyExpense,
+            netSavings = monthlyIncome - monthlyExpense
+        )
+
+        if (monthlyTransactions.isEmpty()) {
             AnalyticsUiState.Empty
         } else {
-            AnalyticsUiState.Success(summary, transactions)
+            AnalyticsUiState.Success(monthlySummary, monthlyTransactions)
         }
     }.catch { e ->
         emit(AnalyticsUiState.Error(e.message ?: "An unknown error occurred"))
