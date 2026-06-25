@@ -38,6 +38,12 @@ class SettingsViewModel @Inject constructor(
         false
     )
 
+    val smsTrackingMode = preferencesRepository.smsTrackingModeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
+    )
+
     val homeLayoutPreset = preferencesRepository.homeLayoutPresetFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -64,6 +70,12 @@ class SettingsViewModel @Inject constructor(
     fun setSmsTrackingEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.setSmsTrackingEnabled(enabled)
+        }
+    }
+
+    fun setSmsTrackingMode(mode: String) {
+        viewModelScope.launch {
+            preferencesRepository.setSmsTrackingMode(mode)
         }
     }
 

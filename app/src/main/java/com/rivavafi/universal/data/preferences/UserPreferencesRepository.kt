@@ -35,6 +35,22 @@ class UserPreferencesRepository @Inject constructor(
         val IS_PREMIUM_GLOBAL_KEY = booleanPreferencesKey("is_premium_global")
         val PROFILE_IMAGE_URI_KEY = stringPreferencesKey("profile_image_uri")
         val USER_USERNAME_KEY = stringPreferencesKey("user_username")
+        val SMS_TRACKING_MODE_KEY = stringPreferencesKey("sms_tracking_mode")
+    }
+
+    val smsTrackingModeFlow: Flow<String> = dataStore.data.map { preferences ->
+        preferences[SMS_TRACKING_MODE_KEY] ?: com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
+    }
+
+    suspend fun getSmsTrackingMode(): String {
+        val prefs = dataStore.data.first()
+        return prefs[SMS_TRACKING_MODE_KEY] ?: com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
+    }
+
+    suspend fun setSmsTrackingMode(mode: String) {
+        dataStore.edit { preferences ->
+            preferences[SMS_TRACKING_MODE_KEY] = mode
+        }
     }
 
     val profileImageUriFlow: Flow<String?> = dataStore.data.map { preferences ->

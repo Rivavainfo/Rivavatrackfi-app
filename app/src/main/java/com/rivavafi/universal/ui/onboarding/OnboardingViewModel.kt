@@ -247,6 +247,12 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun saveSmsTrackingMode(mode: String) {
+        viewModelScope.launch {
+            preferencesRepository.setSmsTrackingMode(mode)
+        }
+    }
+
     fun completeOnboarding() {
         viewModelScope.launch {
             preferencesRepository.setOnboardingCompleted(true)

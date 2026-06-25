@@ -4,13 +4,16 @@ import android.util.Log
 import com.rivavafi.universal.data.local.TransactionEntity
 import com.rivavafi.universal.data.local.UserCorrectionDao
 import com.rivavafi.universal.domain.repository.TransactionRepository
+import com.rivavafi.universal.data.preferences.UserPreferencesRepository
+import com.rivavafi.universal.domain.preferences.SmsTrackingMode
 import java.util.regex.Pattern
 import javax.inject.Inject
 
 class ParseAndSaveSmsUseCase @Inject constructor(
     private val repository: TransactionRepository,
     private val offlineClassifier: OfflineClassifier,
-    private val userCorrectionDao: UserCorrectionDao
+    private val userCorrectionDao: UserCorrectionDao,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) {
     // Enhanced regex using requested format to handle formats like "Rs...", "INR...", etc.
     // Also handling case where amount comes first, like "1,000.00 deposited"
@@ -52,6 +55,16 @@ class ParseAndSaveSmsUseCase @Inject constructor(
         val transaction = parseAndReturnSuspend(sender, messageBody, timestamp, smsId)
         if (transaction == null) {
             Log.d("TRACKFI_PARSER", "Ignored SMS: Could not detect transaction info. Sender: $sender")
+            return
+        }
+
+        val trackingMode = userPreferencesRepository.getSmsTrackingMode()
+        if (trackingMode == SmsTrackingMode.INCOME_ONLY.name && transaction.type != "INCOME") {
+            Log.d("TRACKFI_PARSER", "Ignored SMS: Tracking mode is INCOME_ONLY but transaction is ${transaction.type}")
+            return
+        }
+        if (trackingMode == SmsTrackingMode.EXPENSE_ONLY.name && transaction.type == "INCOME") {
+            Log.d("TRACKFI_PARSER", "Ignored SMS: Tracking mode is EXPENSE_ONLY but transaction is INCOME")
             return
         }
 

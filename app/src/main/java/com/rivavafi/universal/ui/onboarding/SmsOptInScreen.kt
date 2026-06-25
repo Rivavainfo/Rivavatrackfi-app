@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
 import com.rivavafi.universal.ui.components.RivavaBrandDisplay
+import com.rivavafi.universal.domain.preferences.SmsTrackingMode
 
 @Composable
 fun SmsOptInScreen(
@@ -37,6 +38,8 @@ fun SmsOptInScreen(
     var showSettingsDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
 
+    var selectedTrackingMode by remember { mutableStateOf(SmsTrackingMode.BOTH) }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -44,6 +47,7 @@ fun SmsOptInScreen(
                          permissions[Manifest.permission.RECEIVE_SMS] == true
 
         if (smsGranted) {
+            viewModel.saveSmsTrackingMode(selectedTrackingMode.name)
             viewModel.setSmsTrackingEnabled(true)
             viewModel.completeOnboarding()
             onNavigateNext(true)
@@ -79,7 +83,69 @@ fun SmsOptInScreen(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "What should TrackFi count from SMS?",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
+            ),
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "You can change this anytime in Settings.",
+            style = MaterialTheme.typography.bodySmall.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedTrackingMode == SmsTrackingMode.BOTH,
+                        onClick = { selectedTrackingMode = SmsTrackingMode.BOTH },
+                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Text("Income and expenses", style = MaterialTheme.typography.bodyLarge)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedTrackingMode == SmsTrackingMode.INCOME_ONLY,
+                        onClick = { selectedTrackingMode = SmsTrackingMode.INCOME_ONLY },
+                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Text("Income only", style = MaterialTheme.typography.bodyLarge)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedTrackingMode == SmsTrackingMode.EXPENSE_ONLY,
+                        onClick = { selectedTrackingMode = SmsTrackingMode.EXPENSE_ONLY },
+                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+                    )
+                    Text("Expenses only", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         Button(
             onClick = {
@@ -114,6 +180,7 @@ fun SmsOptInScreen(
 
         TextButton(
             onClick = {
+                viewModel.saveSmsTrackingMode(selectedTrackingMode.name)
                 viewModel.setSmsTrackingEnabled(false)
                 viewModel.completeOnboarding()
                 onNavigateNext(false)
