@@ -16,6 +16,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
+
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,6 +98,29 @@ fun TransactionsScreen(
                         .clip(RoundedCornerShape(6.dp)),
                     contentScale = androidx.compose.ui.layout.ContentScale.Crop
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Month Selector
+            val selectedMonth by viewModel.selectedMonth.collectAsState()
+            val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { viewModel.previousMonth() }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Month")
+                }
+                Text(
+                    text = monthFormat.format(selectedMonth.time),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                IconButton(onClick = { viewModel.nextMonth() }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -196,7 +222,7 @@ fun TransactionsScreen(
             }
             is TransactionsUiState.Success -> {
                 Box(modifier = Modifier.weight(1f).padding(horizontal = 20.dp)) {
-                    TransactionList(transactions = state.transactions, viewModel = viewModel)
+                    TransactionList(uiState = state, viewModel = viewModel)
                 }
             }
             is TransactionsUiState.Error -> {
@@ -211,7 +237,7 @@ fun TransactionsScreen(
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun TransactionList(transactions: List<TransactionEntity>, viewModel: TransactionsViewModel) {
+fun TransactionList(uiState: TransactionsUiState.Success, viewModel: TransactionsViewModel) {
     val showDetails by viewModel.showSmsDetails.collectAsState()
     var selectedTransactionToEdit by remember { mutableStateOf<TransactionEntity?>(null) }
     var transactionToDelete by remember { mutableStateOf<TransactionEntity?>(null) }
@@ -223,7 +249,80 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(bottom = 140.dp) // Provide enough bottom padding for the floating nav bar
     ) {
-        items(transactions, key = { it.id }) { transaction ->
+        item {
+            // Month Summary Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("Monthly Summary", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column {
+                            Text("Income", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyIncome)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("Expense", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyExpense)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val net = uiState.monthlyIncome - uiState.monthlyExpense
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Net Balance", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = "${if (net >= 0) "+" else ""}₹${String.format(Locale.getDefault(), "%.0f", net)}",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            color = if (net >= 0) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val expenses = uiState.transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+                    val topCategory = expenses.groupBy { it.category }.maxByOrNull { it.value.sumOf { t -> t.amount } }?.key ?: "None"
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Top Category", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(topCategory, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Total Transactions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${uiState.transactions.size}", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+        }
+
+        uiState.groupedByDay.forEach { (date, transactionsForDay) ->
+            item {
+                val dailyTotal = transactionsForDay.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "-₹${String.format(Locale.getDefault(), "%.0f", dailyTotal)}",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            items(transactionsForDay, key = { it.id }) { transaction ->
             val swipeableState = rememberSwipeToDismissBoxState(
                 confirmValueChange = { state ->
                     if (state == SwipeToDismissBoxValue.StartToEnd) {
@@ -277,6 +376,7 @@ fun TransactionList(transactions: List<TransactionEntity>, viewModel: Transactio
                     )
                 }
             )
+        }
         }
     }
 

@@ -20,11 +20,19 @@ import com.rivavafi.universal.domain.usecase.AddCategoryUseCase
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 sealed class TransactionsUiState {
     object Loading : TransactionsUiState()
     object Empty : TransactionsUiState()
-    data class Success(val transactions: List<TransactionEntity>) : TransactionsUiState()
+    data class Success(
+        val transactions: List<TransactionEntity>,
+        val monthlyIncome: Double = 0.0,
+        val monthlyExpense: Double = 0.0,
+        val groupedByDay: Map<String, List<TransactionEntity>> = emptyMap()
+    ) : TransactionsUiState()
     data class Error(val message: String) : TransactionsUiState()
 }
 
@@ -74,6 +82,23 @@ class TransactionsViewModel @Inject constructor(
 
     private val _sortOrder = MutableStateFlow(SortOrder.DATE_DESC)
     val sortOrder = _sortOrder.asStateFlow()
+
+    private val _selectedMonth = MutableStateFlow(Calendar.getInstance())
+    val selectedMonth = _selectedMonth.asStateFlow()
+
+    fun previousMonth() {
+        val newCal = _selectedMonth.value.clone() as Calendar
+        newCal.add(Calendar.MONTH, -1)
+        _selectedMonth.value = newCal
+        applyFilters()
+    }
+
+    fun nextMonth() {
+        val newCal = _selectedMonth.value.clone() as Calendar
+        newCal.add(Calendar.MONTH, 1)
+        _selectedMonth.value = newCal
+        applyFilters()
+    }
 
     val showSmsDetails = userPreferencesRepository.showSmsDetailsFlow.stateIn(
         viewModelScope,
@@ -126,6 +151,16 @@ class TransactionsViewModel @Inject constructor(
         var filteredList = allTransactions
         val query = _searchQuery.value.trim().lowercase()
 
+        // Filter by selected month
+        val calSelected = _selectedMonth.value
+        val selectedYear = calSelected.get(Calendar.YEAR)
+        val selectedMonthNum = calSelected.get(Calendar.MONTH)
+
+        filteredList = filteredList.filter { txn ->
+            val txnCal = Calendar.getInstance().apply { timeInMillis = txn.date }
+            txnCal.get(Calendar.YEAR) == selectedYear && txnCal.get(Calendar.MONTH) == selectedMonthNum
+        }
+
         if (query.isNotEmpty()) {
             filteredList = filteredList.filter {
                 it.merchantName.lowercase().contains(query) ||
@@ -146,7 +181,20 @@ class TransactionsViewModel @Inject constructor(
         if (filteredList.isEmpty()) {
             _uiState.value = TransactionsUiState.Empty
         } else {
-            _uiState.value = TransactionsUiState.Success(filteredList)
+            val income = filteredList.filter { it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
+            val expense = filteredList.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+
+            val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            val grouped = filteredList.groupBy { txn ->
+                dateFormatter.format(java.util.Date(txn.date))
+            }
+
+            _uiState.value = TransactionsUiState.Success(
+                transactions = filteredList,
+                monthlyIncome = income,
+                monthlyExpense = expense,
+                groupedByDay = grouped
+            )
         }
     }
 }
