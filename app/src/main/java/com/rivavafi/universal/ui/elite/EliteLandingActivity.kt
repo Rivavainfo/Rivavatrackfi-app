@@ -42,6 +42,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +51,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.firebase.Timestamp
@@ -316,6 +319,21 @@ fun HeroSection(seatsRemaining: Int, totalSeats: Int) {
         ),
         label = "hero_glow_alpha"
     )
+    val cyclingAccentColor by infiniteTransition.animateColor(
+        initialValue = Color(0xFFFF4FD8),
+        targetValue = Color(0xFF4DA3FF),
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 3600
+                Color(0xFFFF4FD8) at 0
+                Color(0xFF2DFF7A) at 1200
+                Color(0xFF4DA3FF) at 2400
+                Color(0xFFFF4FD8) at 3600
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "hero_rivava_accent_color"
+    )
 
     Box(
         modifier = Modifier
@@ -348,14 +366,32 @@ fun HeroSection(seatsRemaining: Int, totalSeats: Int) {
                 .align(Alignment.BottomStart)
                 .padding(24.dp)
         ) {
-            val goldGradient = Brush.linearGradient(
-                colors = listOf(Color(0xFFF3E5AB), Color(0xFFD4AF37), Color(0xFFAA7700))
-            )
-
-            Text(
-                "RIVAVA ELITE",
-                style = androidx.compose.ui.text.TextStyle(brush = goldGradient, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-            )
+            Box {
+                Text(
+                    "RIVAVA ELITE",
+                    style = androidx.compose.ui.text.TextStyle(
+                        color = Color.Black,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp,
+                        drawStyle = Stroke(width = 8f)
+                    )
+                )
+                Text(
+                    "RIVAVA ELITE",
+                    style = androidx.compose.ui.text.TextStyle(
+                        color = Color.White,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp,
+                        shadow = Shadow(
+                            color = cyclingAccentColor,
+                            offset = Offset.Zero,
+                            blurRadius = 18f
+                        )
+                    )
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Private Fund Manager Access for Serious Investors",
