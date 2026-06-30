@@ -71,7 +71,7 @@ import com.rivavafi.universal.ui.onboarding.WelcomeScreen
 import com.rivavafi.universal.ui.settings.SettingsScreen
 import com.rivavafi.universal.ui.portfolio.RivavaPortfolioScreen
 import com.rivavafi.universal.ui.profile.ProfileScreen
-import com.rivavafi.universal.ui.theme.TrackFiTheme
+import com.rivavafi.universal.ui.theme.RivavaTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -125,9 +125,9 @@ class HomeActivity : ComponentActivity() {
             val hasCompletedOnboardingState = preferencesRepository.hasCompletedOnboardingFlow.collectAsState(initial = null)
             val hasCompletedOnboarding = hasCompletedOnboardingState.value
 
-            TrackFiTheme(isPremium = isPremiumUser) {
+            RivavaTheme(isPremium = isPremiumUser) {
                 if (hasCompletedOnboarding != null) {
-                    TrackFiAppContent(hasCompletedOnboarding, preferencesRepository, isNewUser)
+                    RivavaAppContent(hasCompletedOnboarding, preferencesRepository, isNewUser)
                 } else {
                     // Show a minimal loading state or nothing while reading preferences
                     androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxSize())
@@ -138,7 +138,7 @@ class HomeActivity : ComponentActivity() {
 }
 
 @Composable
-fun TrackFiAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: UserPreferencesRepository? = null, isNewUser: Boolean = false) {
+fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: UserPreferencesRepository? = null, isNewUser: Boolean = false) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

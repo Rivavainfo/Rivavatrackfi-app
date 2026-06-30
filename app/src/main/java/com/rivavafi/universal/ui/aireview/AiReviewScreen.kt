@@ -149,7 +149,7 @@ fun LearningQuestionCard(transaction: TransactionEntity, suggestedCategory: Stri
                 Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Is ${transaction.merchantName} a $suggestedCategory expense?",
+                    text = "Is ${transaction.merchantName} a $suggestedCategory debit?",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )

@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rivavafi.universal.ui.theme.AmoledBlack
 import com.rivavafi.universal.ui.theme.PrimarySky
-import com.rivavafi.universal.ui.theme.TrackFiTheme
+import com.rivavafi.universal.ui.theme.RivavaTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,7 +27,7 @@ class ResetPasswordActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            TrackFiTheme {
+            RivavaTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = AmoledBlack

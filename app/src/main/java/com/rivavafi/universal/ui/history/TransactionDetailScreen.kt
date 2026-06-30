@@ -130,7 +130,7 @@ fun TransactionDetailScreen(
 
 @Composable
 fun TransactionInfoCard(transaction: TransactionEntity) {
-    val isCredit = transaction.type == "INCOME" || transaction.type == "REWARD"
+    val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD"
     val color = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
     val sign = if (isCredit) "+" else "-"
 
@@ -185,7 +185,7 @@ fun TransactionInfoCard(transaction: TransactionEntity) {
 
             DetailItem("Amount", "$sign₹${String.format(Locale.getDefault(), "%.2f", transaction.amount)}", valueColor = color, isBold = true)
             DetailItem("Date", dateString)
-            DetailItem("Type", if (isCredit) "Income" else "Expense")
+            DetailItem("Type", if (isCredit) "Credit" else "Debit")
 
             if (transaction.bankName != null) {
                 DetailItem("Bank Account", transaction.bankName)

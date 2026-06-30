@@ -75,8 +75,9 @@ class ScanSmsUseCase @Inject constructor(
                         val smsHashId = "sms_$smsId"
 
                         // Check if already processed via smsId
-                        if (!transactionRepository.isSmsIdProcessed(smsHashId)) {
-                            Log.d("TRACKFI_SMS", "Scanning historical SMS from: $sender")
+                        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@flow
+                        if (!transactionRepository.isSmsIdProcessed(smsHashId, userId)) {
+                            Log.d("RIVAVA_SMS", "Scanning historical SMS from: $sender")
                             val result = parseAndSaveSmsUseCase.parseAndReturn(sender, body, date, smsHashId)
                             if (result != null) {
                                 val shouldSave = when (trackingMode) {
@@ -86,15 +87,15 @@ class ScanSmsUseCase @Inject constructor(
                                 }
 
                                 // Check explicit deduplication parameters before insert
-                                if (shouldSave && !transactionRepository.doesTransactionExist(result.date, result.amount, result.merchantName)) {
+                                if (shouldSave && !transactionRepository.doesTransactionExist(result.date, result.amount, result.merchantName, userId)) {
                                     transactionRepository.addTransaction(result)
                                     transactionsFound++
-                                    Log.d("TRACKFI_DATABASE", "Saved historical transaction: $result")
+                                    Log.d("RIVAVA_DATABASE", "Saved historical transaction: $result")
                                     if (result.bankName != null) {
                                         banks.add(result.bankName)
                                     }
                                 } else {
-                                    Log.d("TRACKFI_DATABASE", "Skipped duplicate historical transaction: $result")
+                                    Log.d("RIVAVA_DATABASE", "Skipped duplicate historical transaction: $result")
                                 }
                             }
                         }
@@ -133,7 +134,7 @@ class ScanSmsUseCase @Inject constructor(
                 )
             )
         } catch (e: Exception) {
-            Log.e("TRACKFI_SMS", "Error scanning SMS: ${e.message}", e)
+            Log.e("RIVAVA_SMS", "Error scanning SMS: ${e.message}", e)
             emit(
                 ScanProgress(
                     inProgress = false,

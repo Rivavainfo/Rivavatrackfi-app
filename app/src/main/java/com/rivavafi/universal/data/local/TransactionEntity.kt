@@ -7,10 +7,11 @@ import androidx.room.PrimaryKey
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: String = "",
     val bankName: String? = null,
     val merchantName: String,
     val amount: Double,
-    val type: String, // "INCOME" or "EXPENSE"
+    val type: String, // "CREDIT" or "DEBIT"
     val category: String,
     val date: Long,
     val smsId: String? = null,

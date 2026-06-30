@@ -32,7 +32,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TrackFi"
+rootProject.name = "Rivava"
 
 if (enableAndroid) {
     include(":app")

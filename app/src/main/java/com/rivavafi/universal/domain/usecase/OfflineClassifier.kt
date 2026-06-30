@@ -19,7 +19,7 @@ open class OfflineClassifier @Inject constructor(@ApplicationContext private val
     private val maxLen = 20
 
     private val categories = listOf(
-        "EXPENSE", "INCOME", "INVESTMENT", "MANDATE", "BILL",
+        "DEBIT", "CREDIT", "INVESTMENT", "MANDATE", "BILL",
         "SUBSCRIPTION", "VOUCHER", "SELF_TRANSFER", "CREDIT_CARD", "OTP/SPAM"
     )
 

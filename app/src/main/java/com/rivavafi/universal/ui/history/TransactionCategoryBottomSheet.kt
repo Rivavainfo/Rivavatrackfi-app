@@ -41,11 +41,11 @@ fun TransactionCategoryBottomSheet(
     val haptic = LocalHapticFeedback.current
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val defaultMainCategories = listOf("EXPENSE", "INCOME", "BILL_PENDING", "INVESTMENT", "SUBSCRIPTION", "IGNORE")
-    val defaultExpenseSubcategories = CategoryVisuals.subcategories.keys.toList()
+    val defaultMainCategories = listOf("DEBIT", "CREDIT", "EXPENSE", "INCOME", "BILL_PENDING", "INVESTMENT", "SUBSCRIPTION", "IGNORE")
+    val defaultDebitSubcategories = CategoryVisuals.subcategories.keys.toList()
 
     val mainCategories = (defaultMainCategories + customCategories.filter { it.type == "MAIN" }.map { it.name }).distinct()
-    val expenseSubcategories = (defaultExpenseSubcategories + customCategories.filter { it.type == "SUB" }.map { it.name }).distinct()
+    val debitSubcategories = (defaultDebitSubcategories + customCategories.filter { it.type == "SUB" }.map { it.name }).distinct()
 
     var selectedCategory by remember { mutableStateOf(transaction.category) }
     var selectedSubcategory by remember { mutableStateOf(transaction.subcategory ?: "") }
@@ -74,7 +74,7 @@ fun TransactionCategoryBottomSheet(
                             selected = isSubCat,
                             onClick = { isSubCat = true }
                         )
-                        Text("Subcategory (Expense)")
+                        Text("Subcategory (Debit)")
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(
@@ -143,7 +143,7 @@ fun TransactionCategoryBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+                columns = GridCells.Adaptive(minSize = 100.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)
@@ -166,7 +166,7 @@ fun TransactionCategoryBottomSheet(
                             .bounceClick {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedCategory = category
-                                if (category != "EXPENSE") {
+                                if (category != "DEBIT") {
                                     selectedSubcategory = ""
                                 }
                             }
@@ -195,17 +195,17 @@ fun TransactionCategoryBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (selectedCategory == "EXPENSE") {
+            if (selectedCategory == "DEBIT") {
                 Text("Subcategory", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
+                    columns = GridCells.Adaptive(minSize = 80.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)
                 ) {
-                    items(expenseSubcategories) { sub ->
+                    items(debitSubcategories) { sub ->
                         val catVisual = CategoryVisuals.getSubcategoryVisual(sub)
                         val isSelected = selectedSubcategory == sub
 
@@ -268,13 +268,13 @@ fun TransactionCategoryBottomSheet(
             Button(
                 onClick = {
                     val type = when (selectedCategory) {
-                        "INCOME" -> "INCOME"
+                        "CREDIT" -> "CREDIT"
                         "REWARD" -> "REWARD"
                         "BILL_PENDING" -> "BILL_PENDING"
                         "MANDATE_CREATED" -> "MANDATE_CREATED"
                         "SELF_TRANSFER" -> "SELF_TRANSFER"
                         "IGNORE" -> "IGNORE"
-                        else -> "EXPENSE"
+                        else -> "DEBIT"
                     }
                     val updated = transaction.copy(
                         category = selectedCategory,

@@ -29,7 +29,7 @@ fun TransactionDetailsBottomSheet(
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
-    val isCredit = transaction.type == "INCOME"
+    val isCredit = transaction.type == "CREDIT"
     val color = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
     val sign = if (isCredit) "+" else "-"
 
@@ -100,7 +100,7 @@ fun TransactionDetailsBottomSheet(
             if (transaction.bankName != null) {
                 DetailRow("Bank", transaction.bankName)
             }
-            DetailRow("Type", if (isCredit) "Income" else "Expense")
+            DetailRow("Type", if (isCredit) "Credit" else "Debit")
 
             if (transaction.availableBalance != null) {
                 DetailRow("Remaining Balance", "₹${String.format(Locale.getDefault(), "%.2f", transaction.availableBalance)}")

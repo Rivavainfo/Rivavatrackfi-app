@@ -883,7 +883,7 @@ fun SpendingSummaryCards(transactions: List<TransactionEntity>) {
     var monthlySpending = 0.0
 
     transactions.forEach {
-        if (it.type == "EXPENSE" || it.type == "BILL_PENDING") {
+        if (it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING") {
             if (it.date >= weekStart.toLong()) weeklySpending += it.amount
             if (it.date >= monthStart.toLong()) monthlySpending += it.amount
         }
@@ -941,7 +941,7 @@ fun DailyBudgetCard(
 
     var spentToday = 0.0
     transactions.forEach {
-        if ((it.type == "EXPENSE" || it.type == "BILL_PENDING") && it.date >= todayStart) {
+        if ((it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING") && it.date >= todayStart) {
             spentToday += it.amount
         }
     }
@@ -1068,7 +1068,7 @@ fun EmptyState() {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tap + to add your first income or expense",
+            text = "Tap + to add your first credit or debit",
             style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
             modifier = Modifier.padding(horizontal = 32.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -1078,9 +1078,9 @@ fun EmptyState() {
 
 @Composable
 fun DashboardOverviewBento(summary: FinancialSummaryState) {
-    val netWorth = summary.totalIncome + summary.netSavings
+    val netWorth = summary.totalCredit + summary.netSavings
     val savings = summary.netSavings
-    val investments = summary.totalIncome
+    val investments = summary.totalCredit
 
     val netWorthChange = if (netWorth > 0) "+4.2%" else "0.0%"
 
@@ -1269,7 +1269,7 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
 
 @Composable
 fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit) {
-    val isCredit = transaction.type == "INCOME"
+    val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD" || transaction.type == "INCOME" || transaction.type == "REWARD"
     val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
 
     val categoryVisual = CategoryVisuals.getCategoryVisual(transaction.category)

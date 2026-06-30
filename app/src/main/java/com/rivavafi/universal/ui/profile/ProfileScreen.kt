@@ -536,13 +536,13 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = currencyFormatter.format(summary.totalIncome + summary.netSavings).substringBefore("."),
+                                text = currencyFormatter.format(summary.totalCredit + summary.netSavings).substringBefore("."),
                                 style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.ExtraBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 letterSpacing = (-1).sp
                             )
                             Text(
-                                text = "." + currencyFormatter.format(summary.totalIncome + summary.netSavings).substringAfter(".", "00"),
+                                text = "." + currencyFormatter.format(summary.totalCredit + summary.netSavings).substringAfter(".", "00"),
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(bottom = 6.dp)
@@ -628,7 +628,7 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = currencyFormatter.format(summary.totalExpense).substringBefore("."),
+                                text = currencyFormatter.format(summary.totalDebit).substringBefore("."),
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )

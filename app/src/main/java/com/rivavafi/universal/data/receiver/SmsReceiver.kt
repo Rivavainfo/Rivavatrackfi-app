@@ -39,7 +39,7 @@ class SmsReceiver : BroadcastReceiver() {
                         val sender = sms.displayOriginatingAddress
 
                         if (body != null && sender != null) {
-                            Log.d("TRACKFI_SMS", "New SMS detected from sender: $sender")
+                            Log.d("RIVAVA_SMS", "New SMS detected from sender: $sender")
                             parseAndSaveSmsUseCase(sender, body, sms.timestampMillis)
                         }
                     }

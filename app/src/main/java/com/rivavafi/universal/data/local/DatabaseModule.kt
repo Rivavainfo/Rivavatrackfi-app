@@ -16,7 +16,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideTrackFiDatabase(app: Application): TrackFiDatabase {
+    fun provideRivavaDatabase(app: Application): RivavaDatabase {
         val MIGRATION_4_5 = object : androidx.room.migration.Migration(4, 5) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE transactions ADD COLUMN billingCycle TEXT")
@@ -32,31 +32,39 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE categories ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE user_corrections ADD COLUMN userId TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         return Room.databaseBuilder(
             app,
-            TrackFiDatabase::class.java,
+            RivavaDatabase::class.java,
             "trackfi_db"
         )
-        .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
+        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
         .fallbackToDestructiveMigration()
         .build()
     }
 
     @Provides
     @Singleton
-    fun provideTransactionDao(db: TrackFiDatabase): TransactionDao {
+    fun provideTransactionDao(db: RivavaDatabase): TransactionDao {
         return db.transactionDao()
     }
 
     @Provides
     @Singleton
-    fun provideCategoryDao(db: TrackFiDatabase): CategoryDao {
+    fun provideCategoryDao(db: RivavaDatabase): CategoryDao {
         return db.categoryDao()
     }
 
     @Provides
     @Singleton
-    fun provideUserCorrectionDao(db: TrackFiDatabase): UserCorrectionDao {
+    fun provideUserCorrectionDao(db: RivavaDatabase): UserCorrectionDao {
         return db.userCorrectionDao()
     }
 

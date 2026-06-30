@@ -33,7 +33,7 @@ fun AddTransactionBottomSheet(
 ) {
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var isIncome by remember { mutableStateOf(false) }
+    var isCredit by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "General") }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
@@ -76,23 +76,23 @@ fun AddTransactionBottomSheet(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(32.dp))
-                        .background(if (isIncome) Color.Transparent else MaterialTheme.colorScheme.error)
-                        .clickable { isIncome = false }
+                        .background(if (isCredit) Color.Transparent else MaterialTheme.colorScheme.error)
+                        .clickable { isCredit = false }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Expense", color = if (!isIncome) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Debit", color = if (!isCredit) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(32.dp))
-                        .background(if (isIncome) Color(0xFF4CAF50) else Color.Transparent)
-                        .clickable { isIncome = true }
+                        .background(if (isCredit) Color(0xFF4CAF50) else Color.Transparent)
+                        .clickable { isCredit = true }
                         .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Income", color = if (isIncome) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Credit", color = if (isCredit) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -183,7 +183,17 @@ fun AddTransactionBottomSheet(
             )
 
             if (showDatePicker) {
-                val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = selectedDateMillis,
+                    selectableDates = object : androidx.compose.material3.SelectableDates {
+                        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                            val selectedDate = Calendar.getInstance().apply { timeInMillis = utcTimeMillis }
+                            val currentDate = Calendar.getInstance()
+                            return selectedDate.get(Calendar.YEAR) == currentDate.get(Calendar.YEAR) &&
+                                   selectedDate.get(Calendar.DAY_OF_YEAR) == currentDate.get(Calendar.DAY_OF_YEAR)
+                        }
+                    }
+                )
                 DatePickerDialog(
                     onDismissRequest = { showDatePicker = false },
                     confirmButton = {
@@ -212,12 +222,13 @@ fun AddTransactionBottomSheet(
                 onClick = {
                     val parsedAmount = amount.toDoubleOrNull()
                     if (title.isNotBlank() && parsedAmount != null && parsedAmount > 0) {
-                        onSave(title, parsedAmount, if (isIncome) "INCOME" else "EXPENSE", selectedCategory, selectedDateMillis)
+                        val typeStr = if (isCredit) "CREDIT" else "DEBIT"
+                        onSave(title, parsedAmount, typeStr, selectedCategory, selectedDateMillis)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = if (isIncome) Color(0xFF00FF88) else MaterialTheme.colorScheme.error, contentColor = if (isIncome) Color.Black else Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = if (isCredit) Color(0xFF00FF88) else MaterialTheme.colorScheme.error, contentColor = if (isCredit) Color.Black else Color.White)
             ) {
                 Text("Save Transaction", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
@@ -239,7 +250,7 @@ fun AddTransactionBottomSheet(
             confirmButton = {
                 TextButton(onClick = {
                     if (newCategoryName.isNotBlank()) {
-                        onAddCategory(newCategoryName, if (isIncome) "INCOME" else "EXPENSE")
+                        onAddCategory(newCategoryName, if (isCredit) "CREDIT" else "DEBIT")
                         selectedCategory = newCategoryName
                         showAddCategoryDialog = false
                     }

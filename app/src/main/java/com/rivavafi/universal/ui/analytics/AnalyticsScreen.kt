@@ -78,6 +78,7 @@ fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val terminologyMode by viewModel.terminologyMode.collectAsState()
 
     Scaffold(
         containerColor = Color(0xFF0A0A0A),
@@ -222,9 +223,9 @@ fun AnalyticsScreen(
                 }
                 is AnalyticsUiState.Success -> {
                     // Restoring Original Success Logic
-                    OverviewCards(summary = state.summary)
+                    OverviewCards(summary = state.summary, terminologyMode = terminologyMode)
                     Spacer(modifier = Modifier.height(24.dp))
-                    CashFlowComparisonCard(transactions = state.transactions)
+                    CashFlowComparisonCard(transactions = state.transactions, terminologyMode = terminologyMode)
                     Spacer(modifier = Modifier.height(24.dp))
                     SpendingChartCard(transactions = state.transactions)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -244,10 +245,10 @@ fun AnalyticsScreen(
 
 @Composable
 fun ProjectedSpendCard(transactions: List<TransactionEntity>) {
-    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
 
     // Calculate deep analysis projected spend based on days passed in the month
-    val totalSpend = expenses.sumOf { it.amount }
+    val totalSpend = debits.sumOf { it.amount }
 
     val calendar = Calendar.getInstance()
     // For simplicity, we assume we're looking at the current month's pacing
@@ -290,7 +291,7 @@ fun ProjectedSpendCard(transactions: List<TransactionEntity>) {
 }
 
 @Composable
-fun OverviewCards(summary: FinancialSummaryState) {
+fun OverviewCards(summary: FinancialSummaryState, terminologyMode: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -303,7 +304,7 @@ fun OverviewCards(summary: FinancialSummaryState) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text("Total Balance", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalIncome - summary.totalExpense)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalCredit - summary.totalDebit)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
             }
         }
         Card(
@@ -314,7 +315,7 @@ fun OverviewCards(summary: FinancialSummaryState) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text("Monthly Spent", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalExpense)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.error)
+                Text("₹${String.format(java.util.Locale.getDefault(), "%.0f", summary.totalDebit)}", style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -501,7 +502,7 @@ fun generateLabels(viewMode: String): Array<String> {
 }
 
 fun generateBarData(transactions: List<TransactionEntity>, viewMode: String): BarDataSet {
-    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
     val isWeekly = viewMode == "Weekly"
     val size = if (isWeekly) 7 else 5
     val totals = FloatArray(size) { 0f }
@@ -518,7 +519,7 @@ fun generateBarData(transactions: List<TransactionEntity>, viewMode: String): Ba
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    expenses.forEach { txn ->
+    debits.forEach { txn ->
         if (txn.date >= currentStart) {
             val cal = Calendar.getInstance().apply { timeInMillis = txn.date }
             val index = if (isWeekly) {
@@ -619,7 +620,7 @@ fun SubscriptionTrackerCard(transactions: List<TransactionEntity>) {
 
 
 @Composable
-fun CashFlowComparisonCard(transactions: List<TransactionEntity>) {
+fun CashFlowComparisonCard(transactions: List<TransactionEntity>, terminologyMode: String) {
     val monthStart = Calendar.getInstance().apply {
         set(Calendar.DAY_OF_MONTH, 1)
         set(Calendar.HOUR_OF_DAY, 0)
@@ -628,18 +629,18 @@ fun CashFlowComparisonCard(transactions: List<TransactionEntity>) {
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    var income = 0.0
-    var expense = 0.0
+    var credit = 0.0
+    var debit = 0.0
 
     transactions.forEach {
         if (it.date >= monthStart) {
-            if (it.type == "INCOME" || it.type == "REWARD") income += it.amount
-            if (it.type == "EXPENSE" || it.type == "BILL_PENDING") expense += it.amount
+            if (it.type == "CREDIT" || it.type == "INCOME" || it.type == "REWARD") credit += it.amount
+            if (it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING") debit += it.amount
         }
     }
 
-    val total = income + expense
-    val incomePercent = if (total > 0) (income / total).toFloat() else 0.5f
+    val total = credit + debit
+    val creditPercent = if (total > 0) (credit / total).toFloat() else 0.5f
 
     Card(
         modifier = Modifier
@@ -649,25 +650,25 @@ fun CashFlowComparisonCard(transactions: List<TransactionEntity>) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Monthly Cash Flow", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Monthly Activity", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("Income", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                    Text("₹${String.format(Locale.getDefault(), "%.0f", income)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                    Text(if (terminologyMode == "CREDIT_DEBIT") "Credit" else "Income", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text("₹${String.format(Locale.getDefault(), "%.0f", credit)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("Expense", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                    Text("₹${String.format(Locale.getDefault(), "%.0f", expense)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
+                    Text(if (terminologyMode == "CREDIT_DEBIT") "Debit" else "Expense", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    Text("₹${String.format(Locale.getDefault(), "%.0f", debit)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface)
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Custom Income vs Expense Progress Bar
+            // Custom Credit vs Debit Progress Bar
             Row(modifier = Modifier.fillMaxWidth().height(16.dp).clip(RoundedCornerShape(8.dp))) {
-                Box(modifier = Modifier.weight(incomePercent.coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.primary))
-                Box(modifier = Modifier.weight((1f - incomePercent).coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.error))
+                Box(modifier = Modifier.weight(creditPercent.coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.primary))
+                Box(modifier = Modifier.weight((1f - creditPercent).coerceAtLeast(0.01f)).fillMaxHeight().background(MaterialTheme.colorScheme.error))
             }
         }
     }
@@ -675,9 +676,9 @@ fun CashFlowComparisonCard(transactions: List<TransactionEntity>) {
 
 @Composable
 fun TopMerchantsCard(transactions: List<TransactionEntity>) {
-    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
 
-    val topMerchants = expenses.groupBy { it.merchantName }
+    val topMerchants = debits.groupBy { it.merchantName }
         .mapValues { entry -> entry.value.sumOf { it.amount } }
         .toList()
         .sortedByDescending { it.second }
@@ -719,10 +720,10 @@ fun TopMerchantsCard(transactions: List<TransactionEntity>) {
 
 @Composable
 fun CategoryBreakdown(transactions: List<TransactionEntity>) {
-    val expenses = transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
 
     // Group by category/subcategory
-    val breakdown = expenses.groupBy {
+    val breakdown = debits.groupBy {
         if (it.subcategory != null) it.subcategory else it.category
     }.mapValues { entry ->
         entry.value.sumOf { it.amount }
@@ -775,6 +776,85 @@ fun CategoryBreakdown(transactions: List<TransactionEntity>) {
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Composable
+fun WeeklyTrendsCard(transactions: List<TransactionEntity>) {
+    val expenses = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+
+    // Simple mock logic for weekly trends (last 7 days)
+    val now = Calendar.getInstance()
+    val weeklyData = (0..6).map { i ->
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -i)
+        val dayStart = cal.apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val dayEnd = dayStart + 86400000
+
+        val sum = expenses.filter { it.date in dayStart until dayEnd }.sumOf { it.amount }
+        Pair(SimpleDateFormat("EEE", Locale.getDefault()).format(java.util.Date(dayStart)), sum)
+    }.reversed()
+
+    if (weeklyData.all { it.second == 0.0 }) return
+
+    val maxVal = weeklyData.maxOf { it.second }.coerceAtLeast(1.0)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Weekly Spending Trend", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth().height(120.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                weeklyData.forEach { (day, amount) ->
+                    val heightRatio = (amount / maxVal).toFloat()
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            modifier = Modifier
+                                .width(16.dp)
+                                .fillMaxHeight(heightRatio.coerceAtLeast(0.05f))
+                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(day, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MonthlyComparisonCard(transactions: List<TransactionEntity>) {
+    // A placeholder card for future monthly comparison
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Month over Month", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("More data needed to compare previous months.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
