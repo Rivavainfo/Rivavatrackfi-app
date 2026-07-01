@@ -256,50 +256,6 @@ fun SettingsScreen(
                         )
                     }
 
-                    if (isSmsTrackingEnabled) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Tracking Mode",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and Debits" else "Credit and Debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                        }
-                    }
                 }
             }
 
@@ -352,6 +308,52 @@ fun SettingsScreen(
                             )
                         )
                     }
+
+                    if (isSmsTrackingEnabled) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Tracking Mode",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
+                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                )
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and Debits" else "Credit and Debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
+                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                )
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
+                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                )
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                            }
+                        }
+                    }
+
                 }
             }
 
