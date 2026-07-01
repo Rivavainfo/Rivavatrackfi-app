@@ -964,5 +964,75 @@ fun AdvancedAnalyticsView(transactions: List<TransactionEntity>, terminologyMode
         }
 
         MonthlyComparisonCard(transactions = transactions)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Category Pie Chart
+        CategoryPieChartCard(transactions = transactions)
+    }
+}
+
+@Composable
+fun CategoryPieChartCard(transactions: List<TransactionEntity>) {
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+    val breakdown = debits.groupBy { it.category }.mapValues { entry -> entry.value.sumOf { it.amount } }
+
+    if (breakdown.isEmpty()) return
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Category Distribution", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AndroidView(
+                modifier = Modifier.fillMaxWidth().height(250.dp),
+                factory = { context ->
+                    PieChart(context).apply {
+                        description.isEnabled = false
+                        isDrawHoleEnabled = true
+                        setHoleColor(AndroidColor.TRANSPARENT)
+                        setTransparentCircleColor(AndroidColor.TRANSPARENT)
+                        setTransparentCircleAlpha(110)
+                        holeRadius = 58f
+                        transparentCircleRadius = 61f
+                        setDrawCenterText(true)
+                        rotationAngle = 0f
+                        isRotationEnabled = true
+                        isHighlightPerTapEnabled = true
+                        legend.isEnabled = false
+                        setEntryLabelColor(AndroidColor.WHITE)
+                        setEntryLabelTextSize(12f)
+                    }
+                },
+                update = { pieChart ->
+                    val entries = breakdown.map { (cat, amount) ->
+                        PieEntry(amount.toFloat(), cat)
+                    }
+                    val dataSet = PieDataSet(entries, "Categories").apply {
+                        sliceSpace = 3f
+                        selectionShift = 5f
+                        colors = listOf(
+                            AndroidColor.parseColor("#007AFF"), // Blue
+                            AndroidColor.parseColor("#34C759"), // Green
+                            AndroidColor.parseColor("#FF9500"), // Yellow
+                            AndroidColor.parseColor("#FF3B30"), // Orange
+                            AndroidColor.parseColor("#FF2D55"), // Red
+                            AndroidColor.parseColor("#5856D6"), // Purple
+                            AndroidColor.parseColor("#FFCC00")  // Gold
+                        )
+                        valueTextColor = AndroidColor.WHITE
+                        valueTextSize = 14f
+                    }
+                    pieChart.data = PieData(dataSet)
+                    pieChart.invalidate()
+                }
+            )
+        }
     }
 }
