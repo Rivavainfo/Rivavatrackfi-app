@@ -49,6 +49,8 @@ fun TransactionCategoryBottomSheet(
 
     var selectedCategory by remember { mutableStateOf(transaction.category) }
     var selectedSubcategory by remember { mutableStateOf(transaction.subcategory ?: "") }
+    val initialType = transaction.type
+    var isCreditTransaction by remember { mutableStateOf(initialType == "CREDIT" || initialType == "INCOME" || initialType == "REWARD") }
     var createRule by remember { mutableStateOf(true) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
@@ -116,7 +118,7 @@ fun TransactionCategoryBottomSheet(
                 .padding(horizontal = 24.dp)
         ) {
             Text(
-                text = "Edit Category",
+                text = "Edit Transaction",
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -128,12 +130,46 @@ fun TransactionCategoryBottomSheet(
             )
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Type Toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(if (isCreditTransaction) Color.Transparent else MaterialTheme.colorScheme.error)
+                        .clickable { isCreditTransaction = false }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Debit", color = if (!isCreditTransaction) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(if (isCreditTransaction) Color(0xFF4CAF50) else Color.Transparent)
+                        .clickable { isCreditTransaction = true }
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Credit", color = if (isCreditTransaction) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Main Category", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Category", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 TextButton(onClick = { showAddCategoryDialog = true }) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -267,14 +303,21 @@ fun TransactionCategoryBottomSheet(
 
             Button(
                 onClick = {
-                    val type = when (selectedCategory) {
-                        "CREDIT" -> "CREDIT"
-                        "REWARD" -> "REWARD"
-                        "BILL_PENDING" -> "BILL_PENDING"
-                        "MANDATE_CREATED" -> "MANDATE_CREATED"
-                        "SELF_TRANSFER" -> "SELF_TRANSFER"
-                        "IGNORE" -> "IGNORE"
-                        else -> "DEBIT"
+                    val type = if (isCreditTransaction) {
+                        when (selectedCategory) {
+                            "REWARD" -> "REWARD"
+                            "SELF_TRANSFER" -> "SELF_TRANSFER"
+                            "IGNORE" -> "IGNORE"
+                            else -> "CREDIT"
+                        }
+                    } else {
+                        when (selectedCategory) {
+                            "BILL_PENDING" -> "BILL_PENDING"
+                            "MANDATE_CREATED" -> "MANDATE_CREATED"
+                            "SELF_TRANSFER" -> "SELF_TRANSFER"
+                            "IGNORE" -> "IGNORE"
+                            else -> "DEBIT"
+                        }
                     }
                     val updated = transaction.copy(
                         category = selectedCategory,
