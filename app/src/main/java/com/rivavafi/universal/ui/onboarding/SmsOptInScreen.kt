@@ -125,8 +125,8 @@ fun SmsOptInScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = selectedTrackingMode == SmsTrackingMode.INCOME_ONLY,
-                        onClick = { selectedTrackingMode = SmsTrackingMode.INCOME_ONLY },
+                        selected = selectedTrackingMode == SmsTrackingMode.CREDIT_ONLY,
+                        onClick = { selectedTrackingMode = SmsTrackingMode.CREDIT_ONLY },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
                     Text("Credit only", style = MaterialTheme.typography.bodyLarge)
@@ -136,8 +136,8 @@ fun SmsOptInScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     RadioButton(
-                        selected = selectedTrackingMode == SmsTrackingMode.EXPENSE_ONLY,
-                        onClick = { selectedTrackingMode = SmsTrackingMode.EXPENSE_ONLY },
+                        selected = selectedTrackingMode == SmsTrackingMode.DEBIT_ONLY,
+                        onClick = { selectedTrackingMode = SmsTrackingMode.DEBIT_ONLY },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
                     Text("Debits only", style = MaterialTheme.typography.bodyLarge)

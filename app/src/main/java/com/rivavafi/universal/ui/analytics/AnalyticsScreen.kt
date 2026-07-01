@@ -107,6 +107,27 @@ fun AnalyticsScreen(
                 )
             }
 
+            var showAdvancedAnalytics by remember { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                FilterChip(
+                    selected = !showAdvancedAnalytics,
+                    onClick = { showAdvancedAnalytics = false },
+                    label = { Text("Overview") }
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                FilterChip(
+                    selected = showAdvancedAnalytics,
+                    onClick = { showAdvancedAnalytics = true },
+                    label = { Text("Advanced Analytics") }
+                )
+            }
+
             // Month Selector
             val selectedMonth by viewModel.selectedMonth.collectAsState()
             val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
@@ -222,20 +243,24 @@ fun AnalyticsScreen(
                     }
                 }
                 is AnalyticsUiState.Success -> {
-                    // Restoring Original Success Logic
-                    OverviewCards(summary = state.summary, terminologyMode = terminologyMode)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    CashFlowComparisonCard(transactions = state.transactions, terminologyMode = terminologyMode)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    SpendingChartCard(transactions = state.transactions)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    TopMerchantsCard(transactions = state.transactions)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    SubscriptionTrackerCard(transactions = state.transactions)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    CategoryBreakdown(transactions = state.transactions)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    ProjectedSpendCard(transactions = state.transactions)
+                    if (showAdvancedAnalytics) {
+                        AdvancedAnalyticsView(transactions = state.transactions, terminologyMode = terminologyMode)
+                    } else {
+                        // Restoring Original Success Logic
+                        OverviewCards(summary = state.summary, terminologyMode = terminologyMode)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        CashFlowComparisonCard(transactions = state.transactions, terminologyMode = terminologyMode)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        SpendingChartCard(transactions = state.transactions)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        TopMerchantsCard(transactions = state.transactions)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        SubscriptionTrackerCard(transactions = state.transactions)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        CategoryBreakdown(transactions = state.transactions)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        ProjectedSpendCard(transactions = state.transactions)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(120.dp))
@@ -856,5 +881,88 @@ fun MonthlyComparisonCard(transactions: List<TransactionEntity>) {
             Spacer(modifier = Modifier.height(16.dp))
             Text("More data needed to compare previous months.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+@Composable
+fun AdvancedAnalyticsView(transactions: List<TransactionEntity>, terminologyMode: String) {
+    if (transactions.isEmpty()) {
+        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+            Text("Not enough data for advanced analytics.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        return
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+        WeeklyTrendsCard(transactions = transactions)
+
+        // Distribution of credit vs debit
+        val creditSum = transactions.filter { it.type == "CREDIT" || it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
+        val debitSum = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+        val total = creditSum + debitSum
+
+        if (total > 0) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(6.dp, RoundedCornerShape(28.dp)),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("Income vs Expense Distribution", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val creditRatio = (creditSum / total).toFloat()
+                    Row(modifier = Modifier.fillMaxWidth().height(24.dp).clip(RoundedCornerShape(12.dp))) {
+                        if (creditRatio > 0f) {
+                            Box(modifier = Modifier.weight(creditRatio).fillMaxHeight().background(MaterialTheme.colorScheme.primary))
+                        }
+                        if (creditRatio < 1f) {
+                            Box(modifier = Modifier.weight(1f - creditRatio).fillMaxHeight().background(MaterialTheme.colorScheme.error))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(if (terminologyMode == "CREDIT_DEBIT") "Credits: ${(creditRatio * 100).toInt()}%" else "Income: ${(creditRatio * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(if (terminologyMode == "CREDIT_DEBIT") "Debits: ${((1f - creditRatio) * 100).toInt()}%" else "Expenses: ${((1f - creditRatio) * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+
+        // Top 5 Largest Transactions
+        val largestTxns = transactions.sortedByDescending { it.amount }.take(5)
+        if (largestTxns.isNotEmpty()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(6.dp, RoundedCornerShape(28.dp)),
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("Largest Transactions", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    largestTxns.forEachIndexed { index, txn ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(txn.merchantName, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                            val color = if (txn.type == "CREDIT" || txn.type == "INCOME" || txn.type == "REWARD") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            Text("₹${String.format(Locale.getDefault(), "%.0f", txn.amount)}", style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold), color = color)
+                        }
+                        if (index < largestTxns.size - 1) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+                        }
+                    }
+                }
+            }
+        }
+
+        MonthlyComparisonCard(transactions = transactions)
     }
 }

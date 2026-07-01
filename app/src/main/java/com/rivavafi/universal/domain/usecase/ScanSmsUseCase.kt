@@ -80,9 +80,10 @@ class ScanSmsUseCase @Inject constructor(
                             Log.d("RIVAVA_SMS", "Scanning historical SMS from: $sender")
                             val result = parseAndSaveSmsUseCase.parseAndReturn(sender, body, date, smsHashId)
                             if (result != null) {
+                                val isCreditTxn = result.type == "CREDIT" || result.type == "INCOME" || result.type == "REWARD"
                                 val shouldSave = when (trackingMode) {
-                                    SmsTrackingMode.INCOME_ONLY.name -> result.type == "INCOME"
-                                    SmsTrackingMode.EXPENSE_ONLY.name -> result.type != "INCOME"
+                                    SmsTrackingMode.CREDIT_ONLY.name -> isCreditTxn
+                                    SmsTrackingMode.DEBIT_ONLY.name -> !isCreditTxn
                                     else -> true
                                 }
 

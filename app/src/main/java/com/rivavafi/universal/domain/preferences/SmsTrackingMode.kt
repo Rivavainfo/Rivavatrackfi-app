@@ -1,7 +1,7 @@
 package com.rivavafi.universal.domain.preferences
 
 enum class SmsTrackingMode {
-    INCOME_ONLY,
-    EXPENSE_ONLY,
+    CREDIT_ONLY,
+    DEBIT_ONLY,
     BOTH
 }

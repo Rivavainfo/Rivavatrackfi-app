@@ -60,12 +60,14 @@ class ParseAndSaveSmsUseCase @Inject constructor(
         }
 
         val trackingMode = userPreferencesRepository.getSmsTrackingMode()
-        if (trackingMode == SmsTrackingMode.INCOME_ONLY.name && transaction.type != "INCOME") {
-            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is INCOME_ONLY but transaction is ${transaction.type}")
+        val isCreditTxn = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD"
+
+        if (trackingMode == SmsTrackingMode.CREDIT_ONLY.name && !isCreditTxn) {
+            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is CREDIT_ONLY but transaction is ${transaction.type}")
             return
         }
-        if (trackingMode == SmsTrackingMode.EXPENSE_ONLY.name && transaction.type == "INCOME") {
-            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is EXPENSE_ONLY but transaction is INCOME")
+        if (trackingMode == SmsTrackingMode.DEBIT_ONLY.name && isCreditTxn) {
+            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is DEBIT_ONLY but transaction is ${transaction.type}")
             return
         }
 
