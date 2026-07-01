@@ -231,7 +231,7 @@ fun TransactionCategoryBottomSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (selectedCategory == "DEBIT") {
+            if (!isCreditTransaction) {
                 Text("Subcategory", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(12.dp))
 
