@@ -3,6 +3,10 @@ package com.rivavafi.universal.ui.add
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.items
+import com.rivavafi.universal.ui.theme.bounceClick
+import com.rivavafi.universal.ui.theme.glowEffect
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -28,7 +32,7 @@ import java.util.Locale
 fun AddTransactionBottomSheet(
     categories: List<String>,
     onDismiss: () -> Unit,
-    onSave: (title: String, amount: Double, type: String, category: String, date: Long) -> Unit,
+    onSave: (title: String, amount: Double, type: String, category: String, subcategory: String?, date: Long) -> Unit,
     onAddCategory: (String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
@@ -36,6 +40,7 @@ fun AddTransactionBottomSheet(
     var isCredit by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "General") }
+    var selectedSubcategory by remember { mutableStateOf("") }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
     var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -165,6 +170,61 @@ fun AddTransactionBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (!isCredit) {
+                Text("Subcategory", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                    columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(minSize = 80.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)
+                ) {
+                    items(com.rivavafi.universal.ui.theme.CategoryVisuals.subcategories.keys.toList()) { sub ->
+                        val catVisual = com.rivavafi.universal.ui.theme.CategoryVisuals.getSubcategoryVisual(sub)
+                        val isSelected = selectedSubcategory == sub
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .glowEffect(color = catVisual.color, radius = 20f, isSelected = isSelected)
+                                .background(if (isSelected) catVisual.color else MaterialTheme.colorScheme.surfaceVariant)
+                                .bounceClick {
+                                    selectedSubcategory = sub
+                                }
+                                .padding(vertical = 12.dp, horizontal = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(catVisual.color.copy(alpha = 0.2f), androidx.compose.foundation.shape.CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = catVisual.icon,
+                                        contentDescription = catVisual.title,
+                                        tint = catVisual.color,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = sub,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                    color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = dateFormatter.format(java.util.Date(selectedDateMillis)),
                 onValueChange = {},
@@ -223,7 +283,7 @@ fun AddTransactionBottomSheet(
                     val parsedAmount = amount.toDoubleOrNull()
                     if (title.isNotBlank() && parsedAmount != null && parsedAmount > 0) {
                         val typeStr = if (isCredit) "CREDIT" else "DEBIT"
-                        onSave(title, parsedAmount, typeStr, selectedCategory, selectedDateMillis)
+                        onSave(title, parsedAmount, typeStr, selectedCategory, if (selectedSubcategory.isNotEmpty() && !isCredit) selectedSubcategory else null, selectedDateMillis)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),

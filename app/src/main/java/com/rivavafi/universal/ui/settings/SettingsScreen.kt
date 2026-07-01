@@ -325,9 +325,10 @@ fun SettingsScreen(
                                 RadioButton(
                                     selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4)),
+                                    modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and Debits" else "Credit and Debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and debits" else "Credit and debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -336,7 +337,8 @@ fun SettingsScreen(
                                 RadioButton(
                                     selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4)),
+                                    modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }
@@ -347,7 +349,8 @@ fun SettingsScreen(
                                 RadioButton(
                                     selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
+                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4)),
+                                    modifier = Modifier.padding(end = 8.dp)
                                 )
                                 Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }

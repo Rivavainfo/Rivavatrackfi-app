@@ -38,9 +38,9 @@ fun PdfViewerScreen(
 
     DisposableEffect(Unit) {
         val activity = context as? Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? Activity
-        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE) // Added FLAG_SECURE locally
         onDispose {
-            // Keep FLAG_SECURE active globally
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
     var pdfRenderer by remember { mutableStateOf<PdfRenderer?>(null) }

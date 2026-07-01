@@ -888,11 +888,12 @@ fun LineChartCard(transactions: List<TransactionEntity>) {
                 factory = { context ->
                     LineChart(context).apply {
                         description.isEnabled = false
-                        legend.isEnabled = false
+                        legend.isEnabled = true
+                        legend.textColor = AndroidColor.WHITE
                         setDrawGridBackground(false)
                         axisRight.isEnabled = false
                         axisLeft.textColor = AndroidColor.WHITE
-                        axisLeft.setDrawGridLines(false)
+                        axisLeft.setDrawGridLines(true)
                         xAxis.position = XAxis.XAxisPosition.BOTTOM
                         xAxis.textColor = AndroidColor.WHITE
                         xAxis.setDrawGridLines(false)
@@ -951,15 +952,18 @@ fun BarChartCard(transactions: List<TransactionEntity>) {
                 factory = { context ->
                     BarChart(context).apply {
                         description.isEnabled = false
-                        legend.isEnabled = false
+                        legend.isEnabled = true
+                        legend.textColor = AndroidColor.WHITE
                         setDrawGridBackground(false)
                         axisRight.isEnabled = false
                         axisLeft.textColor = AndroidColor.WHITE
-                        axisLeft.setDrawGridLines(false)
+                        axisLeft.setDrawGridLines(true)
                         xAxis.position = XAxis.XAxisPosition.BOTTOM
                         xAxis.textColor = AndroidColor.WHITE
                         xAxis.setDrawGridLines(false)
-                        xAxis.setDrawLabels(false) // Hide labels for simplicity
+                        xAxis.setDrawAxisLine(true)
+                        axisLeft.setDrawAxisLine(true)
+                        xAxis.setDrawLabels(true)
                         setTouchEnabled(true)
                         isDragEnabled = true
                         setScaleEnabled(true)
@@ -970,7 +974,7 @@ fun BarChartCard(transactions: List<TransactionEntity>) {
                         BarEntry(index.toFloat(), entry.value.toFloat())
                     }
                     val dataSet = BarDataSet(entries, "Daily Spending").apply {
-                        color = AndroidColor.parseColor("#FF9500")
+                        color = AndroidColor.parseColor("#007AFF")
                         valueTextColor = AndroidColor.WHITE
                         valueTextSize = 10f
                     }
@@ -1101,13 +1105,17 @@ fun CategoryPieChartCard(transactions: List<TransactionEntity>) {
                         setHoleColor(AndroidColor.TRANSPARENT)
                         setTransparentCircleColor(AndroidColor.TRANSPARENT)
                         setTransparentCircleAlpha(110)
-                        holeRadius = 58f
-                        transparentCircleRadius = 61f
+                        holeRadius = 65f
+                        transparentCircleRadius = 70f
                         setDrawCenterText(true)
+                        setCenterTextSize(16f)
+                        setCenterTextColor(AndroidColor.WHITE)
                         rotationAngle = 0f
                         isRotationEnabled = true
                         isHighlightPerTapEnabled = true
-                        legend.isEnabled = false
+                        legend.isEnabled = true
+                        legend.textColor = AndroidColor.WHITE
+                        legend.isWordWrapEnabled = true
                         setEntryLabelColor(AndroidColor.WHITE)
                         setEntryLabelTextSize(12f)
                     }
