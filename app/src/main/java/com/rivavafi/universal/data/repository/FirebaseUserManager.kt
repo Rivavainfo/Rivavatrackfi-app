@@ -12,9 +12,29 @@ import javax.inject.Singleton
 class FirebaseUserManager @Inject constructor() {
     private val firestore = FirebaseFirestore.getInstance()
     private val TAG = "FirebaseUserManager"
-    private val COLLECTION_NAME = "THEDATA"
+    private val COLLECTION_NAME = "therivdata"
+
+
+    suspend fun migrateLegacyDataIfNeeded(uid: String) {
+        try {
+            val newDoc = firestore.collection(COLLECTION_NAME).document(uid).get().await()
+            if (!newDoc.exists()) {
+                val legacyDoc = firestore.collection("THEDATA").document(uid).get().await()
+                if (legacyDoc.exists()) {
+                    val data = legacyDoc.data
+                    if (data != null) {
+                        firestore.collection(COLLECTION_NAME).document(uid).set(data).await()
+                        Log.d(TAG, "Successfully migrated legacy THEDATA for UID: $uid to $COLLECTION_NAME")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during legacy data migration for UID: $uid", e)
+        }
+    }
 
     suspend fun saveUserToFirestore(userModel: UserModel) {
+        migrateLegacyDataIfNeeded(userModel.uid)
         if (userModel.uid.isBlank()) {
             Log.e(TAG, "Cannot save user, uid is blank")
             return
@@ -61,6 +81,7 @@ class FirebaseUserManager @Inject constructor() {
     }
 
     suspend fun updateLastLogin(uid: String) {
+        migrateLegacyDataIfNeeded(uid)
         if (uid.isBlank()) return
         try {
             val updateMap = mapOf("lastLoginAt" to System.currentTimeMillis())
@@ -74,6 +95,7 @@ class FirebaseUserManager @Inject constructor() {
     }
 
     suspend fun getCurrentUserData(uid: String): UserModel? {
+        migrateLegacyDataIfNeeded(uid)
         if (uid.isBlank()) return null
         return try {
             val document = firestore.collection(COLLECTION_NAME).document(uid).get().await()
@@ -106,6 +128,7 @@ class FirebaseUserManager @Inject constructor() {
     }
 
     suspend fun checkIfUserExists(uid: String): Boolean {
+        migrateLegacyDataIfNeeded(uid)
         if (uid.isBlank()) return false
         return try {
             val document = firestore.collection(COLLECTION_NAME).document(uid).get().await()
