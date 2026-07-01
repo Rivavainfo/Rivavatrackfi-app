@@ -4,13 +4,13 @@ import com.rivavafi.universal.data.local.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
-    fun getAllTransactions(): Flow<List<TransactionEntity>>
-    fun getTransactionById(id: Long): Flow<TransactionEntity?>
-    suspend fun getTransactionsByMerchant(merchantName: String): List<TransactionEntity>
-    suspend fun isSmsIdProcessed(smsId: String): Boolean
-    suspend fun doesTransactionExist(date: Long, amount: Double, merchantName: String): Boolean
-    suspend fun getAllTransactionsSync(): List<TransactionEntity>
+    fun getAllTransactions(userId: String): Flow<List<TransactionEntity>>
+    fun getTransactionById(id: Long, userId: String): Flow<TransactionEntity?>
+    suspend fun getTransactionsByMerchant(merchantName: String, userId: String): List<TransactionEntity>
+    suspend fun isSmsIdProcessed(smsId: String, userId: String): Boolean
+    suspend fun doesTransactionExist(date: Long, amount: Double, merchantName: String, userId: String): Boolean
+    suspend fun getAllTransactionsSync(userId: String): List<TransactionEntity>
     suspend fun addTransaction(transaction: TransactionEntity)
     suspend fun deleteTransaction(transaction: TransactionEntity)
-    suspend fun deleteAllTransactions()
+    suspend fun deleteAllTransactions(userId: String)
 }

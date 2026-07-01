@@ -8,6 +8,7 @@ class AddCategoryUseCase @Inject constructor(
     private val repository: CategoryRepository
 ) {
     suspend operator fun invoke(category: CategoryEntity) {
-        repository.addCategory(category)
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
+        repository.addCategory(category.copy(userId = userId))
     }
 }

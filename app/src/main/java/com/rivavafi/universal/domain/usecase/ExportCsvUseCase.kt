@@ -16,7 +16,8 @@ class ExportCsvUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(context: Context, uri: Uri): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val transactions = repository.getAllTransactionsSync()
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@withContext Result.failure(Exception("Not logged in"))
+            val transactions = repository.getAllTransactionsSync(userId)
             if (transactions.isEmpty()) {
                 return@withContext Result.failure(Exception("No transactions to export."))
             }

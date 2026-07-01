@@ -8,6 +8,7 @@ class AddTransactionUseCase @Inject constructor(
     private val repository: TransactionRepository
 ) {
     suspend operator fun invoke(transaction: TransactionEntity) {
-        repository.addTransaction(transaction)
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
+        repository.addTransaction(transaction.copy(userId = userId))
     }
 }

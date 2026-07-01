@@ -10,28 +10,28 @@ class TransactionRepositoryImpl @Inject constructor(
     private val dao: TransactionDao
 ) : TransactionRepository {
 
-    override fun getAllTransactions(): Flow<List<TransactionEntity>> {
-        return dao.getAllTransactions()
+    override fun getAllTransactions(userId: String): Flow<List<TransactionEntity>> {
+        return dao.getAllTransactions(userId)
     }
 
-    override fun getTransactionById(id: Long): Flow<TransactionEntity?> {
-        return dao.getTransactionById(id)
+    override fun getTransactionById(id: Long, userId: String): Flow<TransactionEntity?> {
+        return dao.getTransactionById(id, userId)
     }
 
-    override suspend fun getTransactionsByMerchant(merchantName: String): List<TransactionEntity> {
-        return dao.getTransactionsByMerchant(merchantName)
+    override suspend fun getTransactionsByMerchant(merchantName: String, userId: String): List<TransactionEntity> {
+        return dao.getTransactionsByMerchant(merchantName, userId)
     }
 
-    override suspend fun isSmsIdProcessed(smsId: String): Boolean {
-        return dao.isSmsIdProcessed(smsId) > 0
+    override suspend fun isSmsIdProcessed(smsId: String, userId: String): Boolean {
+        return dao.isSmsIdProcessed(smsId, userId) > 0
     }
 
-    override suspend fun doesTransactionExist(date: Long, amount: Double, merchantName: String): Boolean {
-        return dao.doesTransactionExist(date, amount, merchantName) > 0
+    override suspend fun doesTransactionExist(date: Long, amount: Double, merchantName: String, userId: String): Boolean {
+        return dao.doesTransactionExist(date, amount, merchantName, userId) > 0
     }
 
-    override suspend fun getAllTransactionsSync(): List<TransactionEntity> {
-        return dao.getAllTransactionsSync()
+    override suspend fun getAllTransactionsSync(userId: String): List<TransactionEntity> {
+        return dao.getAllTransactionsSync(userId)
     }
 
     override suspend fun addTransaction(transaction: TransactionEntity) {
@@ -42,7 +42,7 @@ class TransactionRepositoryImpl @Inject constructor(
         dao.deleteTransaction(transaction)
     }
 
-    override suspend fun deleteAllTransactions() {
-        dao.deleteAllTransactions()
+    override suspend fun deleteAllTransactions(userId: String) {
+        dao.deleteAllTransactions(userId)
     }
 }

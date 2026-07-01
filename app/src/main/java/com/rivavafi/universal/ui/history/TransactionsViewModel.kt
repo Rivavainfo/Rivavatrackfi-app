@@ -29,8 +29,8 @@ sealed class TransactionsUiState {
     object Empty : TransactionsUiState()
     data class Success(
         val transactions: List<TransactionEntity>,
-        val monthlyIncome: Double = 0.0,
-        val monthlyExpense: Double = 0.0,
+        val monthlyCredit: Double = 0.0,
+        val monthlyDebit: Double = 0.0,
         val groupedByDay: Map<String, List<TransactionEntity>> = emptyMap()
     ) : TransactionsUiState()
     data class Error(val message: String) : TransactionsUiState()
@@ -54,7 +54,10 @@ class TransactionsViewModel @Inject constructor(
         }
     }
 
-    fun getTransactionById(id: Long) = repository.getTransactionById(id)
+    fun getTransactionById(id: Long): kotlinx.coroutines.flow.Flow<TransactionEntity?> {
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return kotlinx.coroutines.flow.flowOf(null)
+        return repository.getTransactionById(id, userId)
+    }
 
     fun updateTransaction(transaction: TransactionEntity, createRule: Boolean = true, ruleKeyword: String? = null) {
         viewModelScope.launch {
@@ -63,11 +66,13 @@ class TransactionsViewModel @Inject constructor(
 
             if (createRule) {
                 // Layer 3 Learning: Save user correction mapping so future SMS gets categorized correctly
+                val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
                 val correction = UserCorrectionEntity(
                     merchantName = transaction.merchantName,
                     category = transaction.category,
                     subcategory = transaction.subcategory,
-                    keyword = ruleKeyword
+                    keyword = ruleKeyword,
+                    userId = userId
                 )
                 userCorrectionDao.insertCorrection(correction)
             }
@@ -181,8 +186,8 @@ class TransactionsViewModel @Inject constructor(
         if (filteredList.isEmpty()) {
             _uiState.value = TransactionsUiState.Empty
         } else {
-            val income = filteredList.filter { it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
-            val expense = filteredList.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+            val credit = filteredList.filter { it.type == "CREDIT" || it.type == "INCOME" || it.type == "REWARD" || it.type == "REWARD" }.sumOf { it.amount }
+            val debit = filteredList.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" || it.type == "BILL_PENDING" }.sumOf { it.amount }
 
             val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
             val grouped = filteredList.groupBy { txn ->
@@ -191,8 +196,8 @@ class TransactionsViewModel @Inject constructor(
 
             _uiState.value = TransactionsUiState.Success(
                 transactions = filteredList,
-                monthlyIncome = income,
-                monthlyExpense = expense,
+                monthlyCredit = credit,
+                monthlyDebit = debit,
                 groupedByDay = grouped
             )
         }

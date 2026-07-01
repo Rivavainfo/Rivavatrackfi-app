@@ -9,10 +9,12 @@ class GetCategoriesUseCase @Inject constructor(
     private val repository: CategoryRepository
 ) {
     operator fun invoke(): Flow<List<CategoryEntity>> {
-        return repository.getAllCategories()
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return kotlinx.coroutines.flow.flowOf(emptyList())
+        return repository.getAllCategories(userId)
     }
 
     suspend fun initialize() {
-        repository.initializeDefaultCategories()
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
+        repository.initializeDefaultCategories(userId)
     }
 }

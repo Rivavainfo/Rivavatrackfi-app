@@ -264,16 +264,16 @@ fun TransactionList(uiState: TransactionsUiState.Success, viewModel: Transaction
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
-                            Text("Income", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
-                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyIncome)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("Credit", style = MaterialTheme.typography.bodySmall, color = Color(0xFF4CAF50))
+                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyCredit)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Expense", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyExpense)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                            Text("Debit", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                            Text("₹${String.format(Locale.getDefault(), "%.0f", uiState.monthlyDebit)}", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    val net = uiState.monthlyIncome - uiState.monthlyExpense
+                    val net = uiState.monthlyCredit - uiState.monthlyDebit
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Net Balance", style = MaterialTheme.typography.bodyMedium)
                         Text(
@@ -286,8 +286,8 @@ fun TransactionList(uiState: TransactionsUiState.Success, viewModel: Transaction
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    val expenses = uiState.transactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }
-                    val topCategory = expenses.groupBy { it.category }.maxByOrNull { it.value.sumOf { t -> t.amount } }?.key ?: "None"
+                    val debits = uiState.transactions.filter { it.type == "DEBIT" || it.type == "BILL_PENDING" }
+                    val topCategory = debits.groupBy { it.category }.maxByOrNull { it.value.sumOf { t -> t.amount } }?.key ?: "None"
 
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Top Category", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -304,7 +304,7 @@ fun TransactionList(uiState: TransactionsUiState.Success, viewModel: Transaction
 
         uiState.groupedByDay.forEach { (date, transactionsForDay) ->
             item {
-                val dailyTotal = transactionsForDay.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+                val dailyTotal = transactionsForDay.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -590,7 +590,7 @@ fun TransactionsEmptyState() {
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit, onLongClick: () -> Unit) {
-    val isCredit = transaction.type == "INCOME" || transaction.type == "REWARD"
+    val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD" || transaction.type == "INCOME" || transaction.type == "REWARD"
 
     val catVisual = if (transaction.subcategory != null)
         com.rivavafi.universal.ui.theme.CategoryVisuals.getSubcategoryVisual(transaction.subcategory)

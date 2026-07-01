@@ -48,6 +48,7 @@ fun SettingsScreen(
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val banksDetected by viewModel.banksDetected.collectAsState()
     val showSmsDetails by viewModel.showSmsDetails.collectAsState()
+    val terminologyMode by viewModel.terminologyMode.collectAsState()
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showSmsRationaleDialog by remember { mutableStateOf(false) }
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
@@ -184,7 +185,7 @@ fun SettingsScreen(
                         leadingContent = { Icon(Icons.Default.Download, contentDescription = null) },
                         modifier = Modifier.clickable {
                             val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
-                            csvExportLauncher.launch("TrackFi_Backup_$timestamp.csv")
+                            csvExportLauncher.launch("Rivava_Backup_$timestamp.csv")
                         }
                     )
 
@@ -273,7 +274,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
                                     colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
                                 )
-                                Text("Income and expenses", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and Debits" else "Credit and Debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -284,7 +285,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.INCOME_ONLY.name) },
                                     colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
                                 )
-                                Text("Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -295,7 +296,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.EXPENSE_ONLY.name) },
                                     colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
                                 )
-                                Text("Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
+                                Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
                             }
                         }
                     }
@@ -331,7 +332,7 @@ fun SettingsScreen(
                                 color = Color.White
                             )
                             Text(
-                                text = "Detect income and expenses from bank messages",
+                                text = if (terminologyMode == "CREDIT_DEBIT") "Detect credit and debits from bank messages" else "Detect income and expenses from bank messages",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFFBEC7D4)
                             )
@@ -405,6 +406,18 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { viewModel.toggleTerminology() },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Use Credit/Debit terminology", color = MaterialTheme.colorScheme.onSurface)
+                        Switch(
+                            checked = terminologyMode == "CREDIT_DEBIT",
+                            onCheckedChange = { viewModel.toggleTerminology() }
+                        )
+                    }
                     Spacer(modifier = Modifier.height(24.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),

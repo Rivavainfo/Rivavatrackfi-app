@@ -16,6 +16,7 @@ class ImportCsvUseCase @Inject constructor(
     private val repository: TransactionRepository
 ) {
     suspend operator fun invoke(context: Context, uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@withContext Result.failure(Exception("Not logged in"))
         try {
             var importedCount = 0
             val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
@@ -50,8 +51,9 @@ class ImportCsvUseCase @Inject constructor(
                                 val amount = amountStr.toDouble()
 
                                 // Prevent duplicates
-                                if (!repository.doesTransactionExist(date, amount, merchant)) {
+                                if (!repository.doesTransactionExist(date, amount, merchant, userId)) {
                                     val transaction = TransactionEntity(
+                            userId = userId,
                                         merchantName = merchant,
                                         amount = amount,
                                         type = type,

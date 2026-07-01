@@ -70,7 +70,7 @@ class AuthActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            TrackFiTheme {
+            RivavaTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = AmoledBlack

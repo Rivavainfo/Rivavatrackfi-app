@@ -86,7 +86,7 @@ fun SmsOptInScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "What should TrackFi count from SMS?",
+            text = "What should Rivava count from SMS?",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -118,7 +118,7 @@ fun SmsOptInScreen(
                         onClick = { selectedTrackingMode = SmsTrackingMode.BOTH },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
-                    Text("Income and expenses", style = MaterialTheme.typography.bodyLarge)
+                    Text("Credit and debits", style = MaterialTheme.typography.bodyLarge)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -129,7 +129,7 @@ fun SmsOptInScreen(
                         onClick = { selectedTrackingMode = SmsTrackingMode.INCOME_ONLY },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
-                    Text("Income only", style = MaterialTheme.typography.bodyLarge)
+                    Text("Credit only", style = MaterialTheme.typography.bodyLarge)
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
@@ -140,7 +140,7 @@ fun SmsOptInScreen(
                         onClick = { selectedTrackingMode = SmsTrackingMode.EXPENSE_ONLY },
                         colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                     )
-                    Text("Expenses only", style = MaterialTheme.typography.bodyLarge)
+                    Text("Debits only", style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
@@ -210,7 +210,7 @@ fun SmsOptInScreen(
         AlertDialog(
             onDismissRequest = { showRationaleDialog = false },
             title = { Text("Permissions Needed") },
-            text = { Text("TrackFi needs SMS permissions to automatically read your bank transactions and build your budget history. It operates strictly offline.") },
+            text = { Text("Rivava needs SMS permissions to automatically read your bank transactions and build your budget history. It operates strictly offline.") },
             confirmButton = {
                 TextButton(onClick = {
                     showRationaleDialog = false

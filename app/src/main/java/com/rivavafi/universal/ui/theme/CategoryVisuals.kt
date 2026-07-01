@@ -13,8 +13,8 @@ data class CategoryVisual(
 )
 
 object CategoryVisuals {
-    val EXPENSE = CategoryVisual("Expense", Color(0xFFE53935), Icons.Outlined.TrendingDown)
-    val INCOME = CategoryVisual("Income", Color(0xFF4CAF50), Icons.Outlined.TrendingUp)
+    val EXPENSE = CategoryVisual("Debit", Color(0xFFE53935), Icons.Outlined.TrendingDown)
+    val INCOME = CategoryVisual("Credit", Color(0xFF4CAF50), Icons.Outlined.TrendingUp)
     val BILL = CategoryVisual("Bill", Color(0xFF9C27B0), Icons.Outlined.Receipt)
     val INVESTMENT = CategoryVisual("Investment", Color(0xFF00897B), Icons.Outlined.Savings)
     val SUBSCRIPTION = CategoryVisual("Subscription", Color(0xFF3949AB), Icons.Outlined.Autorenew)
@@ -42,8 +42,8 @@ object CategoryVisuals {
 
     fun getCategoryVisual(category: String): CategoryVisual {
         return when (category.uppercase()) {
-            "EXPENSE" -> EXPENSE
-            "INCOME" -> INCOME
+            "DEBIT" -> EXPENSE
+            "CREDIT" -> INCOME
             "BILL", "BILL_PENDING" -> BILL
             "INVESTMENT" -> INVESTMENT
             "SUBSCRIPTION" -> SUBSCRIPTION

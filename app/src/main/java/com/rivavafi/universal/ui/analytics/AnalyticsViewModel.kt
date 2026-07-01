@@ -22,8 +22,15 @@ sealed class AnalyticsUiState {
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     private val getFinancialSummaryUseCase: GetFinancialSummaryUseCase,
-    private val getTransactionsUseCase: GetTransactionsUseCase
+    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val preferencesRepository: com.rivavafi.universal.data.preferences.UserPreferencesRepository
 ) : ViewModel() {
+
+    val terminologyMode = preferencesRepository.terminologyModeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "CREDIT_DEBIT"
+    )
 
     private val _selectedMonth = MutableStateFlow(Calendar.getInstance())
     val selectedMonth = _selectedMonth.asStateFlow()
@@ -54,14 +61,14 @@ class AnalyticsViewModel @Inject constructor(
             txnCal.get(Calendar.YEAR) == selectedYear && txnCal.get(Calendar.MONTH) == selectedMonthNum
         }
 
-        val monthlyIncome = monthlyTransactions.filter { it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
-        val monthlyExpense = monthlyTransactions.filter { it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
+        val monthlyCredit = monthlyTransactions.filter { it.type == "CREDIT" || it.type == "INCOME" || it.type == "REWARD" || it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
+        val monthlyDebit = monthlyTransactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
 
         // We override the global summary with the monthly specific one for the UI.
         val monthlySummary = com.rivavafi.universal.domain.usecase.FinancialSummaryState(
-            totalIncome = monthlyIncome,
-            totalExpense = monthlyExpense,
-            netSavings = monthlyIncome - monthlyExpense
+            totalCredit = monthlyCredit,
+            totalDebit = monthlyDebit,
+            netSavings = monthlyCredit - monthlyDebit
         )
 
         if (monthlyTransactions.isEmpty()) {

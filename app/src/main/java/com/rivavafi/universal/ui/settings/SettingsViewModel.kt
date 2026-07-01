@@ -56,12 +56,26 @@ class SettingsViewModel @Inject constructor(
         true
     )
 
+    val terminologyMode = preferencesRepository.terminologyModeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "CREDIT_DEBIT"
+    )
+
+    fun toggleTerminology() {
+        viewModelScope.launch {
+            val current = terminologyMode.value
+            preferencesRepository.setTerminologyMode(if (current == "CREDIT_DEBIT") "INCOME_EXPENSE" else "CREDIT_DEBIT")
+        }
+    }
+
     private val _banksDetected = MutableStateFlow<List<String>>(emptyList())
     val banksDetected: StateFlow<List<String>> = _banksDetected
 
     init {
         viewModelScope.launch {
-            transactionRepository.getAllTransactions().collectLatest { transactions ->
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            transactionRepository.getAllTransactions(userId).collectLatest { transactions ->
                 _banksDetected.value = transactions.mapNotNull { it.bankName }.distinct().sorted()
             }
         }
@@ -122,13 +136,15 @@ class SettingsViewModel @Inject constructor(
 
     fun clearTransactionHistory() {
         viewModelScope.launch {
-            transactionRepository.deleteAllTransactions()
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            transactionRepository.deleteAllTransactions(userId)
         }
     }
 
     fun clearAiLearning() {
         viewModelScope.launch {
-            userCorrectionDao.clearAllCorrections()
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            userCorrectionDao.clearAllCorrections(userId)
         }
     }
 }

@@ -52,19 +52,20 @@ class ParseAndSaveSmsUseCase @Inject constructor(
     private val balancePattern = Pattern.compile("(?i)(?:bal|balance|avl bal|available balance).*?(?:rs\\.?|inr)\\s*([\\d,]+\\.?\\d*)")
 
     suspend operator fun invoke(sender: String, messageBody: String, timestamp: Long, smsId: String? = null) {
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return
         val transaction = parseAndReturnSuspend(sender, messageBody, timestamp, smsId)
         if (transaction == null) {
-            Log.d("TRACKFI_PARSER", "Ignored SMS: Could not detect transaction info. Sender: $sender")
+            Log.d("RIVAVA_PARSER", "Ignored SMS: Could not detect transaction info. Sender: $sender")
             return
         }
 
         val trackingMode = userPreferencesRepository.getSmsTrackingMode()
         if (trackingMode == SmsTrackingMode.INCOME_ONLY.name && transaction.type != "INCOME") {
-            Log.d("TRACKFI_PARSER", "Ignored SMS: Tracking mode is INCOME_ONLY but transaction is ${transaction.type}")
+            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is INCOME_ONLY but transaction is ${transaction.type}")
             return
         }
         if (trackingMode == SmsTrackingMode.EXPENSE_ONLY.name && transaction.type == "INCOME") {
-            Log.d("TRACKFI_PARSER", "Ignored SMS: Tracking mode is EXPENSE_ONLY but transaction is INCOME")
+            Log.d("RIVAVA_PARSER", "Ignored SMS: Tracking mode is EXPENSE_ONLY but transaction is INCOME")
             return
         }
 
@@ -72,7 +73,7 @@ class ParseAndSaveSmsUseCase @Inject constructor(
             // For Subscriptions: Check historical data
             var updatedTransaction = transaction
             if (transaction.category == "SUBSCRIPTION") {
-                val pastTransactions = repository.getTransactionsByMerchant(transaction.merchantName)
+                val pastTransactions = repository.getTransactionsByMerchant(transaction.merchantName, userId)
                 if (pastTransactions.isNotEmpty()) {
                     // Similar amount logic
                     val similarTxn = pastTransactions.find { Math.abs(it.amount - transaction.amount) < (transaction.amount * 0.1) }
@@ -90,14 +91,14 @@ class ParseAndSaveSmsUseCase @Inject constructor(
             }
 
             // Deduplicate explicitly before insert
-            if (!repository.doesTransactionExist(updatedTransaction.date, updatedTransaction.amount, updatedTransaction.merchantName)) {
+            if (!repository.doesTransactionExist(updatedTransaction.date, updatedTransaction.amount, updatedTransaction.merchantName, userId)) {
                 repository.addTransaction(updatedTransaction)
-                Log.d("TRACKFI_DATABASE", "Successfully saved transaction: $updatedTransaction")
+                Log.d("RIVAVA_DATABASE", "Successfully saved transaction: $updatedTransaction")
             } else {
-                Log.d("TRACKFI_DATABASE", "Duplicate transaction detected in parser: $updatedTransaction")
+                Log.d("RIVAVA_DATABASE", "Duplicate transaction detected in parser: $updatedTransaction")
             }
         } catch (e: Exception) {
-            Log.e("TRACKFI_DATABASE", "Error saving transaction: ${e.message}")
+            Log.e("RIVAVA_DATABASE", "Error saving transaction: ${e.message}")
         }
     }
 
@@ -109,7 +110,7 @@ class ParseAndSaveSmsUseCase @Inject constructor(
 
     suspend fun parseAndReturnSuspend(sender: String, messageBody: String, timestamp: Long, smsId: String? = null): TransactionEntity? {
         val merchant = extractMerchant(messageBody, sender)
-        val corrections = userCorrectionDao.getCorrectionsForMerchant(merchant)
+        val corrections = userCorrectionDao.getCorrectionsForMerchant(merchant, com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return null)
 
         // Find matching correction
         var matchedCorrection = corrections.firstOrNull { it.keyword == null } // Default merchant match
@@ -326,20 +327,20 @@ class ParseAndSaveSmsUseCase @Inject constructor(
         val lowerBody = body.lowercase()
 
         // Determine type based on keywords
-        val isIncome = incomeKeywords.any { lowerBody.contains(it) }
-        val isExpense = expenseKeywords.any { lowerBody.contains(it) }
+        val isCredit = incomeKeywords.any { lowerBody.contains(it) }
+        val isDebit = expenseKeywords.any { lowerBody.contains(it) }
         val isUpi = upiKeywords.any { lowerBody.contains(it) }
         val isVoucher = listOf("voucher", "coupon", "reward", "cashback").any { lowerBody.contains(it) }
         val isBill = listOf("bill", "invoice", "amount due", "due date", "overdue").any { lowerBody.contains(it) }
         val isRecharge = listOf("recharge").any { lowerBody.contains(it) }
 
-        if (!isExpense && !isIncome && !isUpi && !isVoucher && !isBill && !isRecharge) {
+        if (!isDebit && !isCredit && !isUpi && !isVoucher && !isBill && !isRecharge) {
             return null
         }
 
-        val type = if (isIncome) {
+        val type = if (isCredit) {
             "INCOME"
-        } else if (isExpense || isRecharge) {
+        } else if (isDebit || isRecharge) {
             "EXPENSE"
         } else if (isVoucher) {
             "REWARD"
@@ -414,8 +415,8 @@ class ParseAndSaveSmsUseCase @Inject constructor(
             lowerMerchant.contains("uber") || lowerMerchant.contains("ola") -> "Travel"
             lowerMerchant.contains("fuel") || lowerMerchant.contains("petrol") || lowerMerchant.contains("hpcl") || lowerMerchant.contains("bpcl") || lowerMerchant.contains("indian oil") -> "Transport"
             lowerMerchant.contains("atm") || lowerBody.contains("atm") -> "Cash Withdrawal"
-            lowerMerchant.contains("salary") || lowerBody.contains("salary") -> "Income"
-            lowerBody.contains("upi") && lowerBody.contains("received") -> "Income"
+            lowerMerchant.contains("salary") || lowerBody.contains("salary") -> "Credit"
+            lowerBody.contains("upi") && lowerBody.contains("received") -> "Credit"
             else -> "General"
         }
     }

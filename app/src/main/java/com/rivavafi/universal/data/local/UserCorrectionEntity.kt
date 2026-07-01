@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class UserCorrectionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: String = "",
     val merchantName: String,
     val keyword: String? = null,
     val category: String,

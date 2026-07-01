@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 data class FinancialSummaryState(
-    val totalIncome: Double = 0.0,
-    val totalExpense: Double = 0.0,
+    val totalCredit: Double = 0.0,
+    val totalDebit: Double = 0.0,
     val netSavings: Double = 0.0
 )
 
@@ -15,12 +15,13 @@ class GetFinancialSummaryUseCase @Inject constructor(
     private val repository: TransactionRepository
 ) {
     operator fun invoke(): Flow<FinancialSummaryState> {
-        return repository.getAllTransactions().map { transactions ->
-            val income = transactions.filter { it.type == "INCOME" }.sumOf { it.amount }
-            val expense = transactions.filter { it.type == "EXPENSE" }.sumOf { it.amount }
+        val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return kotlinx.coroutines.flow.flowOf(FinancialSummaryState())
+        return repository.getAllTransactions(userId).map { transactions ->
+            val income = transactions.filter { it.type == "CREDIT" || it.type == "INCOME" || it.type == "REWARD" }.sumOf { it.amount }
+            val expense = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }.sumOf { it.amount }
             FinancialSummaryState(
-                totalIncome = income,
-                totalExpense = expense,
+                totalCredit = income,
+                totalDebit = expense,
                 netSavings = income - expense
             )
         }

@@ -4,7 +4,7 @@ import com.rivavafi.universal.data.local.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
 interface CategoryRepository {
-    fun getAllCategories(): Flow<List<CategoryEntity>>
+    fun getAllCategories(userId: String): Flow<List<CategoryEntity>>
     suspend fun addCategory(category: CategoryEntity)
-    suspend fun initializeDefaultCategories()
+    suspend fun initializeDefaultCategories(userId: String)
 }

@@ -41,7 +41,7 @@ val PremiumColorScheme = darkColorScheme(
 )
 
 @Composable
-fun TrackFiTheme(
+fun RivavaTheme(
     isPremium: Boolean = false,
     content: @Composable () -> Unit
 ) {

@@ -37,7 +37,8 @@ class AiReviewViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.getAllTransactions().collectLatest { allTransactions ->
+            val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            repository.getAllTransactions(userId).collectLatest { allTransactions ->
                 // Mock uncertain transactions: "UNKNOWN" or low confidence mappings.
                 // In a real app we'd have a 'confidenceScore' field, for now any 'OTHER' or 'UNKNOWN'
                 // or just pick some to demonstrate functionality as per constraints.
@@ -46,7 +47,7 @@ class AiReviewViewModel @Inject constructor(
                 }.take(3)
 
                 // Pick a few transactions for learning questions that don't have a correction yet
-                val allCorrections = userCorrectionDao.getAllCorrections().map { it.merchantName }
+                val allCorrections = userCorrectionDao.getAllCorrections(userId).map { it.merchantName }
                 _learningQuestions.value = allTransactions
                     .filter { !allCorrections.contains(it.merchantName) && it.merchantName.isNotBlank() }
                     .distinctBy { it.merchantName }
@@ -74,6 +75,7 @@ class AiReviewViewModel @Inject constructor(
         viewModelScope.launch {
             repository.addTransaction(transaction.copy(category = newCategory))
             userCorrectionDao.insertCorrection(UserCorrectionEntity(
+                userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch,
                 merchantName = transaction.merchantName,
                 category = newCategory,
                 subcategory = null,
@@ -86,6 +88,7 @@ class AiReviewViewModel @Inject constructor(
         viewModelScope.launch {
             if (isYes) {
                 userCorrectionDao.insertCorrection(UserCorrectionEntity(
+                userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch,
                     merchantName = transaction.merchantName,
                     category = suggestedCategory,
                     subcategory = null,
@@ -94,6 +97,7 @@ class AiReviewViewModel @Inject constructor(
             } else {
                 // If "No", maybe just skip, or map to OTHER to stop asking.
                 userCorrectionDao.insertCorrection(UserCorrectionEntity(
+                userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch,
                     merchantName = transaction.merchantName,
                     category = "OTHER",
                     subcategory = null,
