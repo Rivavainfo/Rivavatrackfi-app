@@ -23,6 +23,8 @@ import com.rivavafi.universal.data.local.TransactionEntity
 import com.rivavafi.universal.ui.theme.CategoryVisuals
 import com.rivavafi.universal.ui.theme.bounceClick
 import com.rivavafi.universal.ui.theme.glowEffect
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.Icons
@@ -116,6 +118,7 @@ fun TransactionCategoryBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Text(
                 text = "Edit Transaction",
@@ -202,7 +205,7 @@ fun TransactionCategoryBottomSheet(
                             .bounceClick {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedCategory = category
-                                if (category != "DEBIT") {
+                                if (isCreditTransaction) {
                                     selectedSubcategory = ""
                                 }
                             }

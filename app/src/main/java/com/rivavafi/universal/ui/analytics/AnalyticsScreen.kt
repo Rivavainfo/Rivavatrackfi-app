@@ -867,8 +867,11 @@ fun WeeklyTrendsCard(transactions: List<TransactionEntity>) {
 }
 
 @Composable
-fun MonthlyComparisonCard(transactions: List<TransactionEntity>) {
-    // A placeholder card for future monthly comparison
+fun LineChartCard(transactions: List<TransactionEntity>) {
+    val sortedTransactions = transactions.sortedBy { it.date }
+
+    if (sortedTransactions.isEmpty()) return
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -877,9 +880,104 @@ fun MonthlyComparisonCard(transactions: List<TransactionEntity>) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Text("Month over Month", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("More data needed to compare previous months.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Cumulative Spending Trend", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AndroidView(
+                modifier = Modifier.fillMaxWidth().height(250.dp),
+                factory = { context ->
+                    LineChart(context).apply {
+                        description.isEnabled = false
+                        legend.isEnabled = false
+                        setDrawGridBackground(false)
+                        axisRight.isEnabled = false
+                        axisLeft.textColor = AndroidColor.WHITE
+                        axisLeft.setDrawGridLines(false)
+                        xAxis.position = XAxis.XAxisPosition.BOTTOM
+                        xAxis.textColor = AndroidColor.WHITE
+                        xAxis.setDrawGridLines(false)
+                        setTouchEnabled(true)
+                        isDragEnabled = true
+                        setScaleEnabled(true)
+                        setPinchZoom(true)
+                    }
+                },
+                update = { lineChart ->
+                    var cumulative = 0f
+                    val entries = sortedTransactions.mapIndexed { index, txn ->
+                        if (txn.type == "DEBIT" || txn.type == "EXPENSE" || txn.type == "BILL_PENDING") {
+                            cumulative += txn.amount.toFloat()
+                        }
+                        Entry(index.toFloat(), cumulative)
+                    }
+                    val dataSet = LineDataSet(entries, "Cumulative Spending").apply {
+                        color = AndroidColor.parseColor("#FF3B30")
+                        valueTextColor = AndroidColor.WHITE
+                        valueTextSize = 10f
+                        setDrawCircles(false)
+                        mode = LineDataSet.Mode.CUBIC_BEZIER
+                        lineWidth = 2f
+                    }
+                    lineChart.data = LineData(dataSet)
+                    lineChart.invalidate()
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun BarChartCard(transactions: List<TransactionEntity>) {
+    val debits = transactions.filter { it.type == "DEBIT" || it.type == "EXPENSE" || it.type == "BILL_PENDING" }
+
+    if (debits.isEmpty()) return
+
+    val grouped = debits.groupBy { SimpleDateFormat("dd MMM", java.util.Locale.getDefault()).format(java.util.Date(it.date)) }
+        .mapValues { entry -> entry.value.sumOf { it.amount } }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(28.dp)),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("Daily Spending", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AndroidView(
+                modifier = Modifier.fillMaxWidth().height(250.dp),
+                factory = { context ->
+                    BarChart(context).apply {
+                        description.isEnabled = false
+                        legend.isEnabled = false
+                        setDrawGridBackground(false)
+                        axisRight.isEnabled = false
+                        axisLeft.textColor = AndroidColor.WHITE
+                        axisLeft.setDrawGridLines(false)
+                        xAxis.position = XAxis.XAxisPosition.BOTTOM
+                        xAxis.textColor = AndroidColor.WHITE
+                        xAxis.setDrawGridLines(false)
+                        xAxis.setDrawLabels(false) // Hide labels for simplicity
+                        setTouchEnabled(true)
+                        isDragEnabled = true
+                        setScaleEnabled(true)
+                    }
+                },
+                update = { barChart ->
+                    val entries = grouped.entries.mapIndexed { index, entry ->
+                        BarEntry(index.toFloat(), entry.value.toFloat())
+                    }
+                    val dataSet = BarDataSet(entries, "Daily Spending").apply {
+                        color = AndroidColor.parseColor("#FF9500")
+                        valueTextColor = AndroidColor.WHITE
+                        valueTextSize = 10f
+                    }
+                    barChart.data = BarData(dataSet)
+                    barChart.invalidate()
+                }
+            )
         }
     }
 }
@@ -963,7 +1061,11 @@ fun AdvancedAnalyticsView(transactions: List<TransactionEntity>, terminologyMode
             }
         }
 
-        MonthlyComparisonCard(transactions = transactions)
+        LineChartCard(transactions = transactions)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        BarChartCard(transactions = transactions)
 
         Spacer(modifier = Modifier.height(16.dp))
 
