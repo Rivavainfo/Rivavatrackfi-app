@@ -44,10 +44,7 @@ fun TransactionCategoryBottomSheet(
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val defaultMainCategories = listOf("DEBIT", "CREDIT", "EXPENSE", "INCOME", "BILL_PENDING", "INVESTMENT", "SUBSCRIPTION", "IGNORE")
-    val defaultDebitSubcategories = CategoryVisuals.subcategories.keys.toList()
-
     val mainCategories = (defaultMainCategories + customCategories.filter { it.type == "MAIN" }.map { it.name }).distinct()
-    val debitSubcategories = (defaultDebitSubcategories + customCategories.filter { it.type == "SUB" }.map { it.name }).distinct()
 
     var selectedCategory by remember { mutableStateOf(transaction.category) }
     var selectedSubcategory by remember { mutableStateOf(transaction.subcategory ?: "") }
@@ -205,9 +202,7 @@ fun TransactionCategoryBottomSheet(
                             .bounceClick {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedCategory = category
-                                if (isCreditTransaction) {
-                                    selectedSubcategory = ""
-                                }
+                                selectedSubcategory = ""
                             }
                             .padding(8.dp),
                         contentAlignment = Alignment.Center
@@ -233,61 +228,6 @@ fun TransactionCategoryBottomSheet(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            if (!isCreditTransaction) {
-                Text("Subcategory", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 80.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)
-                ) {
-                    items(debitSubcategories) { sub ->
-                        val catVisual = CategoryVisuals.getSubcategoryVisual(sub)
-                        val isSelected = selectedSubcategory == sub
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .glowEffect(color = catVisual.color, radius = 20f, isSelected = isSelected)
-                                .background(if (isSelected) catVisual.color else MaterialTheme.colorScheme.surfaceVariant)
-                                .bounceClick {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    selectedSubcategory = sub
-                                }
-                                .padding(vertical = 12.dp, horizontal = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .background(catVisual.color.copy(alpha = 0.2f), CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = catVisual.icon,
-                                        contentDescription = catVisual.title,
-                                        tint = catVisual.color,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = sub,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                                    color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { createRule = !createRule },
@@ -324,7 +264,7 @@ fun TransactionCategoryBottomSheet(
                     }
                     val updated = transaction.copy(
                         category = selectedCategory,
-                        subcategory = if (selectedSubcategory.isNotEmpty()) selectedSubcategory else null,
+                        subcategory = if (isCreditTransaction && selectedSubcategory.isNotEmpty()) selectedSubcategory else null,
                         type = type
                     )
                     onSave(updated, createRule, transaction.merchantName)
