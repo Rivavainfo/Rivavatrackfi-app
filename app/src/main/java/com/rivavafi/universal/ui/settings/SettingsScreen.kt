@@ -370,9 +370,14 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Tracking Mode",
+                            text = "SMS Tracking Preferences",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Choose which bank SMS transaction types Rivava should monitor.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Column {
@@ -385,7 +390,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and debits" else "Credit and debits", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text("Both Credit & Debit", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -396,7 +401,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text("Credit Only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -407,7 +412,7 @@ fun SettingsScreen(
                                     onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                                Text("Debit Only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                             }
                         }
                     }

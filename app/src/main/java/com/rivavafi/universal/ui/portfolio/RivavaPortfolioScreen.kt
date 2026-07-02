@@ -95,13 +95,6 @@ fun RivavaPortfolioScreen(
     val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
     val profileState by profileViewModel.profileState.collectAsState()
 
-    DisposableEffect(Unit) {
-        val activity = context as? Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? Activity
-        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
-    }
 
     val userModel = profileState.userModel
 
@@ -243,6 +236,7 @@ fun RivavaPortfolioScreen(
 
                     if (showWhatsAppDialog) {
                         AlertDialog(
+                            properties = androidx.compose.ui.window.DialogProperties(securePolicy = androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
                             onDismissRequest = { showWhatsAppDialog = false },
                             title = { Text("Contact Advisor", fontWeight = FontWeight.Bold) },
                             text = { Text("Did you connect with the advisor successfully?") },
@@ -372,6 +366,7 @@ fun RivavaPortfolioScreen(
                     if (showLogsDialog) {
                         var screenshotsAllowed by remember { mutableStateOf(false) }
                         AlertDialog(
+                            properties = androidx.compose.ui.window.DialogProperties(securePolicy = androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
                             onDismissRequest = { showLogsDialog = false },
                             title = { Text("API Diagnostic Logs") },
                             text = {
