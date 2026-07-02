@@ -20,6 +20,7 @@ fun PasswordDialog(
     var isError by remember { mutableStateOf(false) }
 
     AlertDialog(
+        properties = androidx.compose.ui.window.DialogProperties(securePolicy = androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
