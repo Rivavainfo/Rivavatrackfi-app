@@ -95,6 +95,14 @@ fun RivavaPortfolioScreen(
     val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
     val profileState by profileViewModel.profileState.collectAsState()
 
+    DisposableEffect(Unit) {
+        val activity = context as? Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? Activity
+        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     val userModel = profileState.userModel
 
     val userPhone = userModel?.phone?.takeIf { it.isNotBlank() } ?: userModel?.phoneno?.takeIf { it.isNotBlank() } ?: auth.currentUser?.phoneNumber ?: ""
