@@ -72,6 +72,7 @@ import com.rivavafi.universal.ui.theme.VibrantRed
 import com.rivavafi.universal.ui.theme.PrimarySky
 import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.universal.utils.PrefsManager
+import com.rivavafi.universal.ui.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +83,8 @@ fun ProfileScreen(
     onNavigateToHelpCenter: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
-    stockViewModel: StockViewModel = hiltViewModel()
+    stockViewModel: StockViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val summary by viewModel.summary.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
@@ -282,6 +284,65 @@ fun ProfileScreen(
                         tint = MaterialTheme.colorScheme.onTertiary,
                         modifier = Modifier.size(20.dp)
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            val smsTrackingMode by settingsViewModel.smsTrackingMode.collectAsState()
+            val terminologyMode by settingsViewModel.terminologyMode.collectAsState()
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.4f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "SMS Tracking Mode",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
+                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and debits" else "Credit and debits", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
+                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
+                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
                 }
             }
 
