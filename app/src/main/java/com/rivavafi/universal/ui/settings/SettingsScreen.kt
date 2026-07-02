@@ -357,9 +357,18 @@ fun SettingsScreen(
                             }
                         )
                     }
+                }
+            }
 
-                    if (isSmsTrackingEnabled) {
-                        Spacer(modifier = Modifier.height(16.dp))
+            if (isSmsTrackingEnabled) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp)),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
                         Text(
                             text = "Tracking Mode",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
@@ -402,10 +411,8 @@ fun SettingsScreen(
                             }
                         }
                     }
-
                 }
             }
-
 
             if (banksDetected.isNotEmpty()) {
                 Card(
