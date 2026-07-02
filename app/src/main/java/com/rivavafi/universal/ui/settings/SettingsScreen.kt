@@ -52,6 +52,10 @@ fun SettingsScreen(
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showSmsRationaleDialog by remember { mutableStateOf(false) }
     var showSmsSettingsDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountStep1Dialog by remember { mutableStateOf(false) }
+    var showDeleteAccountStep2Dialog by remember { mutableStateOf(false) }
+    var deleteConfirmationText by remember { mutableStateOf("") }
+    var isDeleting by remember { mutableStateOf(false) }
 
     val csvExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -427,25 +431,49 @@ fun SettingsScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = {
+                            viewModel.logout()
+                            onRestartApp()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            "Logout",
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "Danger Zone",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Actions here are irreversible and will permanently delete your data.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = {
-                                viewModel.logout()
-                                onRestartApp()
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                "Logout",
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-
                         Button(
                             onClick = { showClearDataDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer),
@@ -455,6 +483,18 @@ fun SettingsScreen(
                             Text(
                                 "Clear History",
                                 color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+
+                        Button(
+                            onClick = { showDeleteAccountStep1Dialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Delete Account",
+                                color = MaterialTheme.colorScheme.onError
                             )
                         }
                     }
@@ -539,6 +579,77 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearDataDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteAccountStep1Dialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountStep1Dialog = false },
+            title = { Text("Delete Account?") },
+            text = { Text("Are you sure you want to delete your account? This action cannot be undone and will delete all your local and cloud data, including your premium status.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteAccountStep1Dialog = false
+                        deleteConfirmationText = ""
+                        showDeleteAccountStep2Dialog = true
+                    }
+                ) {
+                    Text("Next", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountStep1Dialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteAccountStep2Dialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountStep2Dialog = false },
+            title = { Text("Final Confirmation") },
+            text = {
+                Column {
+                    Text("Type 'DELETE' to confirm.")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = deleteConfirmationText,
+                        onValueChange = { deleteConfirmationText = it },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (deleteConfirmationText == "DELETE") {
+                            isDeleting = true
+                            viewModel.deleteAccount {
+                                showDeleteAccountStep2Dialog = false
+                                isDeleting = false
+                                onRestartApp()
+                            }
+                        }
+                    },
+                    enabled = deleteConfirmationText == "DELETE" && !isDeleting
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), color = MaterialTheme.colorScheme.error)
+                    } else {
+                        Text("Confirm", color = if (deleteConfirmationText == "DELETE") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteAccountStep2Dialog = false },
+                    enabled = !isDeleting
+                ) {
                     Text("Cancel")
                 }
             }

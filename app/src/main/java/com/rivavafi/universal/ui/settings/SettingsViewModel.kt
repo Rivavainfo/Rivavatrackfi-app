@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -145,6 +146,30 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
             userCorrectionDao.clearAllCorrections(userId)
+        }
+    }
+
+    fun deleteAccount(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+            val uid = auth.currentUser?.uid
+            if (uid != null) {
+                try {
+                    val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    db.collection("therivdata").document(uid).delete().await()
+                    db.collection("therivavadata").document(uid).delete().await()
+
+                    transactionRepository.deleteAllTransactions(uid)
+                    userCorrectionDao.clearAllCorrections(uid)
+
+                    auth.currentUser?.delete()?.await()
+
+                } catch (e: Exception) {
+                    // Ignore errors to ensure logout is attempted at least
+                }
+            }
+            logout()
+            onComplete()
         }
     }
 }
