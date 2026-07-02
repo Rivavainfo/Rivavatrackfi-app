@@ -72,7 +72,6 @@ import com.rivavafi.universal.ui.theme.VibrantRed
 import com.rivavafi.universal.ui.theme.PrimarySky
 import com.google.firebase.auth.FirebaseAuth
 import com.rivavafi.universal.utils.PrefsManager
-import com.rivavafi.universal.ui.settings.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,16 +82,12 @@ fun ProfileScreen(
     onNavigateToHelpCenter: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
     profileViewModel: ProfileViewModel = hiltViewModel(),
-    stockViewModel: StockViewModel = hiltViewModel(),
-    settingsViewModel: SettingsViewModel = hiltViewModel()
+    stockViewModel: StockViewModel = hiltViewModel()
 ) {
     val summary by viewModel.summary.collectAsState()
     val isPremiumUser by viewModel.isPremiumUser.collectAsState()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val context = LocalContext.current
-
-    val smsTrackingMode by settingsViewModel.smsTrackingMode.collectAsState()
-    val terminologyMode by settingsViewModel.terminologyMode.collectAsState()
 
     val profileState by profileViewModel.profileState.collectAsState()
     val userModel = profileState.userModel
@@ -287,65 +282,6 @@ fun ProfileScreen(
                         tint = MaterialTheme.colorScheme.onTertiary,
                         modifier = Modifier.size(20.dp)
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .clip(RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.2f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "SMS Tracking Mode",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
-                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
-                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and debits" else "Income and expenses", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
-                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
-                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
-                                onClick = { settingsViewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
-                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary, unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                                modifier = Modifier.padding(end = 8.dp)
-                            )
-                            Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
-                        }
-                    }
                 }
             }
 

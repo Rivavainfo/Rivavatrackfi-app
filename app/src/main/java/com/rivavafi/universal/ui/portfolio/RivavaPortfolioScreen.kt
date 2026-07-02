@@ -101,6 +101,14 @@ fun RivavaPortfolioScreen(
     var showWhatsAppDialog by remember { mutableStateOf(false) }
     var premiumKeyInput by remember { mutableStateOf("") }
 
+    DisposableEffect(Unit) {
+        val activity = context as? android.app.Activity ?: (context as? android.content.ContextWrapper)?.baseContext as? android.app.Activity
+        activity?.window?.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE) // Added FLAG_SECURE locally
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+
     if (premiumState.status == EntitlementStatus.LOADING) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
