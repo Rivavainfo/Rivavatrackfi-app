@@ -312,9 +312,14 @@ fun SettingsScreen(
                     if (isSmsTrackingEnabled) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Tracking Mode",
+                            text = "SMS Tracking Preferences",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                             color = Color.White
+                        )
+                        Text(
+                            text = "Choose which bank SMS transaction types Rivava should monitor.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Column {
