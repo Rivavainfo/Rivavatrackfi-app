@@ -51,8 +51,8 @@ android {
         applicationId = "com.rivavafi.universal"
         minSdk = 24
         targetSdk = 35
-        versionCode = 28
-        versionName = "28"
+        versionCode = 29
+        versionName = "29"
 
         // API Key injection with safe fallbacks
         buildConfigField("String", "ALPHA_VANTAGE_API_KEY", "\"${System.getenv("ALPHA_VANTAGE_API_KEY") ?: localProperties.getProperty("alphavantage.apikey") ?: "1JCULNPFKQXWC62U"}\"")
@@ -184,8 +184,12 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     // TensorFlow Lite
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite:2.17.0") {
+        exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+    }
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
+        exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
+    }
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")

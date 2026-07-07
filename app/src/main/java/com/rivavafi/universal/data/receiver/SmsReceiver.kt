@@ -25,28 +25,6 @@ class SmsReceiver : BroadcastReceiver() {
     lateinit var preferencesRepository: UserPreferencesRepository
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
-            val pendingResult = goAsync()
-            val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-
-            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                try {
-                    val isTrackingEnabled = preferencesRepository.isSmsTrackingEnabledFlow.first()
-                    if (!isTrackingEnabled) return@launch
-
-                    for (sms in messages) {
-                        val body = sms.displayMessageBody
-                        val sender = sms.displayOriginatingAddress
-
-                        if (body != null && sender != null) {
-                            Log.d("RIVAVA_SMS", "New SMS detected from sender: $sender")
-                            parseAndSaveSmsUseCase(sender, body, sms.timestampMillis)
-                        }
-                    }
-                } finally {
-                    pendingResult.finish()
-                }
-            }
-        }
+        // SMS Processing is disabled due to Play Store Policies regarding RECEIVE_SMS
     }
 }

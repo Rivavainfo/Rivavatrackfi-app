@@ -1,0 +1,25 @@
+# Google Play Sensitive Permissions Compliance Report
+
+## Removed Permissions
+*   `android.permission.RECEIVE_SMS`: Removed from `AndroidManifest.xml` as it is a sensitive permission restricted by Google Play and not essential for the core functionality.
+*   `android.permission.READ_SMS`: Removed from `AndroidManifest.xml` for the same reason.
+*   `android.permission.READ_CONTACTS`: Removed from dynamic permission requests in `SmsOptInScreen.kt`.
+
+## Remaining Permissions
+*   `android.permission.INTERNET`: Required for communicating with Firebase, external APIs (Alpha Vantage, Finnhub, Massive), and web scraping.
+*   `android.permission.POST_NOTIFICATIONS`: Required on Android 13+ for showing local notifications related to app activity.
+
+## Manifest Changes
+*   Removed `RECEIVE_SMS` and `READ_SMS` `<uses-permission>` tags.
+*   Removed the `<receiver android:name=".data.receiver.SmsReceiver">` block completely to ensure the app does not declare intent filters for `android.provider.Telephony.SMS_RECEIVED`, which could falsely flag the app as attempting to be a default SMS handler.
+
+## Dependency Changes
+*   Updated Android Gradle Plugin in `settings.gradle.kts` from `8.5.0` to `8.7.0` to ensure robust 16 KB memory page size alignment support.
+*   Updated `org.tensorflow:tensorflow-lite` to `2.17.0` to ensure the precompiled native binaries in the AAR are aligned to the 16 KB page size requirement.
+*   Excluded the transitively duplicate `tensorflow-lite-api` module to resolve build failures.
+
+## 16 KB Compatibility Status
+*   **Compliant.** The app targets API 35, uses AGP 8.7.0, and has updated TensorFlow Lite to version 2.17.0 (which includes 16 KB aligned native libraries). The app uses no custom C/C++ (NDK) code, meaning all native libraries come from dependencies that are now updated.
+
+## Remaining Google Play Policy Risks
+*   **None related to SMS/Call Logs.** The app no longer requests any sensitive SMS or Contact permissions. The SMS tracking feature has been completely stubbed out with toasts informing users that it is disabled due to policy.

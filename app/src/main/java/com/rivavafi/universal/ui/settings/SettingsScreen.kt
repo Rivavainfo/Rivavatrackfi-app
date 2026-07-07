@@ -93,25 +93,10 @@ fun SettingsScreen(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val smsGranted = permissions[Manifest.permission.READ_SMS] == true &&
-                         permissions[Manifest.permission.RECEIVE_SMS] == true
-
-        if (smsGranted) {
-            viewModel.setSmsTrackingEnabled(true)
-            Toast.makeText(context, "SMS Tracking Enabled", Toast.LENGTH_SHORT).show()
-        } else {
-            val shouldShowRationale = activity?.let {
-                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
-            } ?: false
-
-            if (!shouldShowRationale) {
-                showSmsSettingsDialog = true
-            } else {
-                viewModel.setSmsTrackingEnabled(false)
-                Toast.makeText(context, "SMS tracking remains disabled.", Toast.LENGTH_SHORT).show()
-            }
-        }
+    ) { _ ->
+        // No longer request SMS permissions to comply with Play Store policies
+        Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
+        viewModel.setSmsTrackingEnabled(false)
     }
 
     Scaffold(
@@ -301,7 +286,8 @@ fun SettingsScreen(
                             checked = isSmsTrackingEnabled,
                             onCheckedChange = { isChecked ->
                                 if (isChecked) {
-                                    showSmsRationaleDialog = true
+                                    Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
+                                    viewModel.setSmsTrackingEnabled(false)
                                 } else {
                                     viewModel.setSmsTrackingEnabled(false)
                                 }
@@ -503,63 +489,6 @@ fun SettingsScreen(
         }
     }
 
-    if (showSmsRationaleDialog) {
-        AlertDialog(
-            onDismissRequest = { showSmsRationaleDialog = false },
-            title = { Text("Enable Automatic Tracking?") },
-            text = { Text("This feature can read transaction SMS to help track financial activity. This is optional.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSmsRationaleDialog = false
-                    val perms = mutableListOf(
-                        Manifest.permission.READ_SMS,
-                        Manifest.permission.RECEIVE_SMS
-                    )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                    permissionLauncher.launch(perms.toTypedArray())
-                }) {
-                    Text("Enable")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showSmsRationaleDialog = false
-                    viewModel.setSmsTrackingEnabled(false)
-                }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showSmsSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSmsSettingsDialog = false },
-            title = { Text("Permission Denied") },
-            text = { Text("You have permanently denied SMS permissions. Please enable them manually in the app settings if you wish to use automatic tracking.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSmsSettingsDialog = false
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Open Settings")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showSmsSettingsDialog = false
-                    viewModel.setSmsTrackingEnabled(false)
-                }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 
     if (showClearDataDialog) {
         AlertDialog(

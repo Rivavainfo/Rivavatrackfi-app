@@ -42,28 +42,11 @@ fun SmsOptInScreen(
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val smsGranted = permissions[Manifest.permission.READ_SMS] == true &&
-                         permissions[Manifest.permission.RECEIVE_SMS] == true
-
-        if (smsGranted) {
-            viewModel.saveSmsTrackingMode(selectedTrackingMode.name)
-            viewModel.setSmsTrackingEnabled(true)
-            viewModel.completeOnboarding()
-            onNavigateNext(true)
-        } else {
-            // Check if we should show rationale or if it was permanently denied
-            val shouldShowRationale = activity?.let {
-                ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
-            } ?: false
-
-            if (!shouldShowRationale) {
-                // Permanently denied
-                showSettingsDialog = true
-            } else {
-                showDeniedMessage = true
-            }
-        }
+    ) { _ ->
+        Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
+        viewModel.setSmsTrackingEnabled(false)
+        viewModel.completeOnboarding()
+        onNavigateNext(false)
     }
 
     Column(
@@ -149,23 +132,10 @@ fun SmsOptInScreen(
 
         Button(
             onClick = {
-                val shouldShowRationale = activity?.let {
-                    ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.READ_SMS)
-                } ?: false
-
-                if (shouldShowRationale) {
-                    showRationaleDialog = true
-                } else {
-                    val perms = mutableListOf(
-                        Manifest.permission.READ_SMS,
-                        Manifest.permission.RECEIVE_SMS,
-                        Manifest.permission.READ_CONTACTS
-                    )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                    permissionLauncher.launch(perms.toTypedArray())
-                }
+                Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
+                viewModel.setSmsTrackingEnabled(false)
+                viewModel.completeOnboarding()
+                onNavigateNext(false)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -206,63 +176,6 @@ fun SmsOptInScreen(
         }
     }
 
-    if (showRationaleDialog) {
-        AlertDialog(
-            onDismissRequest = { showRationaleDialog = false },
-            title = { Text("Permissions Needed") },
-            text = { Text("Rivava needs SMS permissions to automatically read your bank transactions and build your budget history. It operates strictly offline.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showRationaleDialog = false
-                    val perms = mutableListOf(
-                        Manifest.permission.READ_SMS,
-                        Manifest.permission.RECEIVE_SMS,
-                        Manifest.permission.READ_CONTACTS
-                    )
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                    permissionLauncher.launch(perms.toTypedArray())
-                }) {
-                    Text("Grant")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRationaleDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSettingsDialog = false },
-            title = { Text("Permission Denied") },
-            text = { Text("You have permanently denied SMS permissions. If you want to use automatic tracking, please enable them in the app settings.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSettingsDialog = false
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }) {
-                    Text("Open Settings")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showSettingsDialog = false
-                    viewModel.setSmsTrackingEnabled(false)
-                    viewModel.completeOnboarding()
-                    onNavigateNext(false)
-                }) {
-                    Text("Continue without tracking")
-                }
-            }
-        )
-    }
 
     RivavaLoadingOverlay(isLoading = isLoading)
 }
