@@ -65,8 +65,6 @@ import com.rivavafi.universal.ui.history.TransactionsScreen
 import com.rivavafi.universal.ui.home.HomeScreen
 import com.rivavafi.universal.ui.onboarding.GreetingScreen
 import com.rivavafi.universal.ui.onboarding.PhoneInputScreen
-import com.rivavafi.universal.ui.onboarding.SmsScanningScreen
-import com.rivavafi.universal.ui.onboarding.SmsOptInScreen
 import com.rivavafi.universal.ui.onboarding.WelcomeScreen
 import com.rivavafi.universal.ui.settings.SettingsScreen
 import com.rivavafi.universal.ui.portfolio.RivavaPortfolioScreen
@@ -261,7 +259,7 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.SmsOptIn.route) {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.PhoneInput.route) { inclusive = true }
                     }
                 })
@@ -271,21 +269,6 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Greeting.route) { inclusive = true }
                         launchSingleTop = true
-                    }
-                })
-            }
-            composable(Screen.SmsOptIn.route) {
-                SmsOptInScreen(onNavigateNext = { optedIn ->
-                    // Tracking preference is saved in SmsOptInScreen, navigate to Home regardless of choice
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.SmsOptIn.route) { inclusive = true }
-                    }
-                })
-            }
-            composable(Screen.Scanning.route) {
-                SmsScanningScreen(onNavigateNext = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Scanning.route) { inclusive = true }
                     }
                 })
             }

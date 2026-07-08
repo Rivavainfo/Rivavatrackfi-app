@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rivavafi.universal.domain.usecase.ScanSmsUseCase
 import android.os.Build
 import android.content.Intent
 import android.net.Uri
@@ -43,8 +42,6 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
-    val isSmsTrackingEnabled by viewModel.isSmsTrackingEnabled.collectAsState()
-    val smsTrackingMode by viewModel.smsTrackingMode.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val banksDetected by viewModel.banksDetected.collectAsState()
     val showSmsDetails by viewModel.showSmsDetails.collectAsState()
@@ -89,14 +86,6 @@ fun SettingsScreen(
                 }
             }
         }
-    }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { _ ->
-        // No longer request SMS permissions to comply with Play Store policies
-        Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
-        viewModel.setSmsTrackingEnabled(false)
     }
 
     Scaffold(
@@ -248,111 +237,6 @@ fun SettingsScreen(
                 }
             }
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1B1B1B))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "App Settings",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color(0xFF00A3FF).copy(alpha = 0.8f),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Automatic SMS Tracking",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                                color = Color.White
-                            )
-                            Text(
-                                text = if (terminologyMode == "CREDIT_DEBIT") "Detect credit and debits from bank messages" else "Detect income and expenses from bank messages",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFBEC7D4)
-                            )
-                        }
-                        Switch(
-                            checked = isSmsTrackingEnabled,
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    Toast.makeText(context, "SMS tracking is currently unavailable per policy.", Toast.LENGTH_SHORT).show()
-                                    viewModel.setSmsTrackingEnabled(false)
-                                } else {
-                                    viewModel.setSmsTrackingEnabled(false)
-                                }
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF00A3FF)
-                            )
-                        )
-                    }
-
-                    if (isSmsTrackingEnabled) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "SMS Tracking Preferences",
-                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Choose which bank SMS transaction types Rivava should monitor.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name) },
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit and debits" else "Credit and debits", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.CREDIT_ONLY.name) },
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Credit only" else "Income only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = smsTrackingMode == com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name,
-                                    onClick = { viewModel.setSmsTrackingMode(com.rivavafi.universal.domain.preferences.SmsTrackingMode.DEBIT_ONLY.name) },
-                                    modifier = Modifier.padding(end = 8.dp),
-                                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFF00A3FF), unselectedColor = Color(0xFFBEC7D4))
-                                )
-                                Text(if (terminologyMode == "CREDIT_DEBIT") "Debits only" else "Expenses only", style = MaterialTheme.typography.bodyMedium, color = Color.White)
-                            }
-                        }
-                    }
-                }
-            }
 
             if (banksDetected.isNotEmpty()) {
                 Card(

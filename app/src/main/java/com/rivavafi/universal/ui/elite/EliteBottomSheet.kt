@@ -107,21 +107,6 @@ fun EliteBottomSheet(
         }
     }
 
-    val openSms = {
-        try {
-            logInquiry("sms", "sms_opened")
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                data = Uri.parse("sms:$targetNumber")
-                putExtra("sms_body", message)
-            }
-            context.startActivity(intent)
-            logInquiry("sms", "inquiry_completed")
-            onDismiss()
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open SMS app.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
     val scale = remember { Animatable(1f) }
 
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
@@ -155,28 +140,20 @@ fun EliteBottomSheet(
             containerColor = Color(0xFF131313),
             confirmButton = {
                 TextButton(onClick = {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("Phone Number", displayTargetNumber)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(context, "Number copied to clipboard", Toast.LENGTH_SHORT).show()
                     showFallbackDialog = false
-                    openSms()
                 }) {
-                    Text("Send SMS", color = Color(0xFFD4AF37))
+                    Text("Copy Number", color = Color.White)
                 }
             },
             dismissButton = {
-                Row {
-                    TextButton(onClick = {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Phone Number", displayTargetNumber)
-                        clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, "Number copied to clipboard", Toast.LENGTH_SHORT).show()
-                        showFallbackDialog = false
-                    }) {
-                        Text("Copy Number", color = Color.White)
-                    }
-                    TextButton(onClick = {
-                        showFallbackDialog = false
-                    }) {
-                        Text("Cancel", color = Color.Gray)
-                    }
+                TextButton(onClick = {
+                    showFallbackDialog = false
+                }) {
+                    Text("Cancel", color = Color.Gray)
                 }
             }
         )

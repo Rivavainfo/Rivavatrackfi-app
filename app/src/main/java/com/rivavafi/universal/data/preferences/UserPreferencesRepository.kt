@@ -39,12 +39,6 @@ class UserPreferencesRepository @Inject constructor(
         val TERMINOLOGY_MODE_KEY = stringPreferencesKey("terminology_mode")
     }
 
-    val smsTrackingModeFlow: Flow<String> = dataStore.data.map { preferences ->
-        var mode = preferences[SMS_TRACKING_MODE_KEY] ?: com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
-        if (mode == "INCOME_ONLY") mode = "CREDIT_ONLY"
-        if (mode == "EXPENSE_ONLY") mode = "DEBIT_ONLY"
-        mode
-    }
 
     val terminologyModeFlow: Flow<String> = dataStore.data.map { preferences ->
         preferences[TERMINOLOGY_MODE_KEY] ?: "CREDIT_DEBIT"
@@ -56,19 +50,6 @@ class UserPreferencesRepository @Inject constructor(
         }
     }
 
-    suspend fun getSmsTrackingMode(): String {
-        val prefs = dataStore.data.first()
-        var mode = prefs[SMS_TRACKING_MODE_KEY] ?: com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
-        if (mode == "INCOME_ONLY") mode = "CREDIT_ONLY"
-        if (mode == "EXPENSE_ONLY") mode = "DEBIT_ONLY"
-        return mode
-    }
-
-    suspend fun setSmsTrackingMode(mode: String) {
-        dataStore.edit { preferences ->
-            preferences[SMS_TRACKING_MODE_KEY] = mode
-        }
-    }
 
     val profileImageUriFlow: Flow<String?> = dataStore.data.map { preferences ->
         preferences[PROFILE_IMAGE_URI_KEY]
