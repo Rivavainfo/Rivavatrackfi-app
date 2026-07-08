@@ -33,18 +33,6 @@ class SettingsViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    val isSmsTrackingEnabled = preferencesRepository.isSmsTrackingEnabledFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        false
-    )
-
-    val smsTrackingMode = preferencesRepository.smsTrackingModeFlow.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        com.rivavafi.universal.domain.preferences.SmsTrackingMode.BOTH.name
-    )
-
     val homeLayoutPreset = preferencesRepository.homeLayoutPresetFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -79,18 +67,6 @@ class SettingsViewModel @Inject constructor(
             transactionRepository.getAllTransactions(userId).collectLatest { transactions ->
                 _banksDetected.value = transactions.mapNotNull { it.bankName }.distinct().sorted()
             }
-        }
-    }
-
-    fun setSmsTrackingEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesRepository.setSmsTrackingEnabled(enabled)
-        }
-    }
-
-    fun setSmsTrackingMode(mode: String) {
-        viewModelScope.launch {
-            preferencesRepository.setSmsTrackingMode(mode)
         }
     }
 
