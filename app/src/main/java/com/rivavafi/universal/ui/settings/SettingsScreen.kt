@@ -5,10 +5,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Psychology
 
-import android.Manifest
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +18,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.widget.Toast
+
+
+
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.os.Build
 import android.content.Intent
@@ -267,6 +273,106 @@ fun SettingsScreen(
                 }
             }
 
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp)),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "SMS Tracking",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    val smsMode by viewModel.smsTrackingMode.collectAsState()
+                    var expanded by remember { mutableStateOf(false) }
+
+                    val permissionLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestMultiplePermissions()
+                    ) { permissions ->
+                        val granted = permissions[Manifest.permission.READ_SMS] == true && permissions[Manifest.permission.RECEIVE_SMS] == true
+                        if (!granted) {
+                            viewModel.setSmsTrackingMode("OFF")
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Tracking Mode", color = MaterialTheme.colorScheme.onSurface)
+                        Box {
+                            TextButton(onClick = { expanded = true }) {
+                                Text(smsMode)
+                            }
+                            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                listOf("OFF", "CREDIT_ONLY", "DEBIT_ONLY", "BOTH").forEach { mode ->
+                                    DropdownMenuItem(
+                                        text = { Text(mode) },
+                                        onClick = {
+                                            if (mode != "OFF") {
+                                                val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
+                                                val hasReceive = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
+                                                if (!hasRead || !hasReceive) {
+                                                    viewModel.setSmsTrackingMode(mode)
+                                                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                                } else {
+                                                    viewModel.setSmsTrackingMode(mode)
+                                                }
+                                            } else {
+                                                viewModel.setSmsTrackingMode(mode)
+                                            }
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { viewModel.setShowSmsDetails(!showSmsDetails) },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Show SMS Details", color = MaterialTheme.colorScheme.onSurface)
+                        Switch(
+                            checked = showSmsDetails,
+                            onCheckedChange = { viewModel.setShowSmsDetails(it) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = {
+                            val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
+                            if (hasRead) {
+                                viewModel.rescanSms(context)
+                                Toast.makeText(context, "Rescanning inbox...", Toast.LENGTH_SHORT).show()
+                            } else {
+                                permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                Toast.makeText(context, "Please grant SMS permissions first", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Rescan SMS Inbox")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

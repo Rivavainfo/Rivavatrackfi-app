@@ -2,6 +2,10 @@ package com.rivavafi.universal.ui.onboarding
 
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
+
+import com.rivavafi.universal.sms.SmsInboxScanner
+import com.rivavafi.universal.sms.SmsTrackingMode
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.FirebaseException
@@ -32,6 +36,7 @@ class OnboardingViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val authRepository: AuthRepository,
     private val emailService: EmailService,
+    private val smsInboxScanner: com.rivavafi.universal.sms.SmsInboxScanner,
     private val savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -234,6 +239,20 @@ class OnboardingViewModel @Inject constructor(
             .replace(Regex("[^a-z0-9]+"), "_")
             .trim('_')
             .ifBlank { "rivava_user" }
+    }
+
+
+    fun setSmsTrackingMode(mode: String) {
+        viewModelScope.launch {
+            preferencesRepository.setSmsTrackingMode(mode)
+        }
+    }
+
+    fun scanSmsInbox(context: Context, mode: SmsTrackingMode) {
+        viewModelScope.launch {
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            smsInboxScanner.scanInbox(context, mode, userId)
+        }
     }
 
     fun setSmsTrackingEnabled(enabled: Boolean) {

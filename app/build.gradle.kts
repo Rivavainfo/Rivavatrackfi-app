@@ -80,6 +80,17 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+
+    flavorDimensions.add("distribution")
+    productFlavors {
+        create("play") {
+            dimension = "distribution"
+        }
+        create("fullSms") {
+            dimension = "distribution"
+        }
+    }
+
     buildTypes {
         release {
             isDebuggable = false

@@ -150,6 +150,18 @@ class UserPreferencesRepository @Inject constructor(
         preferences[IS_SMS_TRACKING_ENABLED_KEY] ?: false
     }
 
+
+    val smsTrackingModeFlow: Flow<String> = dataStore.data.map { preferences ->
+        preferences[SMS_TRACKING_MODE_KEY] ?: "OFF"
+    }
+
+    suspend fun setSmsTrackingMode(mode: String) {
+        dataStore.edit { preferences ->
+            preferences[SMS_TRACKING_MODE_KEY] = mode
+            preferences[IS_SMS_TRACKING_ENABLED_KEY] = mode != "OFF"
+        }
+    }
+
     val smsScanCompletedFlow: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[SMS_SCAN_COMPLETED_KEY] ?: false
     }
