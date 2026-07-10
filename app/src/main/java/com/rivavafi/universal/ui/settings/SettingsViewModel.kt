@@ -21,6 +21,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+
+import com.rivavafi.universal.sms.SmsInboxScanner
+import com.rivavafi.universal.sms.SmsTrackingMode
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,8 +31,11 @@ class SettingsViewModel @Inject constructor(
     private val preferencesRepository: UserPreferencesRepository,
     private val transactionRepository: TransactionRepository,
     private val exportCsvUseCase: ExportCsvUseCase,
+
     private val importCsvUseCase: ImportCsvUseCase,
+    private val smsInboxScanner: SmsInboxScanner,
     private val userCorrectionDao: com.rivavafi.universal.data.local.UserCorrectionDao,
+
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -66,6 +72,30 @@ class SettingsViewModel @Inject constructor(
             val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
             transactionRepository.getAllTransactions(userId).collectLatest { transactions ->
                 _banksDetected.value = transactions.mapNotNull { it.bankName }.distinct().sorted()
+            }
+        }
+    }
+
+
+    val smsTrackingMode = preferencesRepository.smsTrackingModeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        "OFF"
+    )
+
+    fun setSmsTrackingMode(mode: String) {
+        viewModelScope.launch {
+            preferencesRepository.setSmsTrackingMode(mode)
+        }
+    }
+
+    fun rescanSms(context: Context) {
+        viewModelScope.launch {
+            val modeStr = smsTrackingMode.value
+            val mode = runCatching { SmsTrackingMode.valueOf(modeStr) }.getOrDefault(SmsTrackingMode.OFF)
+            if (mode != SmsTrackingMode.OFF) {
+                val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+                smsInboxScanner.scanInbox(context, mode, userId)
             }
         }
     }

@@ -11,6 +11,12 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.rivavafi.universal.ui.settings.SettingsViewModel
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,12 +37,14 @@ import com.rivavafi.universal.domain.repository.TransactionRepository
 fun TransactionDetailScreen(
     transactionId: Long,
     onBack: () -> Unit,
-    viewModel: TransactionsViewModel = hiltViewModel()
+    viewModel: TransactionsViewModel = hiltViewModel(),
+    settingsViewModel: com.rivavafi.universal.ui.settings.SettingsViewModel = hiltViewModel()
 ) {
     // Collect specific transaction from database through ViewModel (requires a new property or flow lookup)
     val transactionFlow = remember(transactionId) { viewModel.getTransactionById(transactionId) }
     val transactionState = transactionFlow.collectAsState(initial = null)
     val transaction = transactionState.value
+    val showSmsDetails by settingsViewModel.showSmsDetails.collectAsState()
 
     val categories by viewModel.categories.collectAsState()
     var showEditDialog by remember { mutableStateOf(false) }
@@ -70,7 +78,7 @@ fun TransactionDetailScreen(
             ) {
                 TransactionInfoCard(transaction!!)
 
-                if (!transaction!!.rawMessage.isNullOrBlank()) {
+                if (showSmsDetails && !transaction!!.rawMessage.isNullOrBlank()) {
                     RawMessageCard(transaction!!.rawMessage!!)
                 }
 

@@ -84,6 +84,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object PhoneInput : Screen("phone_input", "Phone Input", Icons.Outlined.Home)
     object OtpVerification : Screen("otp_verification", "OTP Verification", Icons.Outlined.Home)
     object SmsOptIn : Screen("sms_opt_in", "SmsOptIn", Icons.Outlined.Home)
+    object SmsConsent : Screen("sms_consent", "SmsConsent", Icons.Outlined.Home)
     object Scanning : Screen("scanning", "Scanning", Icons.Outlined.Home)
     object Home : Screen("home", "Home", Icons.Outlined.Home)
     object Transactions : Screen("transactions", "History", Icons.AutoMirrored.Outlined.ListAlt)
@@ -259,8 +260,16 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.SmsConsent.route) {
                         popUpTo(Screen.PhoneInput.route) { inclusive = true }
+                    }
+                })
+            }
+
+            composable(Screen.SmsConsent.route) {
+                com.rivavafi.universal.ui.onboarding.SmsConsentScreen(onNavigateNext = {
+                    navController.navigate(Screen.Greeting.route) {
+                        popUpTo(Screen.SmsConsent.route) { inclusive = true }
                     }
                 })
             }
