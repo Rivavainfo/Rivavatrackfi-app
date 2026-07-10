@@ -409,8 +409,8 @@ fun RivavaPortfolioScreen(
                                 visible = true
                             }
 
-                            val nseStocks = listOf("IREDA.NS")
-                            val nyseStocks = listOf("RTX")
+                            val nseStocks = listOf("IREDA.NS", "INDHOTEL.NS")
+                            val nyseStocks = listOf("RTX", "NVDA")
 
                             // Helper to render a stock card
                             @Composable
@@ -420,13 +420,37 @@ fun RivavaPortfolioScreen(
                                 val quote = stockState?.data
 
                                 val isIreda = normalizedSymbol == "IREDA.NS"
-                                val ticker = if (isIreda) "IREDA" else "RTX"
-                                val companyName = if (isIreda) "IREDA" else "Raytheon Technologies"
-                                val exchange = if (isIreda) "NSE" else "NYSE"
+                                val isIhcl = normalizedSymbol == "INDHOTEL.NS"
+                                val isRtx = normalizedSymbol == "RTX"
+                                val isNvda = normalizedSymbol == "NVDA"
+
+                                val ticker = when {
+                                    isIreda -> "IREDA"
+                                    isIhcl -> "INDHOTEL"
+                                    isNvda -> "NVDA"
+                                    else -> "RTX"
+                                }
+                                val companyName = when {
+                                    isIreda -> "IREDA"
+                                    isIhcl -> "Indian Hotels Company Limited"
+                                    isNvda -> "NVIDIA Corporation"
+                                    else -> "Raytheon Technologies"
+                                }
+                                val exchange = if (isIreda || isIhcl) "NSE" else "NYSE"
                                 val currency = if (exchange == "NYSE") "$" else "₹"
 
-                                val price = quote?.c ?: if (isIreda) 150.0 else 100.0
-                                val previousClose = quote?.pc ?: if (isIreda) 148.0 else 99.0
+                                val price = quote?.c ?: when {
+                                    isIreda -> 150.0
+                                    isIhcl -> 580.0
+                                    isNvda -> 120.0
+                                    else -> 100.0
+                                }
+                                val previousClose = quote?.pc ?: when {
+                                    isIreda -> 148.0
+                                    isIhcl -> 575.0
+                                    isNvda -> 118.0
+                                    else -> 99.0
+                                }
                                 val change = price - previousClose
                                 val changePercent = if (previousClose != 0.0) (change / previousClose) * 100 else 0.0
                                 val isPositive = change >= 0
@@ -464,7 +488,7 @@ fun RivavaPortfolioScreen(
                             // NSE Section
                             Column {
                                 Text(
-                                    "NSE Stocks",
+                                    "INDIAN MARKET",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = Color(0xFF34D399),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
@@ -479,7 +503,7 @@ fun RivavaPortfolioScreen(
                             // NYSE Section
                             Column {
                                 Text(
-                                    "NYSE Stocks",
+                                    "US MARKET",
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = Color(0xFF3B82F6),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
