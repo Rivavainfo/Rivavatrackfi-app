@@ -8,46 +8,113 @@ on:
 
 jobs:
   build-release-artifacts:
-    name: Build APK and AAB
+    name: Build release APK and AAB
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Prepare release signing key
+        shell: bash
+        env:
+          BASE64_KEYSTORE: ${{ secrets.BASE64_KEYSTORE }}
+          RELEASE_STORE_PASSWORD_SECRET: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS_SECRET: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD_SECRET: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "${BASE64_KEYSTORE}" ]]; then
+            if [[ -z "${RELEASE_STORE_PASSWORD_SECRET}" || -z "${RELEASE_KEY_ALIAS_SECRET}" || -z "${RELEASE_KEY_PASSWORD_SECRET}" ]]; then
+              echo "BASE64_KEYSTORE is set, but one or more RELEASE_* signing secrets are missing." >&2
+              exit 1
+            fi
+
+            echo "${BASE64_KEYSTORE}" | base64 --decode > app/release-key.jks
+            {
+              echo "RELEASE_STORE_PASSWORD=${RELEASE_STORE_PASSWORD_SECRET}"
+              echo "RELEASE_KEY_ALIAS=${RELEASE_KEY_ALIAS_SECRET}"
+              echo "RELEASE_KEY_PASSWORD=${RELEASE_KEY_PASSWORD_SECRET}"
+            } >> "${GITHUB_ENV}"
+            echo "Release keystore decoded from BASE64_KEYSTORE."
+          else
+            echo "BASE64_KEYSTORE is not set; generating a temporary CI signing key for release artifacts."
+            keytool -genkeypair -v \
+              -keystore app/release-key.jks \
+              -alias ci-release \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass ci-release-password \
+              -keypass ci-release-password \
+              -dname "CN=Rivava CI, OU=Mobile, O=Rivava, L=Global, S=NA, C=US"
+            {
+              echo "RELEASE_STORE_PASSWORD=ci-release-password"
+              echo "RELEASE_KEY_ALIAS=ci-release"
+              echo "RELEASE_KEY_PASSWORD=ci-release-password"
+            } >> "${GITHUB_ENV}"
+          fi
+
       - name: Build release APKs and AABs
         env:
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
           BACKEND_URL: ${{ secrets.BACKEND_URL }}
-        run: ./gradlew assemblePlayRelease assembleFullSmsRelease bundlePlayRelease bundleFullSmsRelease
+        run: ./gradlew :app:assemblePlayRelease :app:assembleFullSmsRelease :app:bundlePlayRelease :app:bundleFullSmsRelease --stacktrace
+
+      - name: Verify release artifacts exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+
+          apks=(app/build/outputs/apk/**/*release*.apk)
+          aabs=(app/build/outputs/bundle/**/*.aab)
+
+          if (( ${#apks[@]} == 0 )); then
+            echo "No release APKs were produced under app/build/outputs/apk." >&2
+            find app/build/outputs -maxdepth 5 -type f | sort >&2 || true
+            exit 1
+          fi
+
+          if (( ${#aabs[@]} == 0 )); then
+            echo "No release AABs were produced under app/build/outputs/bundle." >&2
+            find app/build/outputs -maxdepth 5 -type f | sort >&2 || true
+            exit 1
+          fi
+
+          printf 'Release APKs:\n'
+          printf ' - %s\n' "${apks[@]}"
+          printf 'Release AABs:\n'
+          printf ' - %s\n' "${aabs[@]}"
 
       - name: Upload release APKs
-        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('app/build/outputs/apk/**/*release*.apk') != '' }}
+        uses: actions/upload-artifact@v6
         with:
           name: rivava-release-apks
           path: app/build/outputs/apk/**/*release*.apk
           if-no-files-found: error
 
       - name: Upload release AABs
-        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('app/build/outputs/bundle/**/*.aab') != '' }}
+        uses: actions/upload-artifact@v6
         with:
           name: rivava-release-aabs
-          path: app/build/outputs/bundle/**/*Release/*.aab
+          path: app/build/outputs/bundle/**/*.aab
           if-no-files-found: error
