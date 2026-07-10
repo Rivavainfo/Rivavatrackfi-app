@@ -279,12 +279,20 @@ fun StockPortfolioDetailScreen(
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "715%" else "138.64%", color = if (ticker == "IREDA") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(when(ticker) { "IREDA" -> "715%"; "INDHOTEL" -> "450%"; "NVDA" -> "850%"; else -> "138.64%" }, color = if (ticker == "IREDA" || ticker == "INDHOTEL") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(
-                                onClick = { onNavigateToPdfViewer?.invoke(if (ticker == "IREDA") "portfolio_ireda.pdf" else "portfolio_rtx.pdf") },
+                                onClick = {
+                                    val pdfName = when(ticker) {
+                                        "IREDA" -> "portfolio_ireda.pdf"
+                                        "INDHOTEL" -> "portfolio_ihcl.pdf"
+                                        "NVDA" -> "portfolio_nvidia.pdf"
+                                        else -> "portfolio_rtx.pdf"
+                                    }
+                                    onNavigateToPdfViewer?.invoke(pdfName)
+                                },
                                 modifier = Modifier.fillMaxWidth().height(48.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp)
