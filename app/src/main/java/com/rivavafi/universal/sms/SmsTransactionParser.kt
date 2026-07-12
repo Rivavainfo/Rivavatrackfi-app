@@ -88,19 +88,43 @@ object SmsTransactionParser {
         }
 
         val bankName = extractBankName(sender)
+        val merchantName = extractMerchantName(body) ?: "Unknown"
+        val (category, subcategory) = deduceCategory(merchantName, body, type)
 
         return ParsedSmsTransaction(
             amount = amount,
             type = type,
-            merchantName = extractMerchantName(body) ?: "Unknown Merchant",
+            merchantName = merchantName,
             bankName = bankName,
-            category = if (type == "CREDIT") "Income" else "Expense", // Simplified category
+            category = category,
+            subcategory = subcategory,
             date = timestamp,
             smsId = platformSmsId,
             rawMessage = body,
             availableBalance = balance,
             referenceId = refId
         )
+    }
+
+    private fun deduceCategory(merchant: String, body: String, type: String): Pair<String, String?> {
+        val lowerMerchant = merchant.lowercase()
+        val lowerBody = body.lowercase()
+
+        val subcategory = when {
+            lowerMerchant.contains("swiggy") || lowerMerchant.contains("zomato") || lowerMerchant.contains("mcdonalds") || lowerMerchant.contains("kfc") -> "Food"
+            lowerMerchant.contains("uber") || lowerMerchant.contains("ola") || lowerMerchant.contains("rapido") || lowerMerchant.contains("irctc") || lowerMerchant.contains("makemytrip") -> "Transport"
+            lowerMerchant.contains("amazon") || lowerMerchant.contains("flipkart") || lowerMerchant.contains("myntra") || lowerMerchant.contains("ajio") -> "Shopping"
+            lowerMerchant.contains("jio") || lowerMerchant.contains("airtel") || lowerMerchant.contains("vi") || lowerMerchant.contains("recharge") -> "Recharge"
+            lowerMerchant.contains("netflix") || lowerMerchant.contains("prime") || lowerMerchant.contains("spotify") || lowerMerchant.contains("hotstar") || lowerMerchant.contains("bookmyshow") -> "Entertainment"
+            lowerMerchant.contains("apollo") || lowerMerchant.contains("pharmeasy") || lowerMerchant.contains("netmeds") || lowerMerchant.contains("hospital") -> "Health"
+            lowerMerchant.contains("dmart") || lowerMerchant.contains("blinkit") || lowerMerchant.contains("zepto") || lowerMerchant.contains("instamart") || lowerMerchant.contains("bigbasket") -> "Groceries"
+            lowerMerchant.contains("bescom") || lowerMerchant.contains("electricity") || lowerMerchant.contains("water") || lowerMerchant.contains("gas") -> "Utilities"
+            lowerBody.contains("emi") || lowerBody.contains("loan") -> "Loan Payment"
+            else -> null
+        }
+
+        val defaultCat = if (type == "CREDIT") "Credit" else "Debit"
+        return Pair(defaultCat, subcategory)
     }
 
     private fun extractBankName(sender: String): String? {
@@ -115,12 +139,22 @@ object SmsTransactionParser {
     }
 
     private fun extractMerchantName(body: String): String? {
-        // Very basic extraction logic
-        val toMatch = Pattern.compile("(?i)(?:vpa|to|info|at)\\s+([A-Z0-9@.-]+)")
-        val matcher = toMatch.matcher(body)
-        if (matcher.find()) {
-            return matcher.group(1)
+        // Improved extraction logic to find merchant names or VPA IDs
+        val patterns = listOf(
+            Pattern.compile("(?i)(?:vpa|upi)[^a-z0-9]*([a-zA-Z0-9.-]+@[a-zA-Z]+)"),
+            Pattern.compile("(?i)(?:info|to|at|by|from)\\s+([A-Za-z0-9@.-]+(?:\\s+[A-Za-z0-9@.-]+){0,2})"),
+            Pattern.compile("(?i)merchant[:\\s]*([A-Za-z0-9\\s]+)")
+        )
+
+        for (pattern in patterns) {
+            val matcher = pattern.matcher(body)
+            if (matcher.find()) {
+                val found = matcher.group(1)?.trim()
+                if (!found.isNullOrBlank() && !found.equals("the", ignoreCase = true) && !found.equals("a", ignoreCase = true)) {
+                    return found
+                }
+            }
         }
-        return "Unknown"
+        return null
     }
 }
