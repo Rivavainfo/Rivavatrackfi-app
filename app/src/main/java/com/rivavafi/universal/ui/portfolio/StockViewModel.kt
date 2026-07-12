@@ -34,7 +34,7 @@ class StockViewModel @Inject constructor(
     private val repository: StockRepository
 ) : ViewModel() {
 
-    private val defaultSymbols = listOf("IREDA.NS", "RTX")
+    private val defaultSymbols = listOf("IREDA.NS", "INDHOTEL.NS", "RTX", "NVDA")
 
     private val _stockStates = MutableStateFlow(defaultStockStateMap(defaultSymbols))
     val stockStates: StateFlow<Map<String, StockState>> = _stockStates
@@ -196,6 +196,10 @@ class StockViewModel @Inject constructor(
     private fun defaultStockState(symbol: String): StockState {
         val quote = if (symbol.equals("IREDA.NS", ignoreCase = true) || symbol.equals("IREDA", ignoreCase = true)) {
             StockResponse(c = 150.0, h = 150.0, l = 150.0, o = 148.0, pc = 148.0)
+        } else if (symbol.equals("INDHOTEL.NS", ignoreCase = true) || symbol.equals("INDHOTEL", ignoreCase = true)) {
+            StockResponse(c = 580.0, h = 580.0, l = 580.0, o = 575.0, pc = 575.0)
+        } else if (symbol.equals("NVDA", ignoreCase = true)) {
+            StockResponse(c = 120.0, h = 120.0, l = 120.0, o = 118.0, pc = 118.0)
         } else {
             StockResponse(c = 100.0, h = 100.0, l = 100.0, o = 99.0, pc = 99.0)
         }
