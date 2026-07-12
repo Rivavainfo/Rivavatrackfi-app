@@ -680,7 +680,7 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
             Text(
                 text = "${if (isCredit) "+" else "-"}₹${String.format(Locale.getDefault(), "%.0f", transaction.amount)}",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+                color = if (isCredit) Color(0xFF4CAF50) else Color(0xFFE53935)
             )
         }
     }
