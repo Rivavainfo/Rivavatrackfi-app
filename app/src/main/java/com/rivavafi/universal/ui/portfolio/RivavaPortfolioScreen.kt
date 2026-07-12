@@ -278,7 +278,7 @@ fun RivavaPortfolioScreen(
     val cryptoIds = listOf("bitcoin", "ethereum", "solana")
 
     LaunchedEffect(Unit) {
-        viewModel.startPolling(listOf("IREDA.NS", "RTX"))
+        viewModel.startPolling(listOf("IREDA.NS", "INDHOTEL.NS", "RTX", "NVDA"))
         cryptoViewModel.startPolling(cryptoIds)
     }
 
@@ -480,7 +480,7 @@ fun RivavaPortfolioScreen(
                                         onValueClick = { focus ->
                                             onNavigateToDetail(ticker, focus)
                                         },
-                                        modifier = Modifier.width(300.dp)
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -493,9 +493,9 @@ fun RivavaPortfolioScreen(
                                     color = Color(0xFF34D399),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
-                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    items(nseStocks.size) { index ->
-                                        RenderStockCard(nseStocks[index], index)
+                                Column(modifier = Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    nseStocks.forEachIndexed { index, symbol ->
+                                        RenderStockCard(symbol, index)
                                     }
                                 }
                             }
@@ -508,9 +508,9 @@ fun RivavaPortfolioScreen(
                                     color = Color(0xFF3B82F6),
                                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                                 )
-                                LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    items(nyseStocks.size) { index ->
-                                        RenderStockCard(nyseStocks[index], index + nseStocks.size)
+                                Column(modifier = Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    nyseStocks.forEachIndexed { index, symbol ->
+                                        RenderStockCard(symbol, index + nseStocks.size)
                                     }
                                 }
                             }
