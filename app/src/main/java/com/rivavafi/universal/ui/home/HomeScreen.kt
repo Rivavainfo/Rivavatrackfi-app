@@ -1270,7 +1270,7 @@ fun RealBalanceCard(transactions: List<TransactionEntity>) {
 @Composable
 fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true, onClick: () -> Unit) {
     val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD" || transaction.type == "INCOME" || transaction.type == "REWARD"
-    val amountColor = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+    val amountColor = if (isCredit) Color(0xFF4CAF50) else Color(0xFFE53935)
 
     val categoryVisual = CategoryVisuals.getCategoryVisual(transaction.category)
     val subCategoryVisual = transaction.subcategory?.let { CategoryVisuals.getSubcategoryVisual(it) }
@@ -1328,11 +1328,25 @@ fun TransactionItem(transaction: TransactionEntity, showDetails: Boolean = true,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (showDetails && !transaction.bankName.isNullOrBlank()) {
+                    Text(
+                        text = " • ",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = transaction.bankName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
 
         Text(
-            text = "₹${String.format(java.util.Locale.getDefault(), "%.2f", transaction.amount)}",
+            text = "${if (isCredit) "+" else "-"}₹${String.format(java.util.Locale.getDefault(), "%.0f", transaction.amount)}",
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = amountColor
         )
