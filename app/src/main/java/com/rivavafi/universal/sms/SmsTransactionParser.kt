@@ -4,8 +4,8 @@ import java.util.regex.Pattern
 
 object SmsTransactionParser {
 
-    private val CREDIT_WORDS = listOf("credited", "credit", "deposited", "received", "refund", "cashback", "salary", "interest")
-    private val DEBIT_WORDS = listOf("debited", "debit", "spent", "paid", "withdrawn", "purchase", "sent", "upi", "imps", "atm")
+    private val CREDIT_WORDS = listOf("credited", "credit", "deposited", "received", "refund", "cashback", "salary")
+    private val DEBIT_WORDS = listOf("debited", "debit", "spent", "paid", "withdrawn", "purchase", "sent")
 
     // Amount extraction: e.g. Rs. 500, INR 500.00
     private val amountRegex = Pattern.compile("(?i)(?:INR|Rs\\.?|₹)\\s*([0-9,]+(?:\\.\\d{1,2})?)")
