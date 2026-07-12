@@ -270,8 +270,8 @@ fun StockPortfolioDetailScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Column {
-                                    Text(if (ticker == "IREDA") "IPO Price" else "Buy Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(if (ticker == "IREDA") "₹32" else "82.22 USD", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(if (ticker == "IREDA") "IPO Price" else if (ticker == "INDHOTEL" || ticker == "NVDA") "Buying Price" else "Buy Price", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
+                                    Text(when(ticker) { "IREDA" -> "₹32"; "INDHOTEL" -> "₹76.49"; "NVDA" -> "$23.36"; else -> "82.22 USD" }, color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                                 Column {
                                     Text("Status", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
@@ -279,7 +279,7 @@ fun StockPortfolioDetailScreen(
                                 }
                                 Column {
                                     Text("Returns", color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
-                                    Text(when(ticker) { "IREDA" -> "715%"; "INDHOTEL" -> "450%"; "NVDA" -> "850%"; else -> "138.64%" }, color = if (ticker == "IREDA" || ticker == "INDHOTEL") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(when(ticker) { "IREDA" -> "715%"; "INDHOTEL" -> "951.05%"; "NVDA" -> "575.4%"; else -> "138.64%" }, color = if (ticker == "IREDA" || ticker == "INDHOTEL") com.rivavafi.universal.ui.theme.TertiaryEmerald else com.rivavafi.universal.ui.theme.PrimaryContainerSky, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                                 }
                             }
                             Spacer(modifier = Modifier.height(24.dp))
