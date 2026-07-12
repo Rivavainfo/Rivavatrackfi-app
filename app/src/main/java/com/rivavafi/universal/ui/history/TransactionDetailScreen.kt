@@ -139,7 +139,7 @@ fun TransactionDetailScreen(
 @Composable
 fun TransactionInfoCard(transaction: TransactionEntity) {
     val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD"
-    val color = if (isCredit) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error
+    val color = if (isCredit) Color(0xFF4CAF50) else Color(0xFFE53935)
     val sign = if (isCredit) "+" else "-"
 
     val formatter = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
