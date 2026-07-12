@@ -284,105 +284,107 @@ fun SettingsScreen(
             }
 
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "SMS Tracking",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
+            if (com.rivavafi.universal.BuildConfig.FLAVOR != "play") {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp)),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(
+                            text = "SMS Tracking",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         )
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    val smsMode by viewModel.smsTrackingMode.collectAsState()
-                    var expanded by remember { mutableStateOf(false) }
+                        val smsMode by viewModel.smsTrackingMode.collectAsState()
+                        var expanded by remember { mutableStateOf(false) }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Tracking Mode", color = MaterialTheme.colorScheme.onSurface)
-                        Box {
-                            TextButton(onClick = { expanded = true }) {
-                                Text(smsMode)
-                            }
-                            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                                listOf("OFF", "CREDIT_ONLY", "DEBIT_ONLY", "BOTH").forEach { mode ->
-                                    DropdownMenuItem(
-                                        text = { Text(mode) },
-                                        onClick = {
-                                            if (mode != "OFF") {
-                                                val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
-                                                val hasReceive = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
-                                                if (!hasRead || !hasReceive) {
-                                                    val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
-                                                    if (shouldShowRationale) {
-                                                        showSmsRationaleDialog = true
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Tracking Mode", color = MaterialTheme.colorScheme.onSurface)
+                            Box {
+                                TextButton(onClick = { expanded = true }) {
+                                    Text(smsMode)
+                                }
+                                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                    listOf("OFF", "CREDIT_ONLY", "DEBIT_ONLY", "BOTH").forEach { mode ->
+                                        DropdownMenuItem(
+                                            text = { Text(mode) },
+                                            onClick = {
+                                                if (mode != "OFF") {
+                                                    val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
+                                                    val hasReceive = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
+                                                    if (!hasRead || !hasReceive) {
+                                                        val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
+                                                        if (shouldShowRationale) {
+                                                            showSmsRationaleDialog = true
+                                                        } else {
+                                                            viewModel.setSmsTrackingMode(mode)
+                                                            permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                                        }
                                                     } else {
                                                         viewModel.setSmsTrackingMode(mode)
-                                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
                                                     }
                                                 } else {
                                                     viewModel.setSmsTrackingMode(mode)
                                                 }
-                                            } else {
-                                                viewModel.setSmsTrackingMode(mode)
+                                                expanded = false
                                             }
-                                            expanded = false
-                                        }
-                                    )
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { viewModel.setShowSmsDetails(!showSmsDetails) },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Show SMS Details", color = MaterialTheme.colorScheme.onSurface)
-                        Switch(
-                            checked = showSmsDetails,
-                            onCheckedChange = { viewModel.setShowSmsDetails(it) }
-                        )
-                    }
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clickable { viewModel.setShowSmsDetails(!showSmsDetails) },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Show SMS Details", color = MaterialTheme.colorScheme.onSurface)
+                            Switch(
+                                checked = showSmsDetails,
+                                onCheckedChange = { viewModel.setShowSmsDetails(it) }
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = {
-                            val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
-                            if (hasRead) {
-                                viewModel.rescanSms(context)
-                                Toast.makeText(context, "Rescanning inbox...", Toast.LENGTH_SHORT).show()
-                            } else {
-                                val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
-                                if (shouldShowRationale) {
-                                    showSmsRationaleDialog = true
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = {
+                                val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
+                                if (hasRead) {
+                                    viewModel.rescanSms(context)
+                                    Toast.makeText(context, "Rescanning inbox...", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                    val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
+                                    if (shouldShowRationale) {
+                                        showSmsRationaleDialog = true
+                                    } else {
+                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                    }
                                 }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Rescan SMS Inbox")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Rescan SMS Inbox")
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

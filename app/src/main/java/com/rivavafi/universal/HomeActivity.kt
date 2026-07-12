@@ -260,8 +260,14 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
             }
             composable(Screen.PhoneInput.route) {
                 PhoneInputScreen(onNavigateNext = {
-                    navController.navigate(Screen.SmsConsent.route) {
-                        popUpTo(Screen.PhoneInput.route) { inclusive = true }
+                    if (BuildConfig.FLAVOR == "play") {
+                        navController.navigate(Screen.Greeting.route) {
+                            popUpTo(Screen.PhoneInput.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.SmsConsent.route) {
+                            popUpTo(Screen.PhoneInput.route) { inclusive = true }
+                        }
                     }
                 })
             }
