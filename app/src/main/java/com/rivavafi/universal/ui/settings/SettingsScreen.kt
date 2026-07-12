@@ -60,6 +60,16 @@ fun SettingsScreen(
     var deleteConfirmationText by remember { mutableStateOf("") }
     var isDeleting by remember { mutableStateOf(false) }
 
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.READ_SMS] == true && permissions[Manifest.permission.RECEIVE_SMS] == true
+        if (!granted) {
+            viewModel.setSmsTrackingMode("OFF")
+            showSmsSettingsDialog = true
+        }
+    }
+
     val csvExportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
     ) { uri ->
@@ -294,15 +304,6 @@ fun SettingsScreen(
                     val smsMode by viewModel.smsTrackingMode.collectAsState()
                     var expanded by remember { mutableStateOf(false) }
 
-                    val permissionLauncher = rememberLauncherForActivityResult(
-                        ActivityResultContracts.RequestMultiplePermissions()
-                    ) { permissions ->
-                        val granted = permissions[Manifest.permission.READ_SMS] == true && permissions[Manifest.permission.RECEIVE_SMS] == true
-                        if (!granted) {
-                            viewModel.setSmsTrackingMode("OFF")
-                        }
-                    }
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -322,8 +323,13 @@ fun SettingsScreen(
                                                 val hasRead = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
                                                 val hasReceive = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
                                                 if (!hasRead || !hasReceive) {
-                                                    viewModel.setSmsTrackingMode(mode)
-                                                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                                    val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
+                                                    if (shouldShowRationale) {
+                                                        showSmsRationaleDialog = true
+                                                    } else {
+                                                        viewModel.setSmsTrackingMode(mode)
+                                                        permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                                    }
                                                 } else {
                                                     viewModel.setSmsTrackingMode(mode)
                                                 }
@@ -360,8 +366,12 @@ fun SettingsScreen(
                                 viewModel.rescanSms(context)
                                 Toast.makeText(context, "Rescanning inbox...", Toast.LENGTH_SHORT).show()
                             } else {
-                                permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
-                                Toast.makeText(context, "Please grant SMS permissions first", Toast.LENGTH_SHORT).show()
+                                val shouldShowRationale = (activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS))
+                                if (shouldShowRationale) {
+                                    showSmsRationaleDialog = true
+                                } else {
+                                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                                }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -522,6 +532,46 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAccountStep1Dialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showSmsRationaleDialog) {
+        AlertDialog(
+            onDismissRequest = { showSmsRationaleDialog = false },
+            title = { Text("SMS Permissions Needed") },
+            text = { Text("To automatically read and track your transactions from SMS messages, Rivava needs access to read and receive SMS.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSmsRationaleDialog = false
+                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    if (showSmsSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSmsSettingsDialog = false },
+            title = { Text("Permission Denied") },
+            text = { Text("It looks like SMS permissions are permanently denied. Please go to App Settings and enable SMS permissions manually.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSmsSettingsDialog = false
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }) {
+                    Text("Open Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSmsSettingsDialog = false }) {
                     Text("Cancel")
                 }
             }

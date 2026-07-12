@@ -21,6 +21,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rivavafi.universal.sms.SmsInboxScanner
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import com.rivavafi.universal.sms.SmsTrackingMode
 import com.rivavafi.universal.ui.components.RivavaBrandDisplay
 import com.rivavafi.universal.ui.components.RivavaLoadingOverlay
@@ -33,10 +36,9 @@ fun SmsConsentScreen(
     viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     var selectedMode by remember { mutableStateOf(SmsTrackingMode.OFF) }
-    var showDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
 
     // We get the scanner via DI if we can, but since this is inside a composable, we typically use the ViewModel.
     // We will let the ViewModel trigger the scan instead. Wait, let's add it to the ViewModel.
@@ -48,10 +50,11 @@ fun SmsConsentScreen(
         if (granted) {
             viewModel.setSmsTrackingMode(selectedMode.name)
             viewModel.scanSmsInbox(context, selectedMode)
+            onNavigateNext()
         } else {
             viewModel.setSmsTrackingMode(SmsTrackingMode.OFF.name)
+            showSettingsDialog = true
         }
-        onNavigateNext()
     }
 
     Column(
@@ -149,6 +152,37 @@ fun SmsConsentScreen(
         }) {
             Text("Maybe Later", color = Color.White.copy(alpha = 0.6f))
         }
+    }
+
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSettingsDialog = false
+                onNavigateNext()
+            },
+            title = { Text("Permission Denied") },
+            text = { Text("It looks like SMS permissions were denied. You can manually enable them in the app settings, or skip for now.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSettingsDialog = false
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                    onNavigateNext()
+                }) {
+                    Text("Open Settings")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showSettingsDialog = false
+                    onNavigateNext()
+                }) {
+                    Text("Skip")
+                }
+            }
+        )
     }
 
     RivavaLoadingOverlay(isLoading = isLoading)
