@@ -247,7 +247,7 @@ fun StockPortfolioDetailScreen(
 
             // Wealth Insights Card / PDF Viewer for IREDA and RTX
             item {
-                if (ticker == "IREDA" || ticker == "RTX") {
+                if (ticker == "IREDA" || ticker == "RTX" || ticker == "INDHOTEL" || ticker == "NVDA") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
