@@ -30,6 +30,10 @@ class TransactionRepositoryImpl @Inject constructor(
         return dao.doesTransactionExist(date, amount, merchantName, userId) > 0
     }
 
+    override suspend fun findDuplicate(userId: String, transactionId: String?, referenceId: String?, date: Long, amount: Double, type: String, merchantName: String, smsSender: String?): TransactionEntity? {
+        return dao.findDuplicate(userId, transactionId, referenceId, date, amount, type, merchantName, smsSender)
+    }
+
     override suspend fun getAllTransactionsSync(userId: String): List<TransactionEntity> {
         return dao.getAllTransactionsSync(userId)
     }

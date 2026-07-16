@@ -34,13 +34,17 @@ class SmsWorker @AssistedInject constructor(
 
         val parsed = SmsTransactionParser.parseMessage(sender, body, timestamp, smsId, mode)
         if (parsed != null) {
-            val exists = transactionRepository.doesTransactionExist(
+            val duplicate = transactionRepository.findDuplicate(
+                userId = userId,
+                transactionId = parsed.transactionId,
+                referenceId = parsed.referenceId,
                 date = parsed.date,
                 amount = parsed.amount,
+                type = parsed.type,
                 merchantName = parsed.merchantName,
-                userId = userId
+                smsSender = parsed.smsSender
             )
-            if (!exists) {
+            if (duplicate == null) {
                 val entity = TransactionEntity(
                     userId = userId,
                     bankName = parsed.bankName,
@@ -53,11 +57,17 @@ class SmsWorker @AssistedInject constructor(
                     rawMessage = parsed.rawMessage,
                     availableBalance = parsed.availableBalance,
                     referenceId = parsed.referenceId,
-                    subcategory = parsed.subcategory
+                    subcategory = parsed.subcategory,
+                    upiId = parsed.upiId,
+                    accountNumberLast4 = parsed.accountNumberLast4,
+                    transactionId = parsed.transactionId,
+                    smsSender = parsed.smsSender,
+                    source = parsed.source
                 )
                 transactionRepository.addTransaction(entity)
             }
         }
+
         return Result.success()
     }
 }

@@ -76,7 +76,7 @@ fun TransactionDetailScreen(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                TransactionInfoCard(transaction!!)
+                TransactionInfoCard(transaction!!, showSmsDetails)
 
                 if (showSmsDetails && !transaction!!.rawMessage.isNullOrBlank()) {
                     RawMessageCard(transaction!!.rawMessage!!)
@@ -137,7 +137,7 @@ fun TransactionDetailScreen(
 }
 
 @Composable
-fun TransactionInfoCard(transaction: TransactionEntity) {
+fun TransactionInfoCard(transaction: TransactionEntity, showSmsDetails: Boolean) {
     val isCredit = transaction.type == "CREDIT" || transaction.type == "INCOME" || transaction.type == "REWARD"
     val color = if (isCredit) Color(0xFF4CAF50) else Color(0xFFE53935)
     val sign = if (isCredit) "+" else "-"
@@ -201,6 +201,24 @@ fun TransactionInfoCard(transaction: TransactionEntity) {
             if (transaction.availableBalance != null) {
                 DetailItem("Available Balance", "₹${String.format(Locale.getDefault(), "%.2f", transaction.availableBalance)}")
             }
+            if (showSmsDetails) {
+                if (transaction.upiId != null) {
+                    DetailItem("UPI ID", transaction.upiId)
+                }
+                if (transaction.accountNumberLast4 != null) {
+                    DetailItem("Account (Last 4)", transaction.accountNumberLast4)
+                }
+                if (transaction.transactionId != null) {
+                    DetailItem("Transaction ID", transaction.transactionId)
+                }
+                if (transaction.referenceId != null) {
+                    DetailItem("Reference ID", transaction.referenceId)
+                }
+                if (transaction.smsSender != null) {
+                    DetailItem("SMS Sender", transaction.smsSender)
+                }
+            }
+            DetailItem("Source", transaction.source)
         }
     }
 }

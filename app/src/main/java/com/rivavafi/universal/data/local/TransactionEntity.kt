@@ -24,5 +24,12 @@ data class TransactionEntity(
     val referenceId: String? = null,
 
     // Subcategory for granular tracking
-    val subcategory: String? = null
+    val subcategory: String? = null,
+    val upiId: String? = null,
+    val accountNumberLast4: String? = null,
+    val transactionId: String? = null,
+    val smsSender: String? = null,
+    val source: String = "MANUAL",
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )

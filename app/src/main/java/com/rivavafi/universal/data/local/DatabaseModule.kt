@@ -40,12 +40,25 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_7_8 = object : androidx.room.migration.Migration(7, 8) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN upiId TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN accountNumberLast4 TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN transactionId TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN smsSender TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN source TEXT NOT NULL DEFAULT 'MANUAL'")
+                val currentTime = System.currentTimeMillis()
+                db.execSQL("ALTER TABLE transactions ADD COLUMN createdAt INTEGER NOT NULL DEFAULT $currentTime")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT $currentTime")
+            }
+        }
+
         return Room.databaseBuilder(
             app,
             RivavaDatabase::class.java,
             "trackfi_db"
         )
-        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
         .fallbackToDestructiveMigration()
         .build()
     }

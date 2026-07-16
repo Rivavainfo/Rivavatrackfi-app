@@ -37,6 +37,7 @@ class UserPreferencesRepository @Inject constructor(
         val USER_USERNAME_KEY = stringPreferencesKey("user_username")
         val SMS_TRACKING_MODE_KEY = stringPreferencesKey("sms_tracking_mode")
         val TERMINOLOGY_MODE_KEY = stringPreferencesKey("terminology_mode")
+        val LAST_SMS_SCAN_DATE_KEY = androidx.datastore.preferences.core.longPreferencesKey("last_sms_scan_date")
     }
 
 
@@ -227,5 +228,16 @@ class UserPreferencesRepository @Inject constructor(
         dataStore.edit { preferences ->
             preferences.clear()
         }
+    }
+
+
+    suspend fun setLastSmsScanDate(date: Long) {
+        dataStore.edit { preferences ->
+            preferences[LAST_SMS_SCAN_DATE_KEY] = date
+        }
+    }
+
+    val lastSmsScanDateFlow: Flow<Long> = dataStore.data.map { preferences ->
+        preferences[LAST_SMS_SCAN_DATE_KEY] ?: 0L
     }
 }

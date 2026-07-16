@@ -11,5 +11,10 @@ data class ParsedSmsTransaction(
     val rawMessage: String?,
     val availableBalance: Double?,
     val referenceId: String?,
-    val subcategory: String? = null
+    val subcategory: String? = null,
+    val upiId: String? = null,
+    val accountNumberLast4: String? = null,
+    val transactionId: String? = null,
+    val smsSender: String? = null,
+    val source: String = "SMS"
 )
