@@ -27,6 +27,9 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE date = :date AND amount = :amount AND merchantName = :merchantName AND userId = :userId")
     suspend fun doesTransactionExist(date: Long, amount: Double, merchantName: String, userId: String): Int
 
+    @Query("SELECT * FROM transactions WHERE userId = :userId AND ((transactionId IS NOT NULL AND transactionId = :transactionId) OR (referenceId IS NOT NULL AND referenceId = :referenceId) OR (date BETWEEN :date - 60000 AND :date + 60000 AND amount = :amount AND type = :type AND merchantName = :merchantName AND smsSender = :smsSender)) LIMIT 1")
+    suspend fun findDuplicate(userId: String, transactionId: String?, referenceId: String?, date: Long, amount: Double, type: String, merchantName: String, smsSender: String?): TransactionEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: TransactionEntity)
 
