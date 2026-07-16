@@ -16,6 +16,14 @@ object SmsTransactionParser {
     // Reference extraction
     private val refRegex = Pattern.compile("(?i)(?:ref|reference|utr|txn|transaction id)[:\\s.-]*([A-Z0-9]+)")
 
+
+    private val PENDING_WORDS = listOf("pending", "processing")
+    private val FAILED_WORDS = listOf("failed", "declined", "reversed", "cancelled", "unsuccessful", "not successful")
+    private val MARKETING_WORDS = listOf("loan", "offer", "discount", "apply now", "win", "reward", "hurry", "claim")
+
+    private val upiRegex = Pattern.compile("(?i)(?:vpa|upi)[^a-z0-9]*([a-zA-Z0-9.-]+@[a-zA-Z]+)")
+    private val acctRegex = Pattern.compile("(?i)(?:a/c|acct|account)[^0-9]*([0-9]{4})(?![0-9])")
+
     fun parseMessage(
         sender: String,
         body: String,
@@ -30,6 +38,11 @@ object SmsTransactionParser {
         // Skip OTPs and promotional messages
         if (lowerBody.contains("otp") || lowerBody.contains("verification code")) return null
 
+        // Skip failed, pending or marketing messages
+        if (FAILED_WORDS.any { lowerBody.contains(it) }) return null
+        if (PENDING_WORDS.any { lowerBody.contains(it) }) return null
+        if (MARKETING_WORDS.any { lowerBody.contains(it) } && !CREDIT_WORDS.any { lowerBody.contains(it) } && !DEBIT_WORDS.any { lowerBody.contains(it) }) return null
+
         val isCredit = CREDIT_WORDS.any { lowerBody.contains(it) }
         val isDebit = DEBIT_WORDS.any { lowerBody.contains(it) }
 
@@ -39,6 +52,8 @@ object SmsTransactionParser {
                 // assume credit
             } else if (lowerBody.contains("debited") && !lowerBody.contains("credited")) {
                 // assume debit
+            } else if (lowerBody.contains("refund") || lowerBody.contains("reversal")) {
+                // assume credit for refund
             } else {
                 return null
             }
@@ -87,6 +102,18 @@ object SmsTransactionParser {
             refId = refMatcher.group(1)
         }
 
+        var upiId: String? = null
+        val upiMatcher = upiRegex.matcher(body)
+        if (upiMatcher.find()) {
+            upiId = upiMatcher.group(1)
+        }
+
+        var acctLast4: String? = null
+        val acctMatcher = acctRegex.matcher(body)
+        if (acctMatcher.find()) {
+            acctLast4 = acctMatcher.group(1)
+        }
+
         val bankName = extractBankName(sender)
         val merchantName = extractMerchantName(body) ?: "Unknown"
         val (category, subcategory) = deduceCategory(merchantName, body, type)
@@ -102,9 +129,14 @@ object SmsTransactionParser {
             smsId = platformSmsId,
             rawMessage = body,
             availableBalance = balance,
-            referenceId = refId
+            referenceId = refId,
+            upiId = upiId,
+            accountNumberLast4 = acctLast4,
+            transactionId = refId,
+            smsSender = sender
         )
     }
+
 
     private fun deduceCategory(merchant: String, body: String, type: String): Pair<String, String?> {
         val lowerMerchant = merchant.lowercase()
@@ -127,6 +159,7 @@ object SmsTransactionParser {
         return Pair(defaultCat, subcategory)
     }
 
+
     private fun extractBankName(sender: String): String? {
         val s = sender.uppercase()
         if (s.contains("HDFC")) return "HDFC Bank"
@@ -135,8 +168,23 @@ object SmsTransactionParser {
         if (s.contains("AXIS")) return "Axis Bank"
         if (s.contains("KOTAK")) return "Kotak Bank"
         if (s.contains("PNB")) return "PNB"
+        if (s.contains("BOB") || s.contains("BARB")) return "Bank of Baroda"
+        if (s.contains("CANARA")) return "Canara Bank"
+        if (s.contains("IDFC")) return "IDFC FIRST Bank"
+        if (s.contains("INDUS")) return "IndusInd Bank"
+        if (s.contains("FEDERAL")) return "Federal Bank"
+        if (s.contains("YES")) return "Yes Bank"
+        if (s.contains("AU")) return "AU Small Finance Bank"
+        if (s.contains("BHIM") || s.contains("UPI")) return "BHIM UPI"
+        if (s.contains("PAYTM")) return "Paytm"
+        if (s.contains("PHONEPE") || s.contains("YBL")) return "PhonePe"
+        if (s.contains("GPAY") || s.contains("GOOGLE")) return "Google Pay"
+        if (s.contains("AMAZON")) return "Amazon Pay"
+        if (s.contains("CRED")) return "CRED"
+        if (s.contains("WHATSAPP")) return "WhatsApp Pay"
         return sender.takeIf { it.isNotBlank() }
     }
+
 
     private fun extractMerchantName(body: String): String? {
         // Improved extraction logic to find merchant names or VPA IDs

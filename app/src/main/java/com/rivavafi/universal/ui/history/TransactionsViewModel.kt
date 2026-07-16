@@ -170,7 +170,10 @@ class TransactionsViewModel @Inject constructor(
             filteredList = filteredList.filter {
                 it.merchantName.lowercase().contains(query) ||
                 it.category.lowercase().contains(query) ||
-                it.amount.toString().contains(query)
+                it.amount.toString().contains(query) ||
+                (it.upiId != null && it.upiId.lowercase().contains(query)) ||
+                (it.transactionId != null && it.transactionId.lowercase().contains(query)) ||
+                (it.referenceId != null && it.referenceId.lowercase().contains(query))
             }
         }
 
