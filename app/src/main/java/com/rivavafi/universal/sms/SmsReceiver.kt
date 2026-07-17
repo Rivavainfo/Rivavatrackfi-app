@@ -16,24 +16,29 @@ class SmsReceiver : BroadcastReceiver() {
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         if (messages.isNullOrEmpty()) return
 
-        for (sms in messages) {
-            val sender = sms.originatingAddress ?: ""
-            val body = sms.messageBody ?: ""
-            val timestamp = sms.timestampMillis
-            val smsId = "inc_${timestamp}"
+        val messagesBySender = messages.groupBy { it.originatingAddress }
 
-            val data = Data.Builder()
-                .putString("sender", sender)
-                .putString("body", body)
-                .putLong("timestamp", timestamp)
-                .putString("smsId", smsId)
-                .build()
+        for ((sender, senderMessages) in messagesBySender) {
+            val address = sender ?: ""
+            val body = senderMessages.joinToString("") { it.messageBody ?: "" }
 
-            val workRequest = OneTimeWorkRequestBuilder<SmsWorker>()
-                .setInputData(data)
-                .build()
+            if (senderMessages.isNotEmpty()) {
+                val timestamp = senderMessages.first().timestampMillis
+                val smsId = "inc_${timestamp}"
 
-            WorkManager.getInstance(context).enqueue(workRequest)
+                val data = Data.Builder()
+                    .putString("sender", address)
+                    .putString("body", body)
+                    .putLong("timestamp", timestamp)
+                    .putString("smsId", smsId)
+                    .build()
+
+                val workRequest = OneTimeWorkRequestBuilder<SmsWorker>()
+                    .setInputData(data)
+                    .build()
+
+                WorkManager.getInstance(context).enqueue(workRequest)
+            }
         }
     }
 }

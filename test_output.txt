@@ -1,0 +1,45 @@
+
+> Configure project :app
+SIGNING CONFIG WARNING: One or more signing variables are missing.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preFullSmsDebugBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:generateFullSmsDebugBuildConfig UP-TO-DATE
+> Task :app:checkFullSmsDebugAarMetadata UP-TO-DATE
+> Task :app:generateFullSmsDebugResValues UP-TO-DATE
+> Task :app:processFullSmsDebugGoogleServices UP-TO-DATE
+> Task :app:mapFullSmsDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateFullSmsDebugResources UP-TO-DATE
+> Task :app:mergeFullSmsDebugResources UP-TO-DATE
+> Task :app:packageFullSmsDebugResources UP-TO-DATE
+> Task :app:parseFullSmsDebugLocalResources UP-TO-DATE
+> Task :app:createFullSmsDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksFullSmsDebug UP-TO-DATE
+> Task :app:processFullSmsDebugMainManifest UP-TO-DATE
+> Task :app:processFullSmsDebugManifest UP-TO-DATE
+> Task :app:processFullSmsDebugManifestForPackage UP-TO-DATE
+> Task :app:processFullSmsDebugResources UP-TO-DATE
+> Task :app:kspFullSmsDebugKotlin UP-TO-DATE
+> Task :app:compileFullSmsDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileFullSmsDebug UP-TO-DATE
+> Task :app:compileFullSmsDebugJavaWithJavac UP-TO-DATE
+> Task :app:hiltAggregateDepsFullSmsDebug UP-TO-DATE
+> Task :app:hiltJavaCompileFullSmsDebug UP-TO-DATE
+> Task :app:transformFullSmsDebugClassesWithAsm UP-TO-DATE
+> Task :app:bundleFullSmsDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:preFullSmsDebugUnitTestBuild UP-TO-DATE
+> Task :app:processFullSmsDebugJavaRes UP-TO-DATE
+> Task :app:bundleFullSmsDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspFullSmsDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileFullSmsDebugUnitTestKotlin UP-TO-DATE
+> Task :app:javaPreCompileFullSmsDebugUnitTest UP-TO-DATE
+> Task :app:compileFullSmsDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:hiltAggregateDepsFullSmsDebugUnitTest UP-TO-DATE
+> Task :app:hiltJavaCompileFullSmsDebugUnitTest NO-SOURCE
+> Task :app:processFullSmsDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:transformFullSmsDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :app:testFullSmsDebugUnitTest
+
+BUILD SUCCESSFUL in 3s
+33 actionable tasks: 2 executed, 31 up-to-date
