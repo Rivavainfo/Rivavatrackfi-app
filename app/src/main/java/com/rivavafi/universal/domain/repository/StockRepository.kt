@@ -189,7 +189,12 @@ class StockRepository @Inject constructor(
         return withContext(Dispatchers.IO) {
             val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
             try {
-                val yahooSymbol = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+                val yahooSymbol = when {
+                    symbol.equals(IREDA_SYMBOL, ignoreCase = true) -> "IREDA.NS"
+                    symbol.equals(INDHOTEL_SYMBOL, ignoreCase = true) -> "INDHOTEL.NS"
+                    symbol.equals(NVDA_SYMBOL, ignoreCase = true) -> "NVDA"
+                    else -> "RTX"
+                }
                 val scrapeUrl = "https://query1.finance.yahoo.com/v8/finance/chart/$yahooSymbol"
 
                 val jsonResponse = Jsoup.connect(scrapeUrl)
@@ -253,7 +258,12 @@ class StockRepository @Inject constructor(
 
         // Fallback to Yahoo scrape
         try {
-            val yahooSymbol = if (normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+            val yahooSymbol = when {
+                normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true) -> "IREDA.NS"
+                normalizedSymbol.equals(INDHOTEL_SYMBOL, ignoreCase = true) -> "INDHOTEL.NS"
+                normalizedSymbol.equals(NVDA_SYMBOL, ignoreCase = true) -> "NVDA"
+                else -> "RTX"
+            }
             val scrapeUrl = "https://finance.yahoo.com/quote/$yahooSymbol"
 
             val document = withContext(Dispatchers.IO) {
@@ -293,6 +303,20 @@ class StockRepository @Inject constructor(
                 ticker = IREDA_SYMBOL,
                 logo = null,
                 finnhubIndustry = "Financial Services",
+                marketCapitalization = null
+            )
+            INDHOTEL_SYMBOL -> FinnhubCompanyProfileResponse(
+                name = "Indian Hotels Company Limited",
+                ticker = INDHOTEL_SYMBOL,
+                logo = null,
+                finnhubIndustry = "Consumer Cyclical",
+                marketCapitalization = null
+            )
+            NVDA_SYMBOL -> FinnhubCompanyProfileResponse(
+                name = "NVIDIA Corporation",
+                ticker = NVDA_SYMBOL,
+                logo = null,
+                finnhubIndustry = "Technology",
                 marketCapitalization = null
             )
             "RTX" -> FinnhubCompanyProfileResponse(
@@ -443,7 +467,12 @@ class StockRepository @Inject constructor(
 
         // Fallback to Yahoo scrape
         try {
-            val yahooSymbol = if (normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA.NS" else "RTX"
+            val yahooSymbol = when {
+                normalizedSymbol.equals(IREDA_SYMBOL, ignoreCase = true) -> "IREDA.NS"
+                normalizedSymbol.equals(INDHOTEL_SYMBOL, ignoreCase = true) -> "INDHOTEL.NS"
+                normalizedSymbol.equals(NVDA_SYMBOL, ignoreCase = true) -> "NVDA"
+                else -> "RTX"
+            }
             val scrapeUrl = "https://finance.yahoo.com/quote/$yahooSymbol"
 
             val document = withContext(Dispatchers.IO) {
@@ -513,6 +542,8 @@ class StockRepository @Inject constructor(
 
         val defaultQuote = when (symbol) {
             IREDA_SYMBOL -> StockResponse(c = 150.0, h = 150.0, l = 150.0, o = 148.0, pc = 148.0)
+            INDHOTEL_SYMBOL -> StockResponse(c = 580.0, h = 580.0, l = 580.0, o = 575.0, pc = 575.0)
+            NVDA_SYMBOL -> StockResponse(c = 120.0, h = 120.0, l = 120.0, o = 118.0, pc = 118.0)
             else -> StockResponse(c = 100.0, h = 100.0, l = 100.0, o = 99.0, pc = 99.0)
         }
 
@@ -534,9 +565,18 @@ class StockRepository @Inject constructor(
             .apply()
     }
 
-    private fun normalizeSymbol(symbol: String): String = if (symbol.equals("IREDA", ignoreCase = true)) IREDA_SYMBOL else symbol
+    private fun normalizeSymbol(symbol: String): String = when {
+        symbol.equals("IREDA", ignoreCase = true) -> IREDA_SYMBOL
+        symbol.equals("INDHOTEL", ignoreCase = true) -> INDHOTEL_SYMBOL
+        else -> symbol
+    }
 
-    private fun cachePrefix(symbol: String): String = if (symbol.equals(IREDA_SYMBOL, ignoreCase = true)) "IREDA" else "RTX"
+    private fun cachePrefix(symbol: String): String = when {
+        symbol.equals(IREDA_SYMBOL, ignoreCase = true) -> "IREDA"
+        symbol.equals(INDHOTEL_SYMBOL, ignoreCase = true) -> "INDHOTEL"
+        symbol.equals(NVDA_SYMBOL, ignoreCase = true) -> "NVDA"
+        else -> "RTX"
+    }
 
 
 
@@ -547,6 +587,8 @@ class StockRepository @Inject constructor(
         private const val TAG = "StockRepository"
         private const val PREFS_NAME = "stock_quotes_cache"
         const val IREDA_SYMBOL = "IREDA.NS"
+        const val INDHOTEL_SYMBOL = "INDHOTEL.NS"
+        const val NVDA_SYMBOL = "NVDA"
     }
 }
 
