@@ -14,4 +14,7 @@ interface TransactionRepository {
     suspend fun addTransaction(transaction: TransactionEntity)
     suspend fun deleteTransaction(transaction: TransactionEntity)
     suspend fun deleteAllTransactions(userId: String)
+    fun startSync(userId: String)
+    fun stopSync()
+    suspend fun fetchMoreHistory(userId: String, lastDate: Long)
 }

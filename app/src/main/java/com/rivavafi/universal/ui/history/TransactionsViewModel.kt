@@ -43,7 +43,8 @@ class TransactionsViewModel @Inject constructor(
     private val userCorrectionDao: UserCorrectionDao,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val addCategoryUseCase: AddCategoryUseCase,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val auth: com.google.firebase.auth.FirebaseAuth
 ) : ViewModel() {
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
@@ -114,6 +115,10 @@ class TransactionsViewModel @Inject constructor(
     private var allTransactions: List<TransactionEntity> = emptyList()
 
     init {
+        val userId = auth.currentUser?.uid
+        if (userId != null) {
+            repository.startSync(userId)
+        }
         loadTransactions()
         loadCategories()
     }
@@ -203,6 +208,14 @@ class TransactionsViewModel @Inject constructor(
                 monthlyDebit = debit,
                 groupedByDay = grouped
             )
+        }
+    }
+
+    fun fetchMoreHistory() {
+        val userId = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            val lastDate = allTransactions.minOfOrNull { it.date } ?: return@launch
+            repository.fetchMoreHistory(userId, lastDate)
         }
     }
 }
