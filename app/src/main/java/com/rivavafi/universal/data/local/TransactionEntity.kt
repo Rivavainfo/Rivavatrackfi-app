@@ -31,5 +31,9 @@ data class TransactionEntity(
     val smsSender: String? = null,
     val source: String = "MANUAL",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val documentId: String = "",
+    val description: String? = null,
+    val notes: String? = null,
+    val paymentMethod: String? = null
 )

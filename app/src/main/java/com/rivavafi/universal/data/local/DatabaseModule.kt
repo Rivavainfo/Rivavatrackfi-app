@@ -53,12 +53,21 @@ object DatabaseModule {
             }
         }
 
+        val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE transactions ADD COLUMN documentId TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN description TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN notes TEXT")
+                db.execSQL("ALTER TABLE transactions ADD COLUMN paymentMethod TEXT")
+            }
+        }
+
         return Room.databaseBuilder(
             app,
             RivavaDatabase::class.java,
             "trackfi_db"
         )
-        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+        .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
         .fallbackToDestructiveMigration()
         .build()
     }

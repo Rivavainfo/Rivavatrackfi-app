@@ -38,4 +38,6 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE userId = :userId")
     suspend fun deleteAllTransactions(userId: String)
+    @Query("SELECT * FROM transactions WHERE documentId = :documentId AND userId = :userId LIMIT 1")
+    suspend fun getTransactionByDocumentId(documentId: String, userId: String): TransactionEntity?
 }

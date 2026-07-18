@@ -41,6 +41,8 @@ class HomeViewModel @Inject constructor(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val userEntitlementRepository: UserEntitlementRepository,
     private val eliteRepository: EliteRepository,
+    private val transactionRepository: com.rivavafi.universal.domain.repository.TransactionRepository,
+    private val auth: com.google.firebase.auth.FirebaseAuth,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -102,6 +104,10 @@ class HomeViewModel @Inject constructor(
     val eliteSubscription: StateFlow<EliteSubscription> = _eliteSubscription
 
     init {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            transactionRepository.startSync(currentUser.uid)
+        }
         viewModelScope.launch {
             eliteRepository.getEliteConfig().collectLatest {
                 _eliteConfig.value = it
@@ -220,7 +226,7 @@ class HomeViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+            auth.signOut()
             val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build()
@@ -231,6 +237,7 @@ class HomeViewModel @Inject constructor(
             // Clear cached profile data to ensure stale state is wiped
             userPreferencesRepository.clearAllData()
             userEntitlementRepository.clearEntitlement()
+            transactionRepository.stopSync()
         }
     }
 }

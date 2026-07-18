@@ -15,8 +15,21 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /transactions/{transactionId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.userId == userId
+          && request.resource.data.amount is number
+          && request.resource.data.amount >= 0
+          && request.resource.data.type in ["CREDIT", "DEBIT", "INCOME", "EXPENSE", "REWARD", "BILL_PENDING", "MANDATE_CREATED", "SELF_TRANSFER", "IGNORE", "SUB"]
+          && request.resource.data.title is string
+          && request.resource.data.date is number;
+      }
 
       match /subscription/{document} {
         allow read: if request.auth != null && request.auth.uid == userId;
