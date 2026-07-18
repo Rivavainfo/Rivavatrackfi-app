@@ -48,6 +48,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
+    val isLoading by viewModel.isLoading.collectAsState()
     val layoutPreset by viewModel.homeLayoutPreset.collectAsState()
     val banksDetected by viewModel.banksDetected.collectAsState()
     val showSmsDetails by viewModel.showSmsDetails.collectAsState()
@@ -540,6 +541,7 @@ fun SettingsScreen(
         )
     }
 
+    com.rivavafi.universal.ui.components.RivavaLoadingOverlay(isLoading = isLoading)
     if (showSmsRationaleDialog) {
         AlertDialog(
             onDismissRequest = { showSmsRationaleDialog = false },

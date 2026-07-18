@@ -248,10 +248,21 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun scanSmsInbox(context: Context, mode: SmsTrackingMode) {
+    fun scanSmsInbox(context: Context, mode: SmsTrackingMode, onSuccess: () -> Unit) {
+        _isLoading.value = true
         viewModelScope.launch {
-            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
-            smsInboxScanner.scanInbox(context, mode, userId)
+            try {
+                val userId = FirebaseAuth.getInstance().currentUser?.uid
+                if (userId == null) {
+                    onSuccess()
+                    return@launch
+                }
+                smsInboxScanner.scanInbox(context, mode, userId)
+                preferencesRepository.setSmsScanCompleted(true)
+                onSuccess()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
