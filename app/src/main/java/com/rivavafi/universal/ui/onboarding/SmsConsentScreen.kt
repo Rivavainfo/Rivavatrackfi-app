@@ -37,6 +37,7 @@ fun SmsConsentScreen(
 ) {
     var selectedMode by remember { mutableStateOf(SmsTrackingMode.OFF) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showExplanationDialog by remember { mutableStateOf(false) }
     val isLoading by viewModel.isLoading.collectAsState()
     val context = LocalContext.current
 
@@ -49,8 +50,9 @@ fun SmsConsentScreen(
         val granted = permissions[Manifest.permission.READ_SMS] == true && permissions[Manifest.permission.RECEIVE_SMS] == true
         if (granted) {
             viewModel.setSmsTrackingMode(selectedMode.name)
-            viewModel.scanSmsInbox(context, selectedMode)
-            onNavigateNext()
+            viewModel.scanSmsInbox(context, selectedMode, onSuccess = {
+                onNavigateNext()
+            })
         } else {
             viewModel.setSmsTrackingMode(SmsTrackingMode.OFF.name)
             showSettingsDialog = true
@@ -121,10 +123,12 @@ fun SmsConsentScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+
+
         Button(
             onClick = {
                 if (selectedMode != SmsTrackingMode.OFF) {
-                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                    showExplanationDialog = true
                 } else {
                     viewModel.setSmsTrackingMode(SmsTrackingMode.OFF.name)
                     onNavigateNext()
@@ -185,5 +189,26 @@ fun SmsConsentScreen(
         )
     }
 
+
+    if (showExplanationDialog) {
+        AlertDialog(
+            onDismissRequest = { showExplanationDialog = false },
+            title = { Text("Allow SMS Permission") },
+            text = { Text("To automatically log your transactions, Rivava needs permission to read incoming bank SMS messages.\n\n1. Tap 'Continue' below.\n2. When prompted by your device, tap 'Allow'.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExplanationDialog = false
+                    permissionLauncher.launch(arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS))
+                }) {
+                    Text("Continue")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExplanationDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
     RivavaLoadingOverlay(isLoading = isLoading)
 }
