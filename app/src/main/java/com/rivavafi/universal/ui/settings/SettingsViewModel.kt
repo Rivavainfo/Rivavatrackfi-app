@@ -17,6 +17,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -38,6 +39,9 @@ class SettingsViewModel @Inject constructor(
 
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val _isLoading = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val isLoading: kotlinx.coroutines.flow.StateFlow<Boolean> = _isLoading.asStateFlow()
 
     val homeLayoutPreset = preferencesRepository.homeLayoutPresetFlow.stateIn(
         viewModelScope,
@@ -94,8 +98,13 @@ class SettingsViewModel @Inject constructor(
             val modeStr = smsTrackingMode.value
             val mode = runCatching { SmsTrackingMode.valueOf(modeStr) }.getOrDefault(SmsTrackingMode.OFF)
             if (mode != SmsTrackingMode.OFF) {
-                val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
-                smsInboxScanner.scanInbox(context, mode, userId)
+                try {
+                    val userId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+                    _isLoading.value = true
+                    smsInboxScanner.scanInbox(context, mode, userId)
+                } finally {
+                    _isLoading.value = false
+                }
             }
         }
     }
