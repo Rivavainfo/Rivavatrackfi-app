@@ -17,6 +17,11 @@ describe('Backend Functions Tests', () => {
                     onWrite: jest.fn((callback) => callback),
                     onCreate: jest.fn().mockReturnValue(jest.fn())
                 })
+            },
+            auth: {
+                user: jest.fn().mockReturnValue({
+                    onCreate: jest.fn((callback) => callback)
+                })
             }
         };
     });
@@ -35,22 +40,22 @@ describe('Backend Functions Tests', () => {
     jest.restoreAllMocks();
   });
 
-  test('onUserWrite triggers welcome email properly', async () => {
+  test('onUserWrite triggers welcome email properly with name', async () => {
       emailService.sendWelcomeEmail.mockResolvedValue(true);
 
       const change = {
           after: {
               exists: true,
-              data: () => ({ email: 'test@example.com', isVerified: true }),
-              ref: { update: jest.fn() }
+              data: () => ({ email: 'test@example.com', full_name: 'John Doe', isVerified: true }),
+              ref: { set: jest.fn() }
           }
       };
-      const context = {};
+      const context = { params: { userId: '123' } };
 
       await userLifecycleFunctions.onUserWrite(change, context);
 
-      expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com');
-      expect(change.after.ref.update).toHaveBeenCalled();
+      expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith('test@example.com', 'John Doe');
+      expect(change.after.ref.set).toHaveBeenCalled();
   });
 
   test('onUserWrite skips welcome email if welcomeEmailSentAt exists', async () => {
@@ -60,14 +65,15 @@ describe('Backend Functions Tests', () => {
           after: {
               exists: true,
               data: () => ({ email: 'test@example.com', isVerified: true, welcomeEmailSentAt: 'sometime' }),
-              ref: { update: jest.fn() }
+              ref: { set: jest.fn() }
           }
       };
-      const context = {};
+      const context = { params: { userId: '123' } };
 
       await userLifecycleFunctions.onUserWrite(change, context);
 
       expect(emailService.sendWelcomeEmail).not.toHaveBeenCalled();
-      expect(change.after.ref.update).not.toHaveBeenCalled();
+      expect(change.after.ref.set).not.toHaveBeenCalled();
   });
 });
+

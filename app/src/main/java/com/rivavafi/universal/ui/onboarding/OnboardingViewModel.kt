@@ -16,7 +16,6 @@ import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rivavafi.universal.data.preferences.UserPreferencesRepository
 import com.rivavafi.universal.data.repository.AuthRepository
-import com.rivavafi.universal.data.repository.EmailService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +28,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import android.content.Context
+import com.rivavafi.universal.data.repository.EmailService
 import com.rivavafi.universal.utils.PrefsManager
 
 @HiltViewModel
@@ -284,7 +284,6 @@ class OnboardingViewModel @Inject constructor(
             FirebaseAuth.getInstance().currentUser?.let { user ->
                 val uid = user.uid
 
-                // Check if we already marked onboarding complete to prevent duplicate emails
                 val docSnap = firestore.collection("users").document(uid).get().await()
                 val alreadyCompleted = docSnap.getBoolean("onboarding_completed") ?: false
 

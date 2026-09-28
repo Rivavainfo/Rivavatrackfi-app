@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const sgMail = require("@sendgrid/mail");
 const crypto = require("crypto");
+const { sendVerificationEmail } = require("./services/emailService");
 
 // 1. sendVerificationEmail
 exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
@@ -33,8 +33,8 @@ exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
         expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
         await db.runTransaction(async (transaction) => {
-             const existingDoc = await transaction.get(verificationRef);
-             if (existingDoc.exists) {
+            const existingDoc = await transaction.get(verificationRef);
+            if (existingDoc.exists) {
                 const data = existingDoc.data();
                 const now = new Date();
                 const createdAt = data.createdAt ? data.createdAt.toDate() : new Date(0);
@@ -43,9 +43,9 @@ exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
                 if (timeDiff < 60) {
                     throw new Error('RATE_LIMIT_EXCEEDED');
                 }
-             }
+            }
 
-             transaction.set(verificationRef, {
+            transaction.set(verificationRef, {
                 uid,
                 email,
                 tokenHash,
@@ -55,27 +55,11 @@ exports.sendVerificationEmail = functions.https.onRequest(async (req, res) => {
         });
 
         const verifyLink = `https://rivava.in/verify?token=${token}`;
+        const sent = await sendVerificationEmail(email, verifyLink);
 
-        const msg = {
-            to: email,
-            from: 'no-reply@rivava.in',
-            subject: 'Verify your email for Rivava',
-            text: `Welcome to Rivava\n\nPlease verify your email address by visiting the link below:\n\n${verifyLink}\n\nIf you didn't create an account, you can safely ignore this email.`,
-            html: `
-                <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
-                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                        <h2 style="color: #333333; text-align: center;">Welcome to Rivava</h2>
-                        <p style="color: #666666; font-size: 16px; line-height: 1.5;">Please verify your email address by clicking the button below.</p>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="${verifyLink}" style="background-color: #3B82F6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; font-weight: bold; display: inline-block;">Verify Email</a>
-                        </div>
-                        <p style="color: #999999; font-size: 14px; text-align: center;">If you didn't create an account, you can safely ignore this email.</p>
-                    </div>
-                </div>
-            `,
-        };
-
-        await sgMail.send(msg);
+        if (!sent) {
+            return res.status(500).send({ error: 'Failed to deliver verification email' });
+        }
 
         return res.status(200).send({ success: true, message: 'Verification email sent' });
     } catch (error) {
@@ -118,10 +102,12 @@ exports.verify = functions.https.onRequest(async (req, res) => {
             return res.status(400).send({ error: 'Token expired' });
         }
 
-        await db.collection('users').doc(data.uid).update({
+        await db.collection('users').doc(data.uid).set({
             isVerified: true,
+            email_verified: true,
+            email: data.email,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        }, { merge: true });
 
         await admin.auth().updateUser(data.uid, {
             emailVerified: true
@@ -129,25 +115,69 @@ exports.verify = functions.https.onRequest(async (req, res) => {
 
         await doc.ref.delete();
 
-        // Welcome email is handled via the onUserWrite trigger, which will fire because isVerified changed
+        // Welcome email is automatically handled via onUserWrite trigger
 
-        // Render success page
+        // Render sleek success page
         return res.status(200).send(`
-            <html>
+            <!DOCTYPE html>
+            <html lang="en">
                 <head>
-                    <title>Email Verified</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Email Verified - Rivava</title>
                     <style>
-                        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; margin: 0; }
-                        .container { background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; }
-                        h1 { color: #34D399; }
-                        p { color: #666; margin-bottom: 20px; }
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            background-color: #0F172A;
+                            color: #F8FAFC;
+                            margin: 0;
+                            padding: 20px;
+                        }
+                        .container {
+                            background-color: #1E293B;
+                            padding: 40px;
+                            border-radius: 12px;
+                            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                            text-align: center;
+                            max-width: 480px;
+                            border: 1px solid #334155;
+                        }
+                        .icon {
+                            font-size: 48px;
+                            margin-bottom: 16px;
+                        }
+                        h1 {
+                            color: #38BDF8;
+                            margin: 0 0 12px 0;
+                            font-size: 24px;
+                        }
+                        p {
+                            color: #94A3B8;
+                            margin: 0 0 24px 0;
+                            line-height: 1.6;
+                            font-size: 15px;
+                        }
+                        .badge {
+                            display: inline-block;
+                            background: rgba(56, 189, 248, 0.1);
+                            color: #38BDF8;
+                            padding: 8px 16px;
+                            border-radius: 9999px;
+                            font-size: 14px;
+                            font-weight: 600;
+                        }
                     </style>
                 </head>
                 <body>
                     <div class="container">
-                        <h1>Email Verified!</h1>
-                        <p>Your email has been successfully verified.</p>
-                        <p>You can now return to the Rivava app and log in.</p>
+                        <div class="icon">✨</div>
+                        <h1>Email Verified Successfully!</h1>
+                        <p>Your Rivava account has been verified. You're all set to take control of your financial tracking.</p>
+                        <div class="badge">You can now open the Rivava app to log in</div>
                     </div>
                 </body>
             </html>
@@ -177,9 +207,10 @@ exports.checkVerification = functions.https.onRequest(async (req, res) => {
         }
 
         const userData = userDoc.data();
-        return res.status(200).send({ isVerified: userData.isVerified === true });
+        const isVerified = userData.isVerified === true || userData.email_verified === true;
+        return res.status(200).send({ isVerified });
     } catch (error) {
         console.error('Error checking verification:', error);
         return res.status(500).send({ error: 'Internal Server Error' });
     }
-});
+});

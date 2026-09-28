@@ -11,6 +11,7 @@ exports.sendVerificationEmail = verificationFunctions.sendVerificationEmail;
 exports.verify = verificationFunctions.verify;
 exports.checkVerification = verificationFunctions.checkVerification;
 exports.onUserWrite = userLifecycleFunctions.onUserWrite;
+exports.onAuthUserCreated = userLifecycleFunctions.onAuthUserCreated;
 
 exports.createEliteOrder = eliteFunctions.createEliteOrder;
 exports.verifyElitePayment = eliteFunctions.verifyElitePayment;

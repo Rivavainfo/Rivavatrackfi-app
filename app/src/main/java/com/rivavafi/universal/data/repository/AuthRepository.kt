@@ -133,8 +133,9 @@ class AuthRepository @Inject constructor(
         email?.takeIf { it.isNotBlank() }?.let { userData["email"] = it }
         phoneNumber?.takeIf { it.isNotBlank() }?.let { userData["phone_number"] = it }
         if (isVerified) {
+            userData["isVerified"] = true
             userData["phone_verified"] = true
-            if (authProvider == "email") {
+            if (authProvider == "email" || authProvider == "google") {
                 userData["email_verified"] = true
             }
         }
