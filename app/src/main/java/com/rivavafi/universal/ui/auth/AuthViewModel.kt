@@ -109,23 +109,9 @@ class AuthViewModel @Inject constructor(
                     _isNewUser.value = false // Default to false if network fails to avoid blocking login flow
                 }
 
-                val providerId = user.providerData.firstOrNull()?.providerId
-                val isEmailAuth = providerId == "password" || providerId == "email"
-
-                if (isEmailAuth) {
-                    val isVerified = repository.checkVerificationStatus(user.uid)
-                    if (isVerified || user.isEmailVerified) {
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
-                    } else {
-                        // User is signed in but not verified. Do not sign out so they can resend.
-                        _errorMessage.value = "Please verify your email before continuing."
-                        _authState.value = AuthState.IDLE
-                    }
-                } else {
-                        userEntitlementRepository.syncEntitlement()
-                        _authState.value = AuthState.SUCCESS
-                }
+                // Email verification removed: allow session without email verification check
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
             }
         }
     }
@@ -230,40 +216,34 @@ class AuthViewModel @Inject constructor(
                 )
                 firebaseUserManager.saveUserToFirestore(theDataUser)
 
-                if (isVerified) {
-
-                    val sessionState = repository.saveUserToFirestore(
-                        uid = uid,
-                        name = null,
-                        email = email,
-                        phoneNumber = null,
-                        authProvider = "email",
-                        isVerified = true
-                    )
-                    val firebaseNew = false
-                    val isNew = !sessionState.onboardingCompleted
-                    _isNewUser.value = isNew
-                    if (isNew) {
-                        repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
-                    } else {
-                        if (!sessionState.existingName.isNullOrBlank()) {
-                            userPreferencesRepository.saveUserName(sessionState.existingName)
-                        }
-                        if (!sessionState.photoUrl.isNullOrBlank()) {
-                            userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
-                        }
-                    }
-                    if (sessionState.onboardingCompleted) {
-                        userPreferencesRepository.setOnboardingCompleted(true)
-                    }
-
-                    userEntitlementRepository.syncEntitlement()
-                    _authState.value = AuthState.SUCCESS
+                // Removed verification check on login
+                val sessionState = repository.saveUserToFirestore(
+                    uid = uid,
+                    name = null,
+                    email = email,
+                    phoneNumber = null,
+                    authProvider = "email",
+                    isVerified = true
+                )
+                val firebaseNew = false
+                val isNew = !sessionState.onboardingCompleted
+                _isNewUser.value = isNew
+                if (isNew) {
+                    repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
                 } else {
-                    // Do NOT sign out. The user needs an active session to use 'Resend Verification Email'.
-                    _errorMessage.value = "Please verify your email before logging in."
-                    _authState.value = AuthState.IDLE
+                    if (!sessionState.existingName.isNullOrBlank()) {
+                        userPreferencesRepository.saveUserName(sessionState.existingName)
+                    }
+                    if (!sessionState.photoUrl.isNullOrBlank()) {
+                        userPreferencesRepository.setProfileImageUri(sessionState.photoUrl)
+                    }
                 }
+                if (sessionState.onboardingCompleted) {
+                    userPreferencesRepository.setOnboardingCompleted(true)
+                }
+
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email login failed", e)
                 _errorMessage.value = e.message ?: "Login failed"
@@ -331,20 +311,24 @@ class AuthViewModel @Inject constructor(
                 )
                 firebaseUserManager.saveUserToFirestore(theDataUser)
 
-                repository.saveUserToFirestore(
+                val sessionState = repository.saveUserToFirestore(
                     uid = uid,
                     name = name.ifBlank { null },
                     email = email,
                     phoneNumber = null,
                     authProvider = "email",
-                    isVerified = false
+                    isVerified = true
                 )
                 userPreferencesRepository.saveUserName(name)
 
-                repository.sendVerificationEmail(email, uid)
-
-                _errorMessage.value = "Registration successful. Please check your inbox to verify."
-                _authState.value = AuthState.IDLE
+                // Email verification removed for new sign ups
+                val isNew = !sessionState.onboardingCompleted
+                _isNewUser.value = isNew
+                if (isNew) {
+                    repository.auth.currentUser?.let { repository.sendUserToSheet(it, "Email") }
+                }
+                userEntitlementRepository.syncEntitlement()
+                _authState.value = AuthState.SUCCESS
                 onVerificationSent()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Email registration failed", e)
