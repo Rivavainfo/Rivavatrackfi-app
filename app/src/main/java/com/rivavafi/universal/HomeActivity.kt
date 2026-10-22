@@ -168,7 +168,7 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
     val userName by (preferencesRepository?.userNameFlow ?: kotlinx.coroutines.flow.flowOf("")).collectAsState(initial = "")
     val context = androidx.compose.ui.platform.LocalContext.current
     val prefs = context.getSharedPreferences("RivavaPortfolioPrefs", android.content.Context.MODE_PRIVATE)
-    val isPortfolioUnlocked = isPremiumUser || prefs.getBoolean("portfolio_unlocked", false)
+    val isPortfolioUnlocked = true // Portfolio is always open
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -193,7 +193,7 @@ fun RivavaAppContent(hasCompletedOnboarding: Boolean, preferencesRepository: Use
                     ) {
                         bottomNavigationItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route
-                            val isLocked = screen.route == Screen.RivavaPortfolio.route && !isPortfolioUnlocked
+                            val isLocked = false // Portfolio is unlocked all the time
 
                             CustomBottomNavItem(
                                 screen = screen,
@@ -432,6 +432,8 @@ fun CustomBottomNavItem(
                     tint = iconColor,
                     modifier = Modifier.size(26.dp)
                 )
+                /*
+                // COMMENTED OUT LOCK ICON FOR PORTFOLIO
                 if (isLocked) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Filled.Lock,
@@ -444,6 +446,7 @@ fun CustomBottomNavItem(
                             .padding(1.dp)
                     )
                 }
+                */
             }
             if (isSelected) {
                 Box(

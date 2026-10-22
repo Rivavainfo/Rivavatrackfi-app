@@ -77,7 +77,7 @@ import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.ui.graphics.asImageBitmap
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -253,42 +253,83 @@ fun HomeScreen(
             }
 
             item {
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp)),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text(
-                                text = "Your next step to independence",
-                                style = MaterialTheme.typography.headlineSmall.copy(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
+                // Auto-moving banner carousel moving at specific time period (3 seconds)
+                val carouselItems = listOf(
+                    Triple("Your next step to independence", "Take control of your financial future with clarity.", "Explore Portfolio"),
+                    Triple("Smart Market Tracking", "Real-time stock and crypto price analytics at your fingertips.", "View Markets"),
+                    Triple("AI Financial Intelligence", "Automated categorisation and real-time expense insights.", "Get Insights")
+                )
+                val pagerState = androidx.compose.foundation.pager.rememberPagerState(pageCount = { carouselItems.size })
+
+                LaunchedEffect(Unit) {
+                    while (true) {
+                        kotlinx.coroutines.delay(3000)
+                        val nextPage = (pagerState.currentPage + 1) % carouselItems.size
+                        pagerState.animateScrollToPage(nextPage)
+                    }
+                }
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    androidx.compose.foundation.pager.HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { page ->
+                        val item = carouselItems[page]
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(20.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(20.dp)),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Text(
+                                    text = item.first,
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 )
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "Take control of your financial future with clarity.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = Color.White.copy(alpha = 0.86f),
-                                    fontWeight = FontWeight.Medium
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = item.second,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = Color.White.copy(alpha = 0.86f),
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 )
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Button(
-                                onClick = { onNavigateToRivavaPortfolio() },
-                                modifier = Modifier.fillMaxWidth().height(52.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Text("Take a step", fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(20.dp))
+                                Button(
+                                    onClick = { onNavigateToRivavaPortfolio() },
+                                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6), contentColor = Color.White),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp),
+                                    shape = RoundedCornerShape(20.dp)
+                                ) {
+                                    Text(item.third, fontWeight = FontWeight.Bold)
+                                }
                             }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(carouselItems.size) { index ->
+                            val isSelected = pagerState.currentPage == index
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .size(if (isSelected) 8.dp else 6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSelected) Color(0xFF3B82F6) else Color.White.copy(alpha = 0.3f))
+                            )
                         }
                     }
                 }
@@ -566,54 +607,14 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            /*
+            // COMMENTED OUT UNLOCK PREMIUM BANNER SINCE PORTFOLIO IS ALWAYS UNLOCKED
             if (!isPremiumUser && !isPremiumPref) {
                 item {
-                    PremiumCard(
-                        modifier = Modifier
-                            .heightIn(min = 120.dp)
-                            .bounceClick {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onNavigateToRivavaPortfolio()
-                            }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Rivava Premium Portfolio",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(
-                                    onClick = { onNavigateToRivavaPortfolio() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF4C91), contentColor = Color.White),
-                                    shape = RoundedCornerShape(20.dp),
-                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 3.dp, pressedElevation = 1.dp),
-                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                                    modifier = Modifier.height(48.dp)
-                                ) {
-                                    Text(
-                                        text = "Unlock Premium",
-                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                }
-                            }
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Locked Premium Feature",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-                    }
+                    PremiumCard(...)
                 }
             }
+            */
 
             item {
                 Row(
